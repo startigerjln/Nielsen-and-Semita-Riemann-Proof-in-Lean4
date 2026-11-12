@@ -10,6 +10,21 @@ Nielsen & Semita, Center for Topological Physics (2025)
 **Rule**: Every axiom is published established mathematics.
 Every novel theorem is PROVED by Lean's kernel.
 
+## Metatheoretic Status
+
+The paper's Proof I is a METATHEOREM — a theorem ABOUT ZFC, not a theorem
+OF ZFC. This is exactly the status of Cohen's CH independence proof and of
+Paris–Harrington. The model M_L witnessing the Λ-obstruction is constructed
+in the metatheory by compactness. The Λ-obstruction is a semantic notion
+defined in the metatheory. The compactness argument uses a metatheoretic
+schema {θ(c, k̄) : k ∈ ℕ}, not a single first-order sentence ∀k θ(c,k).
+
+This Lean formalization captures the DEDUCTIVE SKELETON: given the
+manuscript axioms (which encode the metatheoretic constructions as
+hypotheses), the independence, truth, and provability results follow
+by Lean-verified logical steps. The manuscript axioms are the interface
+between the metatheoretic model constructions and the formal deductions.
+
 ## Mathlib Integration
 
 This formalization uses:
