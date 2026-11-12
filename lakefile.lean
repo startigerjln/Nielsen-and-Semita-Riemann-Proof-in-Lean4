@@ -8,5 +8,4 @@ require mathlib from git
   "https://github.com/leanprover-community/mathlib4" @ "0f18102487"
 
 @[default_target]
-lean_lib «RH» where
-  globs := #[.submodules `RH]
+lean_lib «RH»
