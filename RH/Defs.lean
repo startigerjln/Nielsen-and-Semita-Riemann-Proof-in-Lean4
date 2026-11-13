@@ -238,6 +238,7 @@ axiom ZFC_consistent : ∀ (φ : L.Sentence), ¬ (ZFCProv φ ∧ ZFCProv (negL �
     an arbitrary model of ZFC. -/
 axiom ZModel : Type                      -- [Chang & Keisler 1990]
 axiom ZModelStr : L.Structure ZModel     -- [Kaye 1991]
+noncomputable instance : L.Structure ZModel := ZModelStr
 
 /-- Satisfaction in the ZFC model, using Mathlib's Sentence.Realize. -/
 def zsat (φ : L.Sentence) : Prop :=
@@ -408,6 +409,7 @@ structure LIrreducible (φ : L.Sentence) : Prop where
     we axiomatize the interpretation for compatibility with the
     abstract L definition. -/
 axiom NatStr : L.Structure Nat           -- [Kaye 1991]
+noncomputable instance : L.Structure Nat := NatStr
 
 /-- negL is semantically correct negation in N.
     PROVED from Mathlib's BoundedFormula.realize_not.
@@ -541,9 +543,7 @@ theorem admissible_has_distortion (τ : TranslationPair) (hτ : Admissible τ) :
     ∃ (φ : L.Sentence), zsat φ ≠ zsat (τ.RL φ) := by
   by_contra h
   push_neg at h
-  exact hτ.nontrivial (fun φ => Iff.intro
-    (fun a => by rw [h φ]; exact a)
-    (fun a => by rw [← h φ]; exact a))
+  exact hτ.nontrivial (fun φ => ⟨fun a => (h φ) ▸ a, fun a => (h φ) ▸ a⟩)
 
 /-! ================================================================
     DECOMPOSITION OF THE OBSTRUCTION CONSTRUCTION
