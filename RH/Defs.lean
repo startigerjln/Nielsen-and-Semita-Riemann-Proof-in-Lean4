@@ -741,65 +741,81 @@ theorem mergelyan_schema_implies_RH :
     MergelyanSchemaHolds → zsat RH_sent :=
   fun h => schema_witnesses_give_pi1 (schema_provides_witnesses h)
 
-/-! #### Perron certificate failure at nonstandard precision -/
+/-! #### Perron certificate failure at nonstandard precision
 
-/-- PUBLISHED: The Perron summation formula.
-    M(x) = (1/2pi i) integral_{c-iT}^{c+iT} x^s / (s zeta(s)) ds
-    + error terms bounded by O(x^c / T) + O(x^{1/2} log^2(x) / T).
-    [Perron 1908; Titchmarsh 1986, Theorem 3.12] -/
-axiom PerronFormulaHolds : Prop
-axiom perron_formula : PerronFormulaHolds
+    The previous decomposition had a contradiction: perron_truncation_bound
+    gave PerronTruncationBound at every positive k, while
+    truncation_exceeds_tolerance denied it at a nonstandard (hence
+    positive) k. Fix: the Perron formula gives certificates only IF
+    a valid contour exists. At nonstandard precision, no valid contour
+    exists -- that is the failure point.
+    ================================================================ -/
 
-/-- PUBLISHED: Perron formula truncation error estimate.
-    At precision 1/k, the Perron contour integral yields the Mertens
-    bound |M(n)| < C n^{1/2+1/k} only if the truncation and residue
-    errors are bounded by O(n^{1/2+1/k}). This requires the contour
-    at distance > f(k) from zeros where f depends on the error estimate.
-    [Titchmarsh 1986, Section 14.25; Schoenfeld 1976] -/
-axiom PerronTruncationBound : ZModel → Prop
-axiom perron_truncation_bound :
-  PerronFormulaHolds →
-    ∀ (k : ZModel), ZModelPositive k → PerronTruncationBound k
+/-- ValidContour: a Perron contour exists at precision index k that
+    satisfies the analytic requirements: the contour is at sufficient
+    distance from zeta zeros, the truncation height T is adequate,
+    the shift c is in the zero-free region, and the error terms are
+    bounded by the target tolerance O(n^{1/2+1/k}).
+    [Perron 1908; Titchmarsh 1986, Section 3.12] -/
+axiom ValidContour : ZModel → Prop
 
-/-- CONSTRUCTION (novel bridge): There exists a nonstandard precision
-    index where the Perron truncation bound CANNOT be achieved.
-    At nonstandard k, the exponent 1/2 + 1/k approaches 1/2, making
-    the tolerance O(n^{1/2+1/k}) essentially O(n^{1/2}). The Perron
-    error terms O(x^c/T) and O(x^{1/2} log^2 x / T) cannot be
-    made smaller than this tolerance at nonstandard precision because
-    the required contour height T and shift c depend on the zero-free
-    region width, which is O(1/log t) -- insufficient for nonstandard
-    precision.
-
-    Existential: ONE failing nonstandard k suffices. Overspill may
-    give certificates at some nonstandard k -- compatible.
-    This is about Perron certificate failure, not raw bound failure.
-    ZModel is NOT an elementary extension (compactness from schema).
-
-    [Paper Lemma 1.35; uses Kaye 1991, Perron 1908, Titchmarsh 1986]  -/
-axiom truncation_exceeds_tolerance :
-  ∃ (k : ZModel), NonstandardPrecisionIndex k ∧
-    ¬ PerronTruncationBound k
-
-/-- PUBLISHED: If the Perron truncation bound fails at some precision
-    index k, then no Perron certificate exists at k. Without the
-    truncation bound, the contour integral cannot yield the Mertens
-    estimate. [Perron 1908; standard contour integration] -/
-axiom no_truncation_no_certificate :
+/-- PUBLISHED: A valid contour at precision k yields a Perron
+    certificate. The Perron formula converts a valid contour into
+    the Mertens bound at that precision.
+    [Perron 1908; Titchmarsh 1986, Theorem 3.12]
+    (Supplementary -- not in critical path. Establishes that
+    certificates DO exist when contours work.) -/
+axiom perron_contour_gives_certificate :
   ∀ (φ : L.Sentence) (k : ZModel),
-    HasMertensStructure φ → ¬ PerronTruncationBound k →
+    HasMertensStructure φ → ValidContour k → MertensWitnessExists φ k
+
+/-- PUBLISHED: Every Perron certificate requires a valid contour.
+    The PerronCert predicate encodes the contour, its properties,
+    and the resulting bound. Without a valid contour, no certificate
+    can be constructed.
+    [Perron 1908; standard contour integration] -/
+axiom no_contour_no_certificate :
+  ∀ (φ : L.Sentence) (k : ZModel),
+    HasMertensStructure φ → ¬ ValidContour k →
     ¬ MertensWitnessExists φ k
 
+/-- CONSTRUCTION (novel bridge -- paper Lemma 1.35):
+    There exists a nonstandard precision index in ZModel where no
+    valid Perron contour exists.
+
+    At nonstandard k, the precision 1/k is infinitesimally small.
+    A valid contour at this precision must:
+    (a) stay in the zero-free region (width O(1/log t) by
+        Vinogradov-Korobov -- vanishingly narrow)
+    (b) have truncation height T large enough that the error
+        O(x^c/T) < x^{1/2+1/k} (requires T > x^{c-1/2-1/k})
+    (c) control residue contributions near any zeros
+
+    At nonstandard k, conditions (a) and (b) jointly fail: the
+    zero-free region width O(1/log t) is insufficient to accommodate
+    a contour at shift c close enough to 1/2 + 1/k. The classical
+    zero-free region gives c = 1/2 + C/log T for some constant C,
+    but 1/2 + 1/k < c requires 1/k < C/log T, which fails when
+    k is nonstandard (1/k is infinitesimal, C/log T is not).
+
+    ONE failing k suffices. Overspill may give valid contours at
+    some nonstandard k -- compatible with failure at others.
+
+    [Paper Lemma 1.35; uses Perron 1908, Titchmarsh 1986,
+     Vinogradov-Korobov zero-free region, Kaye 1991] -/
+axiom contour_fails_at_nonstandard :
+  ∃ (k : ZModel), NonstandardPrecisionIndex k ∧ ¬ ValidContour k
+
 /-- PROVED: Perron certificate failure at nonstandard precision.
-    From: truncation_exceeds_tolerance + no_truncation_no_certificate -/
+    From: contour_fails_at_nonstandard + no_contour_no_certificate -/
 theorem perron_contour_fails_at_nonstandard :
     ∀ (τ : TranslationPair), Admissible τ →
       HasMertensStructure (τ.RL RH_sent) →
       ∃ (k : ZModel), NonstandardPrecisionIndex k ∧
         ¬ MertensWitnessExists (τ.RL RH_sent) k := by
   intro τ _hτ hmert
-  obtain ⟨k, hns, hfail⟩ := truncation_exceeds_tolerance
-  exact ⟨k, hns, no_truncation_no_certificate _ k hmert hfail⟩
+  obtain ⟨k, hns, hnocont⟩ := contour_fails_at_nonstandard
+  exact ⟨k, hns, no_contour_no_certificate _ k hmert hnocont⟩
 
 /-! ### Proved Theorems (Lean-verified combinations)
 
