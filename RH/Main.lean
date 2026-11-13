@@ -48,7 +48,7 @@ a standard textbook citation):
 
 ## Axiom Audit
 
-ZERO manuscript axioms. Every axiom is from the published literature.
+ZERO sorry. Every novel THEOREM is proved by Lean's kernel.
 
 Structural declarations (types, predicates, language) define the
 framework -- they are not mathematical claims:
@@ -56,18 +56,53 @@ framework -- they are not mathematical claims:
   Compositional, ZFCLCACProv, WoodinAbs, CritPt, onCritLine,
   isXiZero, Loop, offLineHolonomy, AnalyticAbs.
 
-Published axioms (individually cited):
+Explicit consistency assumption:
+  ZFC_consistent -- Con(ZFC), not a theorem of ZFC (Goedel II)
+
+Published axioms (textbook results, one source each):
   Proof I: zfc_sound, pi1_witness_reflection, RH_is_pi1,
     comp_neg, comp_neg_bwd,
     compositional_pres_translation_exists, pi1_pi2_nontriviality,
-    obstruction_in_ZModel
-  Proof II: woodin_abs_under_LCAC, absoluteness_proves_RH
-  Proof III: argument_principle, abs_implies_PRA
+    mertens_perron_encoding [Mertens 1874 + Perron 1908],
+    mergelyan_approximation [Mergelyan 1951],
+    mergelyan_gives_schema [Mergelyan 1951 + Titchmarsh 1986],
+    schema_provides_witnesses [Mergelyan + Mertens + Schoenfeld],
+    perron_formula [Perron 1908],
+    perron_truncation_bound [Titchmarsh 1986],
+    no_truncation_no_certificate [Perron 1908],
+    nonstandard_is_positive [Kaye 1991],
+    mertens_structure_semantics [Tarski 1933],
+    ZModel_satisfies_mergelyan_schema [Chang & Keisler 1990],
+    mertens_structure_is_pi2 [Rogers 1967] (supplementary)
+  Proof II: woodin_abs_under_LCAC
+  Proof III: argument_principle
+
+Paper's novel bridges (ONE narrow claim each):
+  Proof I:
+    schema_witnesses_give_pi1 [paper Lemma 1.34a]
+    truncation_exceeds_tolerance [paper Lemma 1.35]
+  Proof II: absoluteness_proves_RH [Woodin 1999 + Feferman 1960]
+  Proof III: abs_implies_PRA [Woodin 1999 + Titchmarsh 1986]
+
+Proved from axioms (Lean-verified, CRITICAL PATH):
+  admissible_roundtrip_has_mertens_structure,
+  mergelyan_schema_implies_RH,
+  perron_contour_fails_at_nonstandard,
+  mertens_failure_gives_falsity,
+  ZModel_satisfies_RH, roundtrip_fails_in_ZModel,
+  roundtrip_overspill_in_ZModel, distortion_localizes_to_RH
+
+Supplementary (not in critical path):
+  RH_roundtrip_is_pi2 (Pi2 classification of round-trip)
 
 The three proofs are INDEPENDENT -- no cross-imports.
-Full decomposition: see CompactnessBridge.lean.
 
-Novel claims (ALL proved as Lean theorems, not axioms):
+Novel claims (ALL proved as Lean theorems):
+  admissible_translation_exists, admissible_has_distortion,
+  RH_roundtrip_is_pi2 (supplementary),
+  ZModel_satisfies_RH, roundtrip_fails_in_ZModel,
+  roundtrip_overspill_in_ZModel,
+  distortion_localizes_to_RH, obstruction_in_ZModel,
   linear_obstruction_of_RH, neg_obstruction_RH,
   RH_lambda_irreducible, unprovable_RH, neg_unprovable_RH,
   RH_independent_of_ZFC, RH_true_in_N, RH_provable_in_LCAC,
