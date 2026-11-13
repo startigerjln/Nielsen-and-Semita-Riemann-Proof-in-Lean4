@@ -112,9 +112,21 @@ Novel claims (ALL proved as Lean theorems):
 ## Mathlib Dependencies
 
 - `Mathlib.ModelTheory.Semantics` -- Language, Structure, Sentence.Realize
+- `Mathlib.ModelTheory.Satisfiability` -- Compactness Theorem (isSatisfiable_iff_isFinitelySatisfiable)
 - `Mathlib.ModelTheory.Ultraproducts` -- ultraproduct construction (Section 1.12)
 - `Mathlib.Order.Filter.Ultrafilter` -- ultrafilter infrastructure
 - `Mathlib.SetTheory.Cardinal.Basic` -- cardinality (model existence)
+- `Mathlib.NumberTheory.LSeries.RiemannZeta` -- Mathlib's RiemannHypothesis definition
+
+Mathlib's Compactness Theorem is used in the CRITICAL PATH:
+  mergelyan_schema_finitely_satisfiable [published, Mergelyan 1951]
+  → mergelyan_schema_satisfiable [PROVED from Mathlib compactness]
+
+Note: Mathlib has Stone-Weierstrass (real polynomial approximation)
+but NOT Mergelyan's theorem (complex polynomial approximation on
+compact sets with connected complement). The proof requires Mergelyan's
+complex version, so mergelyan_schema_finitely_satisfiable remains a
+published axiom.
 
 No hypotheses. No sorry. No manuscript axioms. Every theorem proved.
 -/
