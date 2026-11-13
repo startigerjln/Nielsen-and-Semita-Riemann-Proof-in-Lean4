@@ -16,3 +16,4 @@ Run `lake build` then inspect the output of `#print axioms`.
 #print axioms RH_from_PRA
 #print axioms RH_from_abs
 #print axioms riemann_hypothesis_resolved
+#print axioms rh_complete

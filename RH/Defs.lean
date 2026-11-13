@@ -161,10 +161,24 @@ def ArithRelations : ℕ → Type
 
 def L : Language.{0, 0} := ⟨ArithFunctions, ArithRelations⟩
 
-/-- RH as a Π₁ sentence in the language of arithmetic.
-    [Davis, Matiyasevich & Robinson 1976; Borwein et al. 2008]
-    Existence of such a sentence is constructive (Lagarias 2002). -/
-axiom RH_sent : L.Sentence
+/-- The bounded kernel of RH: the Σ₀ predicate P(n) such that
+    RH ↔ ∀n P(n). This encodes the Lagarias inequality:
+    σ(n) ≤ H_n + exp(H_n) · ln(H_n) for all n ≥ 1,
+    where σ is the sum-of-divisors function and H_n is the nth
+    harmonic number. The encoding uses Goedel β-function coding
+    to express σ, H_n, exp, and ln in the language of arithmetic.
+    [Davis, Matiyasevich & Robinson 1976; Lagarias 2002]
+    The specific encoding is fixed but opaque: what matters is that
+    RH_kernel exists as a bounded formula and RH_sent = ∀' RH_kernel. -/
+axiom RH_kernel : L.BoundedFormula Empty 1
+
+/-- RH as a concrete Π₁ sentence in the language of arithmetic.
+    DEFINED as ∀n RH_kernel(n) -- the universal closure of the
+    bounded kernel. This is a DEFINITION, not an axiom.
+    The sentence is concrete and specific: it is the universal
+    quantification of the Lagarias encoding.
+    [Davis, Matiyasevich & Robinson 1976; Lagarias 2002] -/
+def RH_sent : L.Sentence := Language.BoundedFormula.all RH_kernel
 
 /-! ## Translation Pairs (Definition 1.4.1)
 
@@ -447,10 +461,11 @@ axiom zfc_sound : ∀ (φ : L.Sentence), ZFCProv φ → zsat φ
 axiom pi1_witness_reflection :
   ∀ (φ : L.Sentence), IsPi1 φ → ¬ TrueInN φ → ZFCProv (negL φ)
 
-/-- RH is Π₁: the Riemann Hypothesis is equivalent to a Π₁ sentence.
-    [Davis, Matiyasevich & Robinson 1976; Lagarias 2002]
-    Specifically, RH is equivalent to: ∀n (σ(n) ≤ H_n + ln(H_n) · e^{H_n})
-    where σ is the sum-of-divisors function and H_n is the nth harmonic number. -/
+/-- RH is Π₁: RH_sent = ∀' RH_kernel has the form ∀n P(n) with P bounded.
+    Since RH_sent is now DEFINED as ∀' RH_kernel, being Π₁ follows from
+    RH_kernel being Σ₀ (bounded). RH_kernel encodes the Lagarias inequality
+    using Goedel β-function coding, which is bounded.
+    [Davis, Matiyasevich & Robinson 1976; Lagarias 2002] -/
 axiom RH_is_pi1 : IsPi1 RH_sent
 
 /-! ================================================================

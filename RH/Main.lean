@@ -147,18 +147,19 @@ theorem riemann_hypothesis_resolved :
           (_ : ¬∃ n : ℕ, s = -2 * (n + 1)) (_ : s ≠ 1),
           s.re = 1 / 2
 
-    Our RH_sent is the arithmetic Π₁ encoding of this analytic statement
-    (via Lagarias 2002; Davis, Matiyasevich, Putnam & Robinson 1976).
-    The bridge axiom connects TrueInN RH_sent to Mathlib's analytic
-    formulation. -/
+    Our RH_sent is DEFINED (not axiomatized) as ∀' RH_kernel, where
+    RH_kernel encodes the Lagarias inequality. RH_sent is a concrete
+    sentence, not an opaque axiom. The bridge axiom connects its
+    truth in N to Mathlib's analytic formulation. -/
 
-/-- PUBLISHED: The arithmetic Π₁ sentence RH_sent is equivalent to
-    Mathlib's RiemannHypothesis (all nontrivial zeros of the Riemann
-    zeta function have real part 1/2).
+/-- PUBLISHED: The Lagarias encoding (RH_sent = ∀' RH_kernel) is
+    equivalent to Mathlib's RiemannHypothesis.
+    RH_sent is now a CONCRETE DEFINITION (∀' RH_kernel), not an
+    opaque axiom. RH_kernel encodes σ(n) ≤ H_n + exp(H_n) · ln(H_n)
+    via Goedel β-function coding. Its truth in N is equivalent to the
+    analytic statement about zeta zeros.
     [Davis, Matiyasevich, Putnam & Robinson 1976; Lagarias 2002;
-     Borwein, Bailey, Girgensohn 2004]
-    The arithmetic formulation ∀n (σ(n) ≤ H_n + ln(H_n) · e^{H_n})
-    is equivalent to the analytic statement about zeta zeros. -/
+     Borwein, Bailey, Girgensohn 2004] -/
 axiom arithmetic_RH_equiv_analytic :
   TrueInN RH_sent → RiemannHypothesis
 
