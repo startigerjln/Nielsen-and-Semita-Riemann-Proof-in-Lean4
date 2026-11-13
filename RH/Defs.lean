@@ -783,12 +783,11 @@ axiom no_contour_no_certificate :
     There exists a nonstandard precision index in ZModel where no
     valid Perron contour exists.
 
-    The full analytic argument is in the paper (Lemma 1.35). It
-    establishes that the joint requirements on the contour shift,
-    truncation height, and error control cannot all be satisfied
-    simultaneously at one specific nonstandard precision index.
-    The argument uses properties of the Perron integrand
-    x^s / (s * zeta(s)) and the distribution of zeta zeros.
+    This axiom expresses the intended contour obstruction associated
+    with Lemma 1.35. The paper argues for a round-trip obstruction
+    using continuation codes that pass all standard checks. This
+    axiom formalizes the specific claim that the obstruction manifests
+    as contour failure at one nonstandard precision index.
 
     ONE failing k suffices (existential). Overspill may give valid
     contours at some nonstandard k -- compatible with failure at
