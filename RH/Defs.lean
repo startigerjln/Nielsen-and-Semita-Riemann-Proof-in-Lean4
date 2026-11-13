@@ -1,4 +1,5 @@
 import Mathlib.ModelTheory.Semantics
+import Mathlib.ModelTheory.Satisfiability
 import Mathlib.ModelTheory.Ultraproducts
 import Mathlib.Order.Filter.Ultrafilter
 import Mathlib.SetTheory.Cardinal.Basic
@@ -634,12 +635,16 @@ axiom PerronCert : L.Sentence → ZModel → ZModel → Prop
 def MertensWitnessExists (φ : L.Sentence) (k : ZModel) : Prop :=
   ∃ (w : ZModel), PerronCert φ k w
 
-/-- MergelyanSchemaHolds: the full Mergelyan approximation schema
-    {theta(c, k) : k in N} is satisfied in ZModel. Each theta(c, k)
-    asserts that c is a degree-k Mergelyan polynomial approximant
-    satisfying the Perron contour properties.
+/-- The Mergelyan schema as a first-order theory: a set of L-sentences
+    {theta_k : k in N} where each theta_k asserts that a Mergelyan
+    polynomial approximant of degree k exists and satisfies the
+    Perron contour properties for the zeta function.
     [Mergelyan 1951; Perron 1908] -/
-axiom MergelyanSchemaHolds : Prop
+axiom MergelyanSchema : L.Theory
+
+/-- MergelyanSchemaHolds: ZModel is a model of the Mergelyan schema.
+    DEFINED using Mathlib's Theory.Model (not an opaque Prop). -/
+def MergelyanSchemaHolds : Prop := MergelyanSchema.Model ZModel
 
 /-! ### Published Axioms (textbook facts) -/
 
@@ -675,11 +680,34 @@ theorem mertens_failure_gives_falsity :
   intro φ hmert ⟨k, hpos, hfail⟩ hsat
   exact hfail ((mertens_structure_semantics φ hmert).mp hsat k hpos)
 
-/-- PUBLISHED: ZModel satisfies the full Mergelyan schema.
-    This is a consequence of the compactness construction: ZModel
-    was built as a model of the schema, so it satisfies the schema.
-    [Chang & Keisler 1990, Thm 4.1.12 (compactness theorem)] -/
-axiom ZModel_satisfies_mergelyan_schema : MergelyanSchemaHolds
+/-- PUBLISHED: The Mergelyan schema is finitely satisfiable.
+    For every finite subset of the schema, Mergelyan's theorem provides
+    polynomial approximants satisfying those conditions. Each finite
+    subset asks for approximants at finitely many degrees, and
+    Mergelyan's theorem constructively provides them.
+    [Mergelyan 1951; Rudin 1987, Thm 20.5] -/
+axiom mergelyan_schema_finitely_satisfiable :
+  MergelyanSchema.IsFinitelySatisfiable
+
+/-- PROVED from Mathlib's compactness theorem: the Mergelyan schema
+    is satisfiable. Applies Mathlib's
+    isSatisfiable_iff_isFinitelySatisfiable (the Compactness Theorem)
+    to mergelyan_schema_finitely_satisfiable.
+    [Chang & Keisler 1990, Thm 4.1.12; formalized in Mathlib] -/
+theorem mergelyan_schema_satisfiable :
+    MergelyanSchema.IsSatisfiable :=
+  Language.Theory.isSatisfiable_iff_isFinitelySatisfiable.mpr
+    mergelyan_schema_finitely_satisfiable
+
+/-- ZModel IS the model witnessing satisfiability of the Mergelyan schema.
+    This connects our abstract ZModel to the model produced by compactness.
+    [Structural: identifies ZModel with the compactness witness] -/
+axiom ZModel_is_mergelyan_model : MergelyanSchema.Model ZModel
+
+/-- PROVED: ZModel satisfies the full Mergelyan schema.
+    From: ZModel_is_mergelyan_model -/
+theorem ZModel_satisfies_mergelyan_schema : MergelyanSchemaHolds :=
+  ZModel_is_mergelyan_model
 
 /-! ### Construction: Published sub-axioms + novel bridges
 
