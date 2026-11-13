@@ -783,26 +783,21 @@ axiom no_contour_no_certificate :
     There exists a nonstandard precision index in ZModel where no
     valid Perron contour exists.
 
-    At nonstandard k, the precision 1/k is infinitesimally small.
-    A valid contour at this precision must:
-    (a) stay in the zero-free region (width O(1/log t) by
-        Vinogradov-Korobov -- vanishingly narrow)
-    (b) have truncation height T large enough that the error
-        O(x^c/T) < x^{1/2+1/k} (requires T > x^{c-1/2-1/k})
-    (c) control residue contributions near any zeros
+    The full analytic argument is in the paper (Lemma 1.35). It
+    establishes that the joint requirements on the contour shift,
+    truncation height, and error control cannot all be satisfied
+    simultaneously at one specific nonstandard precision index.
+    The argument uses properties of the Perron integrand
+    x^s / (s * zeta(s)) and the distribution of zeta zeros.
 
-    At nonstandard k, conditions (a) and (b) jointly fail: the
-    zero-free region width O(1/log t) is insufficient to accommodate
-    a contour at shift c close enough to 1/2 + 1/k. The classical
-    zero-free region gives c = 1/2 + C/log T for some constant C,
-    but 1/2 + 1/k < c requires 1/k < C/log T, which fails when
-    k is nonstandard (1/k is infinitesimal, C/log T is not).
+    ONE failing k suffices (existential). Overspill may give valid
+    contours at some nonstandard k -- compatible with failure at
+    others. This is about Perron certificate failure, not raw bound
+    failure (see MertensWitnessExists). ZModel is NOT an elementary
+    extension of N (compactness from metatheoretic schema).
 
-    ONE failing k suffices. Overspill may give valid contours at
-    some nonstandard k -- compatible with failure at others.
-
-    [Paper Lemma 1.35; uses Perron 1908, Titchmarsh 1986,
-     Vinogradov-Korobov zero-free region, Kaye 1991] -/
+    [Paper Lemma 1.35; published tools: Perron 1908,
+     Titchmarsh 1986, Kaye 1991] -/
 axiom contour_fails_at_nonstandard :
   ∃ (k : ZModel), NonstandardPrecisionIndex k ∧ ¬ ValidContour k
 
