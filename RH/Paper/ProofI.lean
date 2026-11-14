@@ -64,6 +64,14 @@ theorem Model.sat_iff (M : Model) (φ ψ : Sent) :
   letI := M.str
   exact Language.BoundedFormula.realize_iff
 
+/-- Implication of two sentences. -/
+def impS (φ ψ : Sent) : Sent := Language.BoundedFormula.imp φ ψ
+
+theorem Model.sat_imp (M : Model) (φ ψ : Sent) :
+    M.Sat (impS φ ψ) ↔ (M.Sat φ → M.Sat ψ) := by
+  letI := M.str
+  exact Language.BoundedFormula.realize_imp
+
 /-- Truth in the standard model ℕ. -/
 def TrueInN (φ : Sent) : Prop :=
   @Language.Sentence.Realize L ℕ natStructure φ
@@ -202,6 +210,23 @@ theorem not_provable_of_obstruction_model (H : Hypotheses S) {φ : Sent}
   obtain ⟨M, hM, h1, h2⟩ := hobs
   have hiff := round_trip_adequacy H hφ M hM
   exact h2 (((M.sat_iff φ (S.can.RL φ)).mp hiff).mp h1)
+
+/-- What Corollary 1.10.6 amounts to: a model of ZFC with `M ⊨ φ` and
+    `M ⊭ R_L(φ)` exists exactly when ZFC does not prove `φ → R_L(φ)`. -/
+theorem obstruction_model_iff_not_provable (τ : TranslationPair) (φ : Sent) :
+    (∃ M, S.ZFCModel M ∧ M.Sat φ ∧ ¬ M.Sat (τ.RL φ)) ↔
+      ¬ S.Prov (impS φ (τ.RL φ)) := by
+  constructor
+  · rintro ⟨M, hM, h1, h2⟩ hprov
+    exact h2 ((M.sat_imp φ (τ.RL φ)).mp (hprov M hM) h1)
+  · intro hnot
+    by_contra hno
+    apply hnot
+    intro M hM
+    rw [M.sat_imp]
+    intro h1
+    by_contra h2
+    exact hno ⟨M, hM, h1, h2⟩
 
 /-- Uniform Preservation, curved side. -/
 theorem uniform_preservation_cur {τ : TranslationPair}
