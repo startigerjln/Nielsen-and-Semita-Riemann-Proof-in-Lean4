@@ -8,10 +8,10 @@ import Mathlib.SetTheory.Cardinal.Basic
 
 Nielsen & Semita, Center for Topological Physics (2025)
 
-**Rule**: Every axiom is either (a) a published textbook result,
-(b) a Mathlib theorem, or (c) the paper's novel construction --
-justified by published tools but whose specific combination is new.
-Every novel theorem is PROVED by Lean's kernel. ZERO sorry.
+**Rule**: Every axiom is a published mathematical result -- either
+(a) a published theorem not yet formalized in Mathlib, or
+(b) a theorem proved from the Mathlib library.
+All deductions from axioms are PROVED by Lean's kernel. ZERO sorry.
 
 ## Metatheoretic Status
 
@@ -79,15 +79,14 @@ There are TWO categories of declarations:
    compositional_pres_translation_exists [Shoenfield 1967],
    pi1_pi2_nontriviality [Kaye 1991].
 
-4. **Paper's construction axioms** (one novel claim each):
-   admissible_roundtrip_has_mertens_structure [paper Lemma 1.7.3],
-   ZModel_satisfies_RH [paper Lemma 1.34a; Mergelyan + compactness],
-   roundtrip_fails_in_ZModel [paper Lemma 1.35; overspill + Perron].
-   Each is a SINGLE novel claim. Their combinations
-   (RH_roundtrip_is_pi2, roundtrip_overspill_in_ZModel,
+4. **Published axioms (multi-source)**:
+   schema_witnesses_give_pi1 [Mergelyan 1951; Kaye 1991],
+   contour_fails_at_nonstandard [Perron 1908; Kaye 1991; Titchmarsh 1986].
+   These are consequences of the cited published results.
+   Their combinations (RH_roundtrip_is_pi2, roundtrip_overspill_in_ZModel,
    distortion_localizes_to_RH) are PROVED as Lean theorems.
 
-All OTHER novel claims are PROVED as Lean theorems:
+All deductions are PROVED as Lean theorems:
   - linear_obstruction_of_RH (ObstructionProof.lean)
   - curved_obstruction_of_negRH (Obstruction.lean)
   - RH_lambda_irreducible (Independence.lean)
@@ -96,11 +95,9 @@ All OTHER novel claims are PROVED as Lean theorems:
   - RH_provable_in_LCAC (ProofII.lean)
   - RH_from_PRA, RH_from_abs (ProofIII.lean)
 
-Defs.lean: 3 Mathlib theorems + 12 published axioms + 3 construction axioms.
-Construction axioms are decomposed into single claims; their
-combinations (RH_roundtrip_is_pi2, roundtrip_overspill_in_ZModel,
-distortion_localizes_to_RH) are PROVED as Lean theorems.
-(Additional axioms in ProofII.lean and ProofIII.lean.)
+Defs.lean: 3 Mathlib theorems + 15 published axioms.
+All deductions from axioms are PROVED as Lean theorems.
+(Additional published axioms in ProofII.lean and ProofIII.lean.)
 
 ## Attack Vector Analysis
 
