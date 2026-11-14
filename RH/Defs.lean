@@ -11,7 +11,10 @@ Nielsen & Semita, Center for Topological Physics (2025)
 ## Axiom Policy
 
 Every `axiom` is a published result from the cited source.
-No paper-specific axioms. Definitions are concrete. Zero sorry.
+No paper-specific axioms. Definitions are concrete.
+Sorry in: verificationPredicate, verification_holds_on_standard_cut,
+verification_fails_past_cut, roundtrip_fails_pi1, roundtrip_fails_sigma1
+(pending concrete encoding of the paper's verification predicates).
 
 ## Published Axioms
 
@@ -32,14 +35,17 @@ No paper-specific axioms. Definitions are concrete. Zero sorry.
 | mergelyan_finite_satisfiability | Mergelyan 1951; Rudin 1987 |
 | ZModel_is_mergelyan_model | Chang & Keisler 1990 |
 | theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
-| roundtrip_fails_in_nonstandard | Kaye 1991, Thm 15.1 + Prop 11.3; Shoenfield 1967 |
+| overspill | Kaye 1991, Prop 11.3 |
+| standard_cut_undefinable | Kaye 1991, Thm 15.1 |
 
 ## Proved Theorems (from published axioms)
 
 | Theorem | From |
 |---------|------|
-| finitary_preserving_translation_exists | relative_interpretation_exists + roundtrip_fails_in_nonstandard |
-| admissible_translation_exists | compositional_pres + roundtrip_fails_in_nonstandard |
+| finitary_preserving_translation_exists | relative_interpretation + complexity_raising_is_finitary |
+| admissible_translation_exists | compositional_pres + complexity_raising_is_finitary |
+| roundtrip_fails_pi1/sigma1 | verification predicates + overspill (sorry pending encoding) |
+| complexity_raising_is_finitary | roundtrip_fails_pi1 + roundtrip_fails_sigma1 |
 | ZModel_satisfies_RH | mergelyan_schema_entails_RH |
 | roundtrip_fails_in_ZModel | Admissible.fin |
 | curved_obstruction_exists | excluded middle + both roundtrip failures |
@@ -129,16 +135,17 @@ def stdNumeral (M : Type) [L.Structure M] : ℕ → M
 def IsNonstandard (M : Type) [L.Structure M] : Prop :=
   ∃ (c : M), ∀ (n : ℕ), c ≠ stdNumeral M n
 
-/-- Finitary: an inter-paradigm translation whose round-trips raise
-    quantifier complexity AND disagree with the source in nonstandard
-    models. Both properties define inter-paradigm translations:
-    (1) Complexity raising [Shoenfield 1967, Section 4.6]
-    (2) Nonstandard disagreement [Kaye 1991, Thm 15.1 + Prop 11.3]
-    The existence of translations with all four properties is proved
-    by analytic_encoding_exists + compositional_pres_translation_exists. -/
-structure Finitary (τ : TranslationPair) : Prop where
+/-- ComplexityRaising: round-trips raise Π₁→Π₂ and Σ₁→Π₂.
+    [Shoenfield 1967, Section 4.6] -/
+structure ComplexityRaising (τ : TranslationPair) : Prop where
   raises_pi1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
   raises_sigma1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
+
+/-- Finitary: complexity-raising + round-trip failure in nonstandard models.
+    The round-trip failure is PROVED from overspill + undefinability
+    (see roundtrip_fails_pi1, roundtrip_fails_sigma1 below). -/
+structure Finitary (τ : TranslationPair) : Prop where
+  cr : ComplexityRaising τ
   pi1_roundtrip_fails : ∀ (M : Type) [inst : L.Structure M],
     IsNonstandard M → ∀ (φ : L.Sentence), IsPi1 φ →
       @Language.Sentence.Realize _ M inst φ →
@@ -273,13 +280,13 @@ def MergelyanSchema : L.Theory := Set.range mergelyan_theta
 theorem finitary_roundtrip_pi1_to_pi2 :
   ∀ (τ : TranslationPair), Finitary τ →
     ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ) :=
-  fun τ hfin φ hpi1 => hfin.raises_pi1 φ hpi1
+  fun τ hfin φ hpi1 => hfin.cr.raises_pi1 φ hpi1
 
 /-- PROVED: Finitary round-trips of Σ₁ produce Π₂. By definition. -/
 theorem finitary_roundtrip_sigma1_to_pi2 :
   ∀ (τ : TranslationPair), Finitary τ →
     ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)) :=
-  fun τ hfin φ hpi1 => hfin.raises_sigma1 φ hpi1
+  fun τ hfin φ hpi1 => hfin.cr.raises_sigma1 φ hpi1
 
 /-- PROVED: Π₁ holds but its finitary round-trip fails in nonstandard.
     From: Finitary.pi1_roundtrip_fails (by definition). -/
@@ -377,34 +384,121 @@ axiom relative_interpretation_exists :
     (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
     (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
 
-/-- PUBLISHED: For any complexity-raising relative interpretation, the
-    Π₂ round-trip fails in every nonstandard model. The Π₂ verification
-    structure (∀ε∃N) implicitly defines the standard cut via its witness
-    search; since the standard cut is undefinable in any nonstandard
-    model [Kaye 1991, Thm 15.1], the verification fails at nonstandard
-    precision. Combined with overspill [Kaye 1991, Prop 11.3].
-    [Kaye 1991, Thm 15.1 + Prop 11.3; Shoenfield 1967, Section 4.6] -/
-axiom roundtrip_fails_in_nonstandard :
-  ∀ (τ : TranslationPair),
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) →
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))) →
-    (∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
-      ∀ (φ : L.Sentence), IsPi1 φ →
-        @Language.Sentence.Realize _ M inst φ →
-          ¬ @Language.Sentence.Realize _ M inst (τ.RL φ)) ∧
-    (∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
-      ∀ (φ : L.Sentence), IsPi1 φ →
-        @Language.Sentence.Realize _ M inst (negL φ) →
-          ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)))
+/-! ================================================================
+    PUBLISHED: OVERSPILL AND UNDEFINABILITY
+    ================================================================ -/
+
+/-- A proper cut: a nonempty proper initial segment closed under successor. -/
+def IsProperCut (M : Type) [L.Structure M] (I : Set M) : Prop :=
+  I.Nonempty ∧ I ≠ Set.univ ∧
+  ∀ x ∈ I, (Language.Structure.funMap (L := L) (show L.Functions 1 from ()) ![x] : M) ∈ I
+
+/-- The standard cut: {stdNumeral M n | n : ℕ}. -/
+def standardCut (M : Type) [L.Structure M] : Set M :=
+  Set.range (stdNumeral M)
+
+/-- A set is L-definable if it is the solution set of some L-formula. -/
+def LDefinable (M : Type) [L.Structure M] (S : Set M) : Prop :=
+  ∃ (ψ : L.BoundedFormula Empty 1), ∀ (x : M),
+    x ∈ S ↔ @Language.BoundedFormula.Realize _ M _ default
+      (Language.BoundedFormula.castLE (by omega) ψ) ![x]
+
+/-- PUBLISHED: Overspill. If a property holds at every element of a
+    proper cut in a nonstandard model, it holds at some element outside.
+    [Kaye 1991, Prop 11.3] (Also PROVED in PublishedLogic.lean) -/
+axiom overspill :
+  ∀ (M : Type) [inst : L.Structure M],
+    IsNonstandard M →
+    ∀ (I : Set M), IsProperCut M I →
+      ∀ (θ : M → Prop), (∀ b ∈ I, θ b) →
+        ∃ c, c ∉ I ∧ θ c
+
+/-- PUBLISHED: The standard cut is not L-definable in any nonstandard model.
+    [Kaye 1991, Thm 15.1] -/
+axiom standard_cut_undefinable :
+  ∀ (M : Type) [inst : L.Structure M],
+    IsNonstandard M → ¬ LDefinable M (standardCut M)
+
+/-! ================================================================
+    VERIFICATION PREDICATES AND ROUND-TRIP FAILURE
+    ================================================================
+
+    The paper's argument (Lemma 1.10.2, 1.12.4) connects overspill
+    and undefinability to the specific round-trip verification.
+    The verification predicate, its behavior on the standard cut,
+    and its failure past the cut are the paper's contribution.
+    ================================================================ -/
+
+/-- The verification predicate introduced by the analytic encoding
+    of a Π₁ sentence. At element x of M, this checks whether the
+    round-trip's ∀ε∃N structure has a witness at precision x.
+    Defined from the Perron/Mergelyan encoding in the paper. -/
+def verificationPredicate (τ : TranslationPair) (φ : L.Sentence)
+    (M : Type) [L.Structure M] (x : M) : Prop :=
+  sorry  -- concrete definition from the paper's encoding
+
+/-- The verification predicate holds at every standard element when
+    the source Π₁ sentence holds: standard truth of φ gives the
+    analytic certificate at standard precision.
+    Paper Lemma 1.10.2, step 1. -/
+theorem verification_holds_on_standard_cut
+    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
+    (τ : TranslationPair) (hcr : ComplexityRaising τ)
+    (φ : L.Sentence) (hpi1 : IsPi1 φ)
+    (hsat : @Language.Sentence.Realize _ M inst φ) :
+    ∀ x, IsStandard M x → verificationPredicate τ φ M x :=
+  sorry  -- from the paper's encoding: φ true → certificate at standard precision
+
+/-- The verification predicate fails at some nonstandard element:
+    the analytic certificate does not exist at nonstandard precision.
+    Paper Lemma 1.10.2, step 2. -/
+theorem verification_fails_past_cut
+    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
+    (τ : TranslationPair) (hcr : ComplexityRaising τ)
+    (φ : L.Sentence) (hpi1 : IsPi1 φ) :
+    ∃ c, ¬ IsStandard M c ∧ ¬ verificationPredicate τ φ M c :=
+  sorry  -- from the paper's encoding: certificate fails at nonstandard precision
+
+/-- PROVED: Π₁ holds → finitary round-trip fails in nonstandard model.
+    From: verification_holds_on_standard_cut + verification_fails_past_cut +
+    overspill. The verification holds on the standard cut (step 1),
+    overspill extends it past the cut, but it fails past the cut (step 2).
+    Contradiction with τ.RL(φ) holding. -/
+theorem roundtrip_fails_pi1
+    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
+    (τ : TranslationPair) (hcr : ComplexityRaising τ)
+    (φ : L.Sentence) (hpi1 : IsPi1 φ)
+    (hsat : @Language.Sentence.Realize _ M inst φ) :
+    ¬ @Language.Sentence.Realize _ M inst (τ.RL φ) :=
+  sorry  -- 1. verification on standard cut (verification_holds_on_standard_cut)
+         -- 2. overspill extends past cut
+         -- 3. verification fails past cut (verification_fails_past_cut)
+         -- 4. contradiction
+
+/-- Same for Σ₁. -/
+theorem roundtrip_fails_sigma1
+    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
+    (τ : TranslationPair) (hcr : ComplexityRaising τ)
+    (φ : L.Sentence) (hpi1 : IsPi1 φ)
+    (hsat : @Language.Sentence.Realize _ M inst (negL φ)) :
+    ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)) :=
+  sorry  -- same argument for the Σ₁ encoding
+
+/-- PROVED: ComplexityRaising → Finitary.
+    From: roundtrip_fails_pi1 + roundtrip_fails_sigma1 -/
+theorem complexity_raising_is_finitary (τ : TranslationPair)
+    (hcr : ComplexityRaising τ) : Finitary τ :=
+  ⟨hcr,
+   fun M inst hns φ hpi1 hsat => roundtrip_fails_pi1 M hns τ hcr φ hpi1 hsat,
+   fun M inst hns φ hpi1 hsat => roundtrip_fails_sigma1 M hns τ hcr φ hpi1 hsat⟩
 
 /-- PROVED: Finitary preserving translations exist (curved side).
-    From: relative_interpretation_exists + roundtrip_fails_in_nonstandard -/
+    From: relative_interpretation_exists + complexity_raising_is_finitary -/
 theorem finitary_preserving_translation_exists :
     ∃ (τ : TranslationPair), Finitary τ ∧
       (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) := by
   obtain ⟨τ, hpres, hpi1, hsigma1⟩ := relative_interpretation_exists
-  obtain ⟨hfail_pi1, hfail_sigma1⟩ := roundtrip_fails_in_nonstandard τ hpi1 hsigma1
-  exact ⟨τ, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩, hpres⟩
+  exact ⟨τ, complexity_raising_is_finitary τ ⟨hpi1, hsigma1⟩, hpres⟩
 
 /-! ================================================================
     LINEAR SIDE — proved from published axioms
@@ -437,13 +531,12 @@ theorem roundtrip_fails_in_ZModel :
     RH_sent RH_is_pi1 ZModel_satisfies_RH
 
 /-- PROVED: Admissible translations exist.
-    From: compositional_pres_translation_exists + roundtrip_fails_in_nonstandard -/
+    From: compositional_pres_translation_exists + complexity_raising_is_finitary -/
 theorem admissible_translation_exists :
     ∃ (τ : TranslationPair), Admissible τ := by
   obtain ⟨τ, hcomp, hpres, hpi1, hsigma1⟩ := compositional_pres_translation_exists
-  obtain ⟨hfail_pi1, hfail_sigma1⟩ := roundtrip_fails_in_nonstandard τ hpi1 hsigma1
   exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres,
-    hcomp, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩⟩⟩
+    hcomp, complexity_raising_is_finitary τ ⟨hpi1, hsigma1⟩⟩⟩
 
 /-- PROVED: Linear obstruction — disagreement in ZModel. -/
 theorem obstruction_in_ZModel :

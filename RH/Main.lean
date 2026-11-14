@@ -43,7 +43,8 @@ pi1_holds_roundtrip_fails, sigma1_holds_roundtrip_fails
 
   Defs.lean (Proof I -- curved side):
   - relative_interpretation_exists [Shoenfield 1967; Rogers 1967]
-  - roundtrip_fails_in_nonstandard [Kaye 1991, Thm 15.1; Shoenfield 1967]
+  - overspill [Kaye 1991, Prop 11.3]
+  - standard_cut_undefinable [Kaye 1991, Thm 15.1]
   - theta_implies_kernel_at_standard [Mergelyan 1951; Lagarias 2002]
 
   Encoding.lean (Δ₀ formula encoding):
