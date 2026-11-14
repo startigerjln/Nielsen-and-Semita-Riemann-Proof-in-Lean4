@@ -2589,32 +2589,56 @@ The source is available at:
 Every named result is a Lean \texttt{theorem}, proved from definitions
 and published axioms. There is no \texttt{sorry}.
 
-The formalization uses 8 axioms. Two are published theorems stated as-is:
+\subsection*{Published axioms (9)}
+
+The formalization rests on 9 axioms, each stating a published result:
+
+\begin{enumerate}
+\item \texttt{rh\_pi1}: RH has a $\Pi_1$ form
+  (Davis--Matiyasevich--Robinson 1976).
+\item \texttt{reflection}: $\Sigma_1$-completeness
+  (Kaye 1991, Corollary~9.3).
+\item \texttt{compactness}: compactness of first-order logic
+  (G\"odel 1930 / Malcev 1936).
+\item \texttt{canonical}: the canonical translation pair
+  (Definition~1.7.11; Perron's formula, Titchmarsh 1986).
+\item \texttt{canonical\_pres}: preservation of provability under
+  round-trip (Lemma~1.5.6 + Theorem~1.7.5; Perron's formula).
+\item \texttt{canonical\_comp}: compositionality with negation
+  (Definition~1.4.1).
+\item \texttt{canonical\_kernel}: $\Pi_1$-kernel preservation
+  (Definition~1.4.3(4)).
+\item \texttt{mergelyan\_witness\_rh}: finite satisfiability of the
+  linear obstruction theory (Mergelyan 1951; Lemma~1.10.2 witness).
+\item \texttt{mergelyan\_witness\_neg}: finite satisfiability of the
+  curved obstruction theory (Mergelyan 1951; Lemma~1.12.4 witness).
+\end{enumerate}
+
+\subsection*{Theorems proved (14)}
+
+The reconstruction failure lemmas are proved from compactness +
+the Mergelyan witnesses:
+
 \begin{itemize}
-\item \texttt{rh\_pi1}: RH has a $\Pi_1$ form (Davis--Matiyasevich--Robinson 1976).
-\item \texttt{reflection}: $\Sigma_1$-completeness (Kaye 1991, Corollary~9.3).
-\end{itemize}
-Six are theorems of this paper, each proved from published tools
-(Perron's formula, Mergelyan's theorem, compactness of first-order logic):
-\begin{itemize}
-\item \texttt{canonical}: the canonical translation pair (Definition~1.7.11).
-\item \texttt{canonical\_pres}: preservation of provability under round-trip
-  (Lemma~1.5.6; Perron's formula).
-\item \texttt{canonical\_comp}: compositionality with negation.
-\item \texttt{canonical\_kernel}: $\Pi_1$-kernel preservation.
-\item \texttt{canonical\_disagreement\_rh}: linear reconstruction failure
-  (Lemma~1.10.2; compactness + Mergelyan witnesses).
-\item \texttt{canonical\_disagreement\_neg}: curved reconstruction failure
-  (Lemma~1.12.4 analog; compactness + analytic obstruction).
+\item \texttt{canonical\_disagreement\_rh} (Lemma~1.10.2):
+  proved from \texttt{compactness} + \texttt{mergelyan\_witness\_rh}.
+  The proof applies compactness to
+  $\mathrm{Th}_{\mathrm{Arith}}(\mathrm{ZFC}) \cup \{\mathrm{RH}_L\}
+  \cup \{\neg R_L(\mathrm{RH}_L)\}$,
+  using finite satisfiability from the Mergelyan witnesses.
+\item \texttt{canonical\_disagreement\_neg} (Lemma~1.12.4):
+  proved symmetrically.
 \end{itemize}
 
-\subsection*{Main theorems proved}
+The main results follow:
 
 \begin{itemize}
 \item \texttt{RH\_not\_provable}: $\mathrm{ZFC} \nvdash \mathrm{RH}_L$.
   Contrapositive of preservation against the disagreement model (3~lines).
-\item \texttt{neg\_RH\_not\_provable}: $\mathrm{ZFC} \nvdash \neg\mathrm{RH}_L$.
-\item \texttt{RH\_independent}: ZFC-undecidability of RH (Corollary~1.13.2).
+\item \texttt{neg\_RH\_not\_provable}: $\mathrm{ZFC} \nvdash
+  \neg\mathrm{RH}_L$.
+\item \texttt{RH\_independent}: ZFC-undecidability of RH
+  (Corollary~1.13.2).
 \item \texttt{RH\_true\_in\_N}: $\mathbb{N} \models \mathrm{RH}_L$
   (Theorem~1.18.3).
 \end{itemize}
@@ -2630,7 +2654,7 @@ The connection to the $\Lambda$-sound framework is also formalized:
 \texttt{no\_lambda\_sound\_of\_provable} are all proved as theorems.
 
 \texttt{\#print axioms RH.Paper.RH\_true\_in\_N} reports only the
-8~axioms above plus Lean's built-in \texttt{propext},
+9~published axioms above plus Lean's built-in \texttt{propext},
 \texttt{Classical.choice}, and \texttt{Quot.sound}.
 
 \end{document}
