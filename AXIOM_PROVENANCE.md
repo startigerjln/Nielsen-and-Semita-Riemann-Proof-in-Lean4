@@ -14,6 +14,8 @@ Section and theorem numbers below refer to Nielsen and Semita's
 | `Model.sat_vacuous_precision` | A nonempty model. Adding a universal precision variable unused by the matrix preserves satisfaction. |
 | `Model.sat_precision_of_completeTheory` | The precision sentence holds in ℕ and the model satisfies the complete theory of ℕ. This verifies that adjoining a nonstandard parameter using the complete theory alone cannot give a failing check. |
 | `not_finitely_satisfied_in_N` | The precision sentence holds in ℕ. The singleton containing its negation cannot be satisfied in ℕ. |
+| `finitely_satisfiable_neg_iff_not_provable` | None. Adjoining the negation of a sentence is finitely satisfiable exactly when the original theory does not entail the sentence. |
+| `precision_shape_does_not_imply_finite_satisfiability` | None. For any two-variable matrix `check`, the matrix `check → check` gives a precision sentence whose negation is unsatisfiable over any arithmetic theory. |
 | `round_trip_failure_of_finite_satisfiability` | Finite satisfiability of the theory with the negated round trip added, using Mathlib's compactness theorem |
 | `RH_not_provable_of_finite_precision_failure` | The round trip is equivalent over the target theory to the abstract precision sentence, preservation holds for RH_L, and adjoining the negated precision sentence is finitely satisfiable. |
 | `RH_not_provable` | Preservation for RH_L (Lemma 1.5.6) and failure in a model of the target theory (Lemma 1.10.2 and Corollary 1.7.14) |
@@ -41,5 +43,8 @@ Its matrix is a parameter. The linear deduction uses the round-trip
 equivalence and preservation for that parameter. The remaining step in
 Lemma 1.10.2 is to prove finite satisfiability with the failing check
 included. The standard model cannot satisfy that check if it satisfies
-the universal precision sentence. The analytic obstruction in
+the universal precision sentence. Over the target theory this finite
+satisfiability claim is equivalent to non-entailment of the precision
+sentence. The quantifier shape alone gives neither, as the example
+`∀ n k, (check n k → check n k)` shows. The analytic obstruction in
 Lemma 1.12.4 also remains open here.

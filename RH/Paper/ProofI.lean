@@ -156,6 +156,47 @@ theorem sentence_failure_of_finite_satisfiability {φ : Sent}
   exact Language.Theory.realize_sentence_of_mem (M := N.Carrier)
     (T := T) (Set.mem_insert_of_mem _ hψ)
 
+/-- The finite-satisfiability claim is equivalent to non-entailment of
+    the sentence over the target theory. Every arithmetic model is
+    nonempty because it interprets the constant zero. -/
+theorem finitely_satisfiable_neg_iff_not_provable (φ : Sent) :
+    (insert (neg φ) S.T).IsFinitelySatisfiable ↔ ¬ S.Prov φ := by
+  classical
+  constructor
+  · intro finite hprov
+    obtain ⟨M, hM, hfail⟩ := sentence_failure_of_finite_satisfiability S finite
+    exact hfail (hprov M hM)
+  · intro hnot
+    have witness : ∃ M : Model, S.ZFCModel M ∧ ¬ M.Sat φ := by
+      by_contra h
+      apply hnot
+      intro M hM
+      exact Classical.byContradiction (fun hfail => h ⟨M, hM, hfail⟩)
+    obtain ⟨M, hM, hfail⟩ := witness
+    letI : L.Structure M.carrier := M.str
+    letI : Nonempty M.carrier := ⟨M.str.funMap zeroFunc (fun i => Fin.elim0 i)⟩
+    let T := insert (neg φ) S.T
+    letI : T.Model M.carrier :=
+      ⟨fun ψ hψ => by
+        rcases Set.mem_insert_iff.mp hψ with hneg | hbase
+        · subst ψ
+          exact (M.sat_neg φ).mpr hfail
+        · exact hM ψ hbase⟩
+    exact (Language.Theory.Model.isSatisfiable (T := T) M.carrier).isFinitelySatisfiable
+
+/-- A two-variable precision matrix can succeed at every input in every
+    model. Its quantifier shape gives no counterexample, even at a
+    nonstandard input. -/
+theorem precision_shape_does_not_imply_finite_satisfiability
+    (check : L.BoundedFormula Empty 2) :
+    ¬ (insert (neg (precisionSentence (check.imp check))) S.T).IsFinitelySatisfiable := by
+  intro finite
+  apply (finitely_satisfiable_neg_iff_not_provable S _).mp finite
+  intro M _
+  letI : L.Structure M.carrier := M.str
+  change ∀ n k : M.carrier, check.Realize _ _ → check.Realize _ _
+  exact fun _ _ h => h
+
 theorem round_trip_failure_of_finite_satisfiability {τ : TranslationPair} {φ : Sent}
     (finite : (insert (neg (τ.RL φ)) S.T).IsFinitelySatisfiable) :
     S.RoundTripFails τ φ :=
