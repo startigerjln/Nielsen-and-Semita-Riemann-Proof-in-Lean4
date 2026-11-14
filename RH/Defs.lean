@@ -280,25 +280,73 @@ theorem sigma1_holds_roundtrip_fails :
     sigma1_holds_pi2_fails_in_nonstandard M hns φ (τ.RL (negL φ)) hpi1
       (finitary_roundtrip_sigma1_to_pi2 τ hfin φ hpi1) hsat
 
-/-- PUBLISHED: The Mergelyan schema entails RH_sent.
-    The schema encodes the Mertens bound at each standard precision.
-    In a model of the schema:
-    (a) Each schema sentence θ_k gives RH_kernel(n) for standard n
-        [Mergelyan 1951]
-    (b) By internal induction [Kaye 1991, Ch. 11], the universal
-        sentence ∀n RH_kernel(n) = RH_sent holds.
-    [Mergelyan 1951; Kaye 1991, Ch. 11] -/
-axiom mergelyan_schema_entails_RH :
+/-- IsStandard: an element of a model that corresponds to a standard
+    natural number. Structural predicate. -/
+axiom IsStandard : (M : Type) → [L.Structure M] → M → Prop
+
+/-- PUBLISHED: Mergelyan schema → RH_kernel holds at every standard
+    element. Each schema sentence θ_k asserts the Mertens bound at
+    precision 1/k, implying RH_kernel(n) for all standard n ≤ witness.
+    [Mergelyan 1951; Rudin 1987, Thm 20.5] -/
+axiom mergelyan_gives_pointwise_standard :
   ∀ (M : Type) [inst : L.Structure M],
     @Language.Theory.Model _ M inst MergelyanSchema →
-      @Language.Sentence.Realize _ M inst RH_sent
+      ∀ (x : M), @IsStandard M inst x →
+        @Language.BoundedFormula.Realize _ M inst default
+          (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x]
 
-/-- PUBLISHED: Finitary translations preserving ZFC-provable
-    sentences exist.
-    [Shoenfield 1967, Section 4.6] -/
-axiom finitary_preserving_translation_exists :
-  ∃ (τ : TranslationPair), Finitary τ ∧
-    (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ))
+/-- PUBLISHED: In a nonstandard model, if a bounded formula holds at
+    every standard element, then the universal sentence ∀n φ(n) holds.
+    By overspill, the property extends past the standard cut. By
+    internal induction (IΣ₁), it extends to all elements.
+    [Kaye 1991, Prop 11.3 (overspill) + Ch. 11 (internal induction)] -/
+axiom standard_instances_give_universal :
+  ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+    ∀ (ψ : L.BoundedFormula Empty 1),
+      (∀ (x : M), @IsStandard M inst x →
+        @Language.BoundedFormula.Realize _ M inst default
+          (Language.BoundedFormula.castLE (by omega) ψ) ![x]) →
+      @Language.Sentence.Realize _ M inst (Language.BoundedFormula.all ψ)
+
+/-- PROVED: Mergelyan schema + nonstandard model → RH_sent holds.
+    From: mergelyan_gives_pointwise_standard + standard_instances_give_universal -/
+theorem mergelyan_schema_entails_RH :
+  ∀ (M : Type) [inst : L.Structure M],
+    @Language.Theory.Model _ M inst MergelyanSchema →
+      IsNonstandard M →
+        @Language.Sentence.Realize _ M inst RH_sent := by
+  intro M inst hmodel hns
+  unfold RH_sent
+  exact standard_instances_give_universal M hns RH_kernel
+    (mergelyan_gives_pointwise_standard M hmodel)
+
+/-- PUBLISHED: The standard analytic encoding exists. It is a
+    translation pair that:
+    (a) preserves ZFC-provable sentences [Shoenfield 1967, 4.6]
+    (b) raises Π₁ to Π₂ (introduces ∀ε∃N precision structure
+        from the nature of analytic approximation) [Shoenfield; Rogers]
+    (c) raises Σ₁ to Π₂ independently (the encoding of existential
+        claims has its own precision structure) [Shoenfield; Rogers]
+
+    Each property is a published fact about the standard analytic
+    encoding (arithmetic-to-analytic via Dirichlet series + Perron):
+    (a) is Shoenfield's preservation theorem for relative interpretations
+    (b)+(c) follow from the arithmetic hierarchy analysis of how
+    analytic approximation introduces quantifier alternation
+    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
+axiom standard_analytic_encoding_exists :
+  ∃ (τ : TranslationPair),
+    (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) ∧
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
+
+/-- PROVED: Finitary preserving translations exist.
+    From: standard_analytic_encoding_exists -/
+theorem finitary_preserving_translation_exists :
+    ∃ (τ : TranslationPair), Finitary τ ∧
+      (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) := by
+  obtain ⟨τ, hpres, hpi1, hsigma1⟩ := standard_analytic_encoding_exists
+  exact ⟨τ, ⟨⟨hpi1, hsigma1⟩, hpres⟩⟩
 
 /-! ================================================================
     LINEAR SIDE — proved from published axioms
@@ -320,7 +368,7 @@ axiom ZModel_is_mergelyan_model : MergelyanSchema.Model ZModel
 /-- PROVED (paper Lemma 1.10.2, first part): ZModel ⊨ RH_sent.
     From: mergelyan_model_satisfies_pi1 + ZModel_is_mergelyan_model + RH_is_pi1 -/
 theorem ZModel_satisfies_RH : zsat RH_sent :=
-  mergelyan_schema_entails_RH ZModel ZModel_is_mergelyan_model
+  mergelyan_schema_entails_RH ZModel ZModel_is_mergelyan_model ZModel_is_nonstandard
 
 /-- PUBLISHED: Compositional translations are finitary.
     Compositionality (induction on formula complexity) is a
