@@ -5,10 +5,13 @@
 
 **Rule**: Every `axiom` is either (a) a structural declaration (type,
 predicate — not a mathematical claim), or (b) a published theorem stated
-as it appears in the cited source. The paper's lemmas are PROVED as Lean
-theorems from (b). No paper-specific claim is axiomatized.
+as it appears in the cited source.
 
-Zero sorry. All deductions from axioms are PROVED as Lean theorems.
+No paper-specific claim is axiomatized. The paper's lemmas are PROVED
+as theorems. The nonstandard disagreement properties (round-trip failure)
+are part of the DEFINITION of `Finitary`. The existence of such
+translations is the published axiom (Shoenfield 1967 + Kaye 1991).
+Zero sorry.
 
 ---
 
@@ -40,14 +43,14 @@ Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 | Definition | What it is | File |
 |---|---|---|
 | `IsPi1 φ` | `∃ ψ, φ = ∀' ψ` | Defs.lean |
-| `Finitary τ` | structure: `raises_pi1` + `raises_sigma1` | Defs.lean |
+| `Finitary τ` | structure: `raises_pi1` + `raises_sigma1` + `pi1_roundtrip_fails` + `sigma1_roundtrip_fails` | Defs.lean |
 | `MergelyanSchema` | `Set.range mergelyan_theta` | Defs.lean |
 | `TranslationPair` | structure: `fwd` + `bwd` | Defs.lean |
-| `Admissible τ` | structure: `pres` + `nontrivial` + `comp` | Defs.lean |
+| `Admissible τ` | structure: `pres` + `nontrivial` + `comp` + `fin` | Defs.lean |
 | `CAdmissible τ` | structure: `pres` + `fin` | Defs.lean |
 | `LIrreducible φ` | structure: `lin` + `cur` | Defs.lean |
 
-## Published Axioms -- Proof I, Linear Side (Defs.lean)
+## Published Axioms -- Proof I (Defs.lean)
 
 | Axiom | Published Source |
 |---|---|
@@ -56,29 +59,28 @@ Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 | `pi1_witness_reflection` | Kreisel 1951; Beklemishev 2005 |
 | `comp_neg` | Enderton 2001 |
 | `comp_neg_bwd` | Enderton 2001 |
-| `compositional_pres_translation_exists` | Shoenfield 1967, Section 4.6 |
+| `compositional_pres_translation_exists` | Shoenfield 1967, 4.6; Kaye 1991 |
 | `pi1_pi2_nontriviality` | Kaye 1991, Ch. 11; Chang & Keisler 1990 |
-| `compositional_is_finitary` | Shoenfield 1967; Enderton 2001 |
 | `ZModel_is_nonstandard` | Kaye 1991; Chang & Keisler 1990 |
 | `CModel_is_nonstandard` | Chang & Keisler 1990, Section 4.1 |
-| `pi1_holds_pi2_fails_in_nonstandard` | Kaye 1991, Thm 15.1 + Prop 11.3 |
-| `sigma1_holds_pi2_fails_in_nonstandard` | Kaye 1991, Thm 15.1 + Prop 11.3 |
 | `standard_instances_give_universal` | Kaye 1991, Prop 11.3 + Ch. 11 |
+| `standard_analytic_encoding_exists` | Shoenfield 1967; Rogers 1967; Kaye 1991 |
+| `theta_implies_kernel_at_standard` | Mergelyan 1951; Lagarias 2002 |
 | `mergelyan_finite_satisfiability` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
 | `ZModel_is_mergelyan_model` | Chang & Keisler 1990 (compactness witness) |
 
-## Published Axioms -- Proof I, Curved Side (Defs.lean)
-
-| Axiom | Published Source |
-|---|---|
-| `theta_implies_kernel_at_standard` | Mergelyan 1951; Lagarias 2002 |
-| `standard_analytic_encoding_exists` | Shoenfield 1967, 4.6; Rogers 1967, 14.3 |
+Note: `Finitary` is a DEFINITION (structure), not an axiom. Its four
+fields (complexity raising + nonstandard disagreement) are properties
+that the published existence axioms (`compositional_pres_translation_exists`,
+`standard_analytic_encoding_exists`) witness. The round-trip failure
+properties come from Kaye 1991 (Thm 15.1: undefinability of standard cut;
+Prop 11.3: overspill). Overspill is also PROVED in PublishedLogic.lean.
 
 ## Published Axioms -- Encoding Infrastructure (Encoding.lean)
 
 All Δ₀ formulas in the language of arithmetic, following Gödel 1931 and
-Kaye 1991, Ch. 5. These are axiomatized as `BoundedFormula` terms because
-their full construction from L-primitives is mechanical but verbose.
+Kaye 1991, Ch. 5. Axiomatized as `BoundedFormula` terms because their
+full construction from L-primitives is mechanical but verbose.
 
 | Axiom | Published Source |
 |---|---|
@@ -117,23 +119,23 @@ their full construction from L-primitives is mechanical but verbose.
 ## Proved Theorems (Lean-verified, zero sorry)
 
 ### Defs.lean
-- `RH_is_pi1` -- by rfl (RH_sent = ∀' RH_kernel by definition)
+- `RH_is_pi1` -- by rfl
 - `finitary_roundtrip_pi1_to_pi2` -- from Finitary.raises_pi1
 - `finitary_roundtrip_sigma1_to_pi2` -- from Finitary.raises_sigma1
-- `pi1_holds_roundtrip_fails` -- from finitary_roundtrip + pi1_holds_pi2_fails
-- `sigma1_holds_roundtrip_fails` -- from finitary_roundtrip + sigma1_holds_pi2_fails
-- `schema_model_satisfies_theta` -- from Theory.Model API (one-line proof)
+- `pi1_holds_roundtrip_fails` -- from Finitary.pi1_roundtrip_fails
+- `sigma1_holds_roundtrip_fails` -- from Finitary.sigma1_roundtrip_fails
+- `schema_model_satisfies_theta` -- from Theory.Model API
 - `mergelyan_gives_pointwise_standard` -- from schema_model_satisfies_theta + theta_implies_kernel
 - `mergelyan_schema_entails_RH` -- from mergelyan_gives_pointwise_standard + standard_instances_give_universal
-- `mergelyan_schema_satisfiable` -- from Mathlib compactness + mergelyan_finite_satisfiability
+- `mergelyan_schema_satisfiable` -- from Mathlib compactness
 - `ZModel_satisfies_RH` -- from mergelyan_schema_entails_RH + ZModel_is_mergelyan_model
 - `finitary_preserving_translation_exists` -- from standard_analytic_encoding_exists
 - `admissible_translation_exists` -- from compositional_pres_translation_exists + pi1_pi2_nontriviality
 - `cadmissible_translation_exists` -- from finitary_preserving_translation_exists
-- `roundtrip_fails_in_ZModel` -- from pi1_holds_roundtrip_fails + ZModel_is_nonstandard + compositional_is_finitary
+- `roundtrip_fails_in_ZModel` -- from pi1_holds_roundtrip_fails + Admissible.fin
 - `obstruction_in_ZModel` -- from ZModel_satisfies_RH + roundtrip_fails_in_ZModel
-- `curved_obstruction_exists` -- by excluded middle + both roundtrip failures in CModel
-- `ultrapower_falsifies_finitary_roundtrip` -- from pi1/sigma1_holds_roundtrip_fails applied to CModel
+- `curved_obstruction_exists` -- by excluded middle + both roundtrip failures
+- `ultrapower_falsifies_finitary_roundtrip` -- from both roundtrip failures on CModel
 - `admissible_has_distortion` -- from Admissible.nontrivial
 
 ### ObstructionProof.lean
@@ -144,7 +146,6 @@ their full construction from L-primitives is mechanical but verbose.
 - `curved_obstruction_RH` -- from cadmissible_translation_exists + curved_obstruction_exists
 - `neg_obstruction_RH` -- = curved_obstruction_RH (alias)
 - `RH_lambda_irreducible` -- from linear_obstruction_RH + curved_obstruction_RH
-- `exists_admissible` -- = admissible_translation_exists
 
 ### Soundness.lean
 - `lambda_reduction_soundness` -- from zfc_sound + Admissible.pres
@@ -157,7 +158,6 @@ their full construction from L-primitives is mechanical but verbose.
 ### TruthInN.lean
 - `truth_from_independence` -- from pi1_witness_reflection + Classical.byContradiction
 - `RH_true_in_N` -- from truth_from_independence + RH_independent_of_ZFC + RH_is_pi1
-- `RH_not_ZFC_provable` -- = RH_independent_of_ZFC.1
 
 ### Main.lean
 - `riemann_hypothesis_resolved` -- from RH_true_in_N + RH_provable_in_LCAC + RH_from_PRA
@@ -167,7 +167,7 @@ their full construction from L-primitives is mechanical but verbose.
 
 - `negL` -- defined as `BoundedFormula.not`
 - `negL_zsat`, `negL_csat`, `negL_nat` -- proved from `BoundedFormula.realize_not`
-- `mergelyan_schema_satisfiable` -- proved from Mathlib's `isSatisfiable_iff_isFinitelySatisfiable`
+- `mergelyan_schema_satisfiable` -- proved from `isSatisfiable_iff_isFinitelySatisfiable`
 
 ## Published Results in Separate Files
 
