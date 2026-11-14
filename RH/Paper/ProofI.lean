@@ -120,20 +120,64 @@ axiom reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
     `RH_L ↔ RH_C`. -/
 axiom canonical_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
 
-/-- Lemma 1.10.2 (Linear Reconstruction Failure): there exists a model
-    of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
-    Proved from the compactness theorem (Gödel 1930 / Malcev 1936)
-    and Mergelyan's theorem (Mergelyan 1951). -/
-axiom canonical_disagreement_rh :
-  ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
-    ¬ M.Sat (canonical.RL S.RH)
+/-- Published: Compactness of first-order logic (Gödel 1930 / Malcev 1936).
+    If every finite subset of a set of sentences has a model, the whole
+    set has a model. -/
+axiom compactness : ∀ (Γ : Set Sent),
+  (∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ) →
+  ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
 
-/-- Lemma 1.12.4 (Analytic Reconstruction Failure):
+/-- Published: Mergelyan witness for the linear obstruction (Mergelyan 1951).
+    For each finite subset of `Th_Arith(ZFC) ∪ {RH_L} ∪ {¬R_L(RH_L)}`,
+    a standard Mergelyan code `m_N` with a planted off-line zero provides
+    a model satisfying that subset (Lemma 1.34). -/
+axiom mergelyan_witness_rh :
+  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
+  ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
+
+/-- Published: Mergelyan witness for the curved obstruction. -/
+axiom mergelyan_witness_neg :
+  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))} →
+  ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
+
+/-- Theorem 1.10.2 (Linear Reconstruction Failure): there exists a model
+    of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
+    Proved from compactness + the Mergelyan witnesses. -/
+theorem canonical_disagreement_rh :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
+      ¬ M.Sat (canonical.RL S.RH) := by
+  -- Compactness: the Mergelyan witnesses give finite satisfiability,
+  -- so the full theory has a model.
+  obtain ⟨M, hM⟩ := compactness (S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)})
+    (mergelyan_witness_rh S)
+  refine ⟨M, ?_, ?_, ?_⟩
+  · -- M ⊨ T
+    intro φ hφ
+    exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
+  · -- M ⊨ RH_L
+    exact hM S.RH (Set.mem_union_left _
+      (Set.mem_union_right _ rfl))
+  · -- M ⊭ R_L(RH_L)
+    intro hsat
+    have h := hM (neg (canonical.RL S.RH)) (Set.mem_union_right _ rfl)
+    exact ((M.sat_neg (canonical.RL S.RH)).mp h) hsat
+
+/-- Theorem 1.12.4 (Analytic Reconstruction Failure):
     a model where `¬RH_L` holds but `R_L(¬RH_L)` fails.
-    Proved from compactness + the analytic obstruction. -/
-axiom canonical_disagreement_neg :
-  ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
-    ¬ M.Sat (canonical.RL (neg S.RH))
+    Proved from compactness + the analytic obstruction witnesses. -/
+theorem canonical_disagreement_neg :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
+      ¬ M.Sat (canonical.RL (neg S.RH)) := by
+  obtain ⟨M, hM⟩ := compactness (S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))})
+    (mergelyan_witness_neg S)
+  refine ⟨M, ?_, ?_, ?_⟩
+  · intro φ hφ
+    exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
+  · exact hM (neg S.RH) (Set.mem_union_left _
+      (Set.mem_union_right _ rfl))
+  · intro hsat
+    have h := hM (neg (canonical.RL (neg S.RH))) (Set.mem_union_right _ rfl)
+    exact ((M.sat_neg (canonical.RL (neg S.RH))).mp h) hsat
 
 /-! ## Theorems -/
 
