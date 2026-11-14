@@ -70,6 +70,50 @@ def Setting.Disagrees (S : Setting) (τ : TranslationPair) (φ : Sent) : Prop :=
 
 /-! ## Theorems -/
 
+/-- The first-order shape in Lemma 1.7.12. The variables are the candidate
+    zero index and the precision, in that order. -/
+def precisionSentence (check : L.BoundedFormula Empty 2) : Sent :=
+  check.all.all
+
+/-- Failure of the precision sentence supplies an actual failing pair
+    in the model. -/
+theorem Model.not_sat_precisionSentence (M : Model)
+    (check : L.BoundedFormula Empty 2) :
+    ¬ M.Sat (precisionSentence check) ↔
+      ∃ n k : M.carrier, ¬ @Language.BoundedFormula.Realize L M.carrier M.str
+        Empty 2 check (fun e => Empty.elim e) (Fin.snoc (Fin.snoc Fin.elim0 n) k) := by
+  classical
+  letI := M.str
+  change (¬ ∀ n k : M.carrier, check.Realize (default : Empty → M.carrier)
+    (Fin.snoc (Fin.snoc (default : Fin 0 → M.carrier) n) k)) ↔ _
+  have emptyAssignment : (default : Empty → M.carrier) = fun e => Empty.elim e :=
+    funext Empty.elim
+  have noBoundVariables : (default : Fin 0 → M.carrier) = Fin.elim0 :=
+    funext Fin.elim0
+  rw [emptyAssignment, noBoundVariables]
+  simp only [not_forall]
+
+/-- An extra unbounded universal variable alone can leave the truth
+    value unchanged. This applies to nonstandard models as well. -/
+theorem Model.sat_vacuous_precision (M : Model) (check : L.BoundedFormula Empty 1)
+    [Nonempty M.carrier] :
+    M.Sat (precisionSentence (check.liftAt 1 1)) ↔ M.Sat check.all := by
+  letI := M.str
+  change (∀ n : M.carrier, ((check.liftAt 1 1).all).Realize
+    (default : Empty → M.carrier) (Fin.snoc (default : Fin 0 → M.carrier) n)) ↔
+    ∀ n : M.carrier, check.Realize (default : Empty → M.carrier)
+      (Fin.snoc (default : Fin 0 → M.carrier) n)
+  simp only [Language.BoundedFormula.realize_all_liftAt_one_self]
+
+/-- If the standard model satisfies the precision sentence, any model of
+    its complete theory satisfies it too. A nonstandard element by itself
+    cannot witness the failure required by Lemma 1.10.2. -/
+theorem Model.sat_precision_of_completeTheory (M : Model)
+    (hM : ∀ φ ∈ L.completeTheory ℕ, M.Sat φ)
+    (check : L.BoundedFormula Empty 2) (hcheck : TrueInN (precisionSentence check)) :
+    M.Sat (precisionSentence check) :=
+  hM _ (Language.mem_completeTheory.mpr hcheck)
+
 /-- Mathlib's compactness theorem applied to the theory containing the
     negation of the round trip. -/
 theorem round_trip_failure_of_finite_satisfiability {τ : TranslationPair} {φ : Sent}

@@ -10,6 +10,9 @@ Section and theorem numbers below refer to Nielsen and Semita's
 
 | Deduction | Explicit premises |
 |---|---|
+| `Model.not_sat_precisionSentence` | None. Failure of the sentence in Lemma 1.7.12 is equivalent to the existence of a candidate index and precision at which the matrix fails. |
+| `Model.sat_vacuous_precision` | A nonempty model. Adding a universal precision variable unused by the matrix preserves satisfaction. |
+| `Model.sat_precision_of_completeTheory` | The precision sentence holds in ℕ and the model satisfies the complete theory of ℕ. This verifies that adjoining a nonstandard parameter using the complete theory alone cannot give a failing check. |
 | `round_trip_failure_of_finite_satisfiability` | Finite satisfiability of the theory with the negated round trip added, using Mathlib's compactness theorem |
 | `RH_not_provable` | Preservation for RH_L (Lemma 1.5.6) and failure in a model of the target theory (Lemma 1.10.2 and Corollary 1.7.14) |
 | `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L in the target theory |
@@ -31,6 +34,10 @@ disagreement premise is used to refute the biconditional.
 `TranslationPair` supplies two maps on arithmetic syntax. The manuscript's
 canonical pair is defined on the RH fragment (Definitions 1.7.10–1.7.11).
 Its arithmetic round trip has a precision parameter (Lemma 1.7.12).
+The Lean definition `precisionSentence` captures the quantifier shape.
+Its matrix is a parameter. In Lemma 1.10.2, each finite fragment that
+contains the asserted failing check still needs a model realizing that
+failure. Introducing a nonstandard parameter supplies no such proof.
 Applying the deductions to RH requires implementing that fragment and
 the two maps, defining the precision predicate, and proving preservation
 and the obstruction lemmas for those definitions. The arithmetic theorem
