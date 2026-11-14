@@ -96,6 +96,13 @@ structure LambdaSound (τ : TranslationPair) : Prop where
     M.Sat (τ.toC φ) → M.Sat (τ.RC (τ.toC φ))
   /-- (4) Π₁-kernel preservation, at the level of truth in ℕ. -/
   kernel : ∀ φ, IsPi1 φ → (TrueInN φ ↔ TrueInN (τ.RL φ))
+  /-- Compositionality (Remark on definitional translations; Remark on the
+      Lean formalization of admissibility): both maps commute with negation. -/
+  comp : ∀ φ, τ.toC (neg φ) = neg (τ.toC φ) ∧ τ.toL (neg φ) = neg (τ.toL φ)
+  /-- Semantic non-triviality (Remark on the Lean formalization of
+      admissibility): the round trip is not truth-preserving on every
+      sentence in every linear model. This excludes the identity pair. -/
+  nontrivial : ¬ ∀ φ M, S.Lin M → (M.Sat φ ↔ M.Sat (τ.RL φ))
 
 /-- Linear Λ-obstruction is nonzero: some linear model separates `φ` from
     its round trip (Definition 1.5.3). -/
