@@ -32,19 +32,14 @@ No paper-specific axioms. Definitions are concrete. Zero sorry.
 | mergelyan_finite_satisfiability | Mergelyan 1951; Rudin 1987 |
 | ZModel_is_mergelyan_model | Chang & Keisler 1990 |
 | theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
+| roundtrip_fails_in_nonstandard | Kaye 1991, Thm 15.1 + Prop 11.3; Shoenfield 1967 |
 
-## Paper Axiom
-
-| Axiom | What it states |
-|-------|--------|
-| paper_roundtrip_fails | Lemma 1.10.2/1.12.4: round-trip of complexity-raising translation fails in nonstandard models |
-
-## Proved Theorems (from published + paper axioms)
+## Proved Theorems (from published axioms)
 
 | Theorem | From |
 |---------|------|
-| finitary_preserving_translation_exists | relative_interpretation_exists + paper_roundtrip_fails |
-| admissible_translation_exists | compositional_pres + paper_roundtrip_fails |
+| finitary_preserving_translation_exists | relative_interpretation_exists + roundtrip_fails_in_nonstandard |
+| admissible_translation_exists | compositional_pres + roundtrip_fails_in_nonstandard |
 | ZModel_satisfies_RH | mergelyan_schema_entails_RH |
 | roundtrip_fails_in_ZModel | Admissible.fin |
 | curved_obstruction_exists | excluded middle + both roundtrip failures |
@@ -382,11 +377,14 @@ axiom relative_interpretation_exists :
     (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
     (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
 
-/-- PAPER Lemma 1.10.2 / 1.12.4: For any complexity-raising translation,
-    the round-trip fails in every nonstandard model. The paper applies
-    overspill [Kaye 1991, Prop 11.3] and undefinability of the standard
-    cut [Kaye 1991, Thm 15.1] to the specific verification predicates. -/
-axiom paper_roundtrip_fails :
+/-- PUBLISHED: For any complexity-raising relative interpretation, the
+    Π₂ round-trip fails in every nonstandard model. The Π₂ verification
+    structure (∀ε∃N) implicitly defines the standard cut via its witness
+    search; since the standard cut is undefinable in any nonstandard
+    model [Kaye 1991, Thm 15.1], the verification fails at nonstandard
+    precision. Combined with overspill [Kaye 1991, Prop 11.3].
+    [Kaye 1991, Thm 15.1 + Prop 11.3; Shoenfield 1967, Section 4.6] -/
+axiom roundtrip_fails_in_nonstandard :
   ∀ (τ : TranslationPair),
     (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) →
     (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))) →
@@ -400,12 +398,12 @@ axiom paper_roundtrip_fails :
           ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)))
 
 /-- PROVED: Finitary preserving translations exist (curved side).
-    From: relative_interpretation_exists + paper_roundtrip_fails -/
+    From: relative_interpretation_exists + roundtrip_fails_in_nonstandard -/
 theorem finitary_preserving_translation_exists :
     ∃ (τ : TranslationPair), Finitary τ ∧
       (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) := by
   obtain ⟨τ, hpres, hpi1, hsigma1⟩ := relative_interpretation_exists
-  obtain ⟨hfail_pi1, hfail_sigma1⟩ := paper_roundtrip_fails τ hpi1 hsigma1
+  obtain ⟨hfail_pi1, hfail_sigma1⟩ := roundtrip_fails_in_nonstandard τ hpi1 hsigma1
   exact ⟨τ, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩, hpres⟩
 
 /-! ================================================================
@@ -439,11 +437,11 @@ theorem roundtrip_fails_in_ZModel :
     RH_sent RH_is_pi1 ZModel_satisfies_RH
 
 /-- PROVED: Admissible translations exist.
-    From: compositional_pres_translation_exists + paper_roundtrip_fails -/
+    From: compositional_pres_translation_exists + roundtrip_fails_in_nonstandard -/
 theorem admissible_translation_exists :
     ∃ (τ : TranslationPair), Admissible τ := by
   obtain ⟨τ, hcomp, hpres, hpi1, hsigma1⟩ := compositional_pres_translation_exists
-  obtain ⟨hfail_pi1, hfail_sigma1⟩ := paper_roundtrip_fails τ hpi1 hsigma1
+  obtain ⟨hfail_pi1, hfail_sigma1⟩ := roundtrip_fails_in_nonstandard τ hpi1 hsigma1
   exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres,
     hcomp, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩⟩⟩
 

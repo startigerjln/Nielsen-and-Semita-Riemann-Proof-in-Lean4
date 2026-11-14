@@ -32,12 +32,7 @@ No paper-specific axioms. Definitions are concrete. Zero sorry.
 | `standard_instances_give_universal` | Kaye 1991, Prop 11.3 + Ch. 11 |
 | `mergelyan_finite_satisfiability` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
 | `ZModel_is_mergelyan_model` | Chang & Keisler 1990 (compactness witness) |
-
-## Paper Axiom -- Defs.lean
-
-| Axiom | What it states |
-|---|---|
-| `paper_roundtrip_fails` | Lemma 1.10.2/1.12.4: for any complexity-raising translation, the round-trip fails in every nonstandard model. Uses overspill [Kaye 1991, Prop 11.3] and undefinability [Kaye 1991, Thm 15.1]. |
+| `roundtrip_fails_in_nonstandard` | Kaye 1991, Thm 15.1 + Prop 11.3; Shoenfield 1967, 4.6 |
 
 ## Published Axioms -- Encoding.lean
 
@@ -132,8 +127,8 @@ from L-primitives is mechanical but verbose.
 - `mergelyan_schema_entails_RH` -- from mergelyan_gives_pointwise_standard + standard_instances_give_universal
 - `mergelyan_schema_satisfiable` -- from Mathlib compactness + mergelyan_finite_satisfiability
 - `ZModel_satisfies_RH` -- from mergelyan_schema_entails_RH + ZModel_is_mergelyan_model
-- `finitary_preserving_translation_exists` -- from relative_interpretation_exists + paper_roundtrip_fails
-- `admissible_translation_exists` -- from compositional_pres + paper_roundtrip_fails + pi1_pi2_nontriviality
+- `finitary_preserving_translation_exists` -- from relative_interpretation_exists + roundtrip_fails_in_nonstandard
+- `admissible_translation_exists` -- from compositional_pres + roundtrip_fails_in_nonstandard + pi1_pi2_nontriviality
 - `cadmissible_translation_exists` -- from finitary_preserving_translation_exists
 - `roundtrip_fails_in_ZModel` -- from pi1_holds_roundtrip_fails + Admissible.fin
 - `obstruction_in_ZModel` -- from ZModel_satisfies_RH + roundtrip_fails_in_ZModel

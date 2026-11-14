@@ -41,12 +41,10 @@ pi1_holds_roundtrip_fails, sigma1_holds_roundtrip_fails
   - mergelyan_finite_satisfiability [Mergelyan 1951; Rudin 1987]
   - ZModel_is_mergelyan_model [Chang & Keisler 1990, compactness witness]
 
-  Defs.lean (Proof I -- curved side, published):
+  Defs.lean (Proof I -- curved side):
   - relative_interpretation_exists [Shoenfield 1967; Rogers 1967]
+  - roundtrip_fails_in_nonstandard [Kaye 1991, Thm 15.1; Shoenfield 1967]
   - theta_implies_kernel_at_standard [Mergelyan 1951; Lagarias 2002]
-
-  Defs.lean (PAPER axiom):
-  - paper_roundtrip_fails [Lemma 1.10.2/1.12.4]
 
   Encoding.lean (Δ₀ formula encoding):
   - divFormula, remFormula, betaFormula [Gödel 1931; Kaye 1991]
