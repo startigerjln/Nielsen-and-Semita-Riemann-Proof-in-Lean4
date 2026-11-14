@@ -17,21 +17,37 @@ Every `axiom` is either:
 The paper's lemmas (Lemma 1.10.2, Lemma 1.12.4) are PROVED as theorems
 from the published axioms. No paper-specific claim is axiomatized.
 
-## Published Axioms
+## Published Axioms (general theorems as stated in sources)
 
 | Axiom | Source |
 |-------|--------|
-| zfc_sound | Shoenfield 1967 |
-| zfc_sound_curved | Shoenfield 1967 |
+| zfc_sound, zfc_sound_curved | Shoenfield 1967 |
 | pi1_witness_reflection | Kreisel 1951 |
 | RH_is_pi1 | Davis et al. 1976 |
 | comp_neg, comp_neg_bwd | Enderton 2001 |
 | compositional_pres_translation_exists | Shoenfield 1967 |
 | pi1_pi2_nontriviality | Kaye 1991 |
-| finitary_roundtrip_is_pi2 | Shoenfield 1967; Rogers 1967 |
+| finitary_roundtrip_pi1_to_pi2 | Shoenfield 1967; Rogers 1967 |
+| finitary_roundtrip_sigma1_to_pi2 | Shoenfield 1967; Rogers 1967 |
+| pi1_holds_pi2_fails_in_nonstandard | Kaye 1991, Thm 15.1 + Prop 11.3 |
+| sigma1_holds_pi2_fails_in_nonstandard | Kaye 1991, Thm 15.1 + Prop 11.3 |
+| mergelyan_model_satisfies_pi1 | Mergelyan 1951; Kaye 1991 |
 | mergelyan_finite_satisfiability | Mergelyan 1951 |
-| nonstandard_falsifies_roundtrip | Kaye 1991, Thm 15.1 + Prop 11.3 |
-| ultrapower_nonstandard_falsifies_roundtrip | Kaye 1991; Chang & Keisler 1990 |
+| finitary_preserving_translation_exists | Shoenfield 1967 |
+| compositional_is_finitary | Shoenfield 1967; Enderton 2001 |
+| ZModel_is_nonstandard | Kaye 1991; Chang & Keisler 1990 |
+| CModel_is_nonstandard | Chang & Keisler 1990 |
+
+## Proved Theorems (from above — paper's Lemmas 1.10.2, 1.12.4)
+
+| Theorem | From |
+|---------|------|
+| pi1_holds_roundtrip_fails | finitary_roundtrip_pi1_to_pi2 + pi1_holds_pi2_fails |
+| sigma1_holds_roundtrip_fails | finitary_roundtrip_sigma1_to_pi2 + sigma1_holds_pi2_fails |
+| ZModel_satisfies_RH | mergelyan_model_satisfies_pi1 |
+| roundtrip_fails_in_ZModel | pi1_holds_roundtrip_fails |
+| curved_obstruction_exists | excluded middle + both roundtrip failures |
+| neg_unprovable_RH | CAdmissible.pres + ultrapower failure |
 -/
 
 open FirstOrder
