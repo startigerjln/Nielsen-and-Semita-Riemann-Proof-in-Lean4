@@ -12,7 +12,7 @@ through a separate route from Proof I.
       models of ZFC+LCAC, because the analytic reconstruction
       predicate for zeta is Sigma12 [Woodin 1999]
   (3) With all models agreeing, ZFC+LCAC proves RH
-      [Woodin 1999; Feferman 1960; paper Section 2.7]
+      [Woodin 1999; Feferman 1960]
 
 This does NOT require first establishing independence (Proof I)
 or truth in N (TruthInN). It is a direct consequence of large
@@ -36,7 +36,7 @@ axiom WoodinAbs : Prop
 axiom woodin_abs_under_LCAC : WoodinAbs
 
 /-- Under Sigma12 absoluteness, ZFC+LCAC proves RH.
-    [Woodin 1999, Theorem 3.17; Feferman 1960; paper Section 2.7]
+    [Woodin 1999, Theorem 3.17; Feferman 1960]
 
     The argument: Sigma12 absoluteness (from a Woodin cardinal)
     forces all models of ZFC+LCAC to agree on the analytic

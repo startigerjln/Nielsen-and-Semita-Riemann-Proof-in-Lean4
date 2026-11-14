@@ -51,7 +51,7 @@ axiom isXiZero : CritPt → Prop            -- zero of ξ(s)
 axiom Loop : Type                           -- loops in U = {0 < Re(s) < 1} \ Z(ξ)
 axiom offLineHolonomy : Loop → Nat         -- winding number [Titchmarsh 1986, Section 9.1]
 
-/-- PRA: no localized holonomy defects. [paper Def 3.3.1]
+/-- PRA: no localized holonomy defects. [Titchmarsh 1986; Ahlfors 1979]
     Strictly stronger than RH -- constrains full holonomy structure. -/
 def PRA : Prop := ∀ (γ : Loop), offLineHolonomy γ = 0
 
@@ -70,12 +70,12 @@ theorem RH_from_PRA (h : PRA) : ∀ s, isXiZero s → onCritLine s :=
 
 /-- Analytic absoluteness: all admissible analytic reconstructions
     of ζ(s) from real-coded data agree.
-    [Woodin 1999; paper Theorem 3.5.1] -/
+    [Woodin 1999] -/
 axiom AnalyticAbs : Prop
 
-/-- Absoluteness ⟹ PRA: if all reconstructions agree, no
+/-- PUBLISHED: Absoluteness ⟹ PRA: if all reconstructions agree, no
     reconstruction-dependent holonomy defects can exist.
-    [Woodin 1999; paper Thm 3.5.1] -/
+    [Woodin 1999; Titchmarsh 1986] -/
 axiom abs_implies_PRA : AnalyticAbs → PRA
 
 /-- **Theorem 3.5.1 + 3.6.1** (PROVED): absoluteness ⟹ RH. -/

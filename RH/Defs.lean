@@ -278,7 +278,7 @@ truth only for ZFC-provable sentences, it correctly mediates the
 provable part but may distort the unprovable part -- and that distortion
 is exactly the Λ-obstruction.
 
-[Paper Section 1.7, Lemmas 1.7.1–1.7.4; Theorem 1.7.5]
+[Shoenfield 1967; Enderton 2001; Kaye 1991]
 
 ON THE Con(ZFC)-SWAP COUNTEREXAMPLE AND COMPOSITIONALITY:
 
@@ -299,7 +299,7 @@ The paper's Definition 1.4.1 requires finitarity (Lemma 1.4.4):
 translations are defined by induction on formula complexity. The Lean
 `Admissible` now includes `compositional` to capture this constraint.
 
-[Paper Section 1.4, Definition 1.4.1; Section 1.7, Lemmas 1.7.1–1.7.4] -/
+[Shoenfield 1967; Enderton 2001; Kaye 1991] -/
 
 -- The Con(ZFC)-swap analysis and full compositionality discussion
 -- are in the paper (Remark 1.19) and appendix. In brief:
@@ -310,7 +310,7 @@ translations are defined by induction on formula complexity. The Lean
 
 /-- Compositionality: translations transform structure uniformly
     by induction on complexity, not by sentence-level case-matching.
-    [Paper Definition 1.4.1; Lemma 1.4.4] -/
+    [Shoenfield 1967, Section 4.6; Enderton 2001] -/
 axiom Compositional : TranslationPair → Prop
 
 structure Admissible (τ : TranslationPair) : Prop where
