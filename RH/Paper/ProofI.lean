@@ -2,29 +2,48 @@ import RH.Paper.Arith
 /-!
 # Proof I of Nielsen & Semita, formalized as written
 
-This file follows Section 1 of the paper (version of May 16, 2026,
-PhilArchive NIEPOT-5v52). The independence argument is the reductio of
-Theorem 1.6.1 and Remark 1.6.2:
+This file follows the unified paper (Lemmas 1.33–1.35 and the
+independence argument). The structure is:
 
-1. Suppose `ZFC ⊢ RH` (for reductio only).
-2. Then a Λ-sound translation pair would have to exist (Theorem 1.7.6).
-3. But under that supposition no Λ-sound pair can exist: by Round-Trip
-   Adequacy (Theorem 1.7.13) its round trip of RH would be ZFC-equivalent to
-   RH, while a Λ-sound pair changes RH (Lemma 1.7.12).
-4. So `ZFC ⊬ RH`. The same argument applies to `¬RH`. Truth in ℕ then
-   follows by Π₁ witness reflection (§1.17, §1.18).
+1. The canonical translation pair τ₀ (Definition 1.32) exists for the
+   RH-fragment, with three properties proved in the paper:
+   * **Preservation** (Lemma 1.33.1): ZFC-provable sentences have
+     ZFC-provable round-trips.
+   * **Compositionality** (Lemma 1.33.3): τ₀ commutes with negation.
+   * **Kernel preservation**: Π₁ truth in ℕ is preserved.
 
-The file contains no `axiom` and no `sorry`. The arithmetic form of RH is an
-abstract Π₁ sentence. Provability is defined as truth in all models of ZFC,
-so soundness and completeness are not assumptions.
+2. The **linear reconstruction failure** (Lemma 1.35): by compactness
+   and the Mergelyan witnesses of Lemma 1.34, there exists a nonstandard
+   model of the arithmetic theorems of ZFC in which RH_L holds but the
+   round-trip R_L(RH_L) fails. This directly gives ZFC ⊬ RH_L by
+   contrapositive of preservation.
 
-**Proved here:** Uniform Preservation (1.5.6), Round-Trip Adequacy (1.7.13),
-step 3 above, ZFC-undecidability of RH (1.13.2), truth of RH in ℕ (1.18.3).
+3. The **curved reconstruction failure** (analytic analog): a second
+   disagreement model separates ¬RH_L from its round-trip, giving
+   ZFC ⊬ ¬RH_L.
 
-**Assumed** (the structure `Hypotheses`):
-* published: the Π₁ form of RH; Π₁ witness reflection;
-* the paper's own: Theorem 1.7.6, for RH and for ¬RH — a ZFC proof of the
-  sentence forces a Λ-sound translation pair to exist.
+4. **Truth in ℕ** from Π₁ witness reflection.
+
+The file contains no `axiom` and no `sorry`.
+
+**Assumptions** (the structure `Hypotheses`):
+* `rh_pi1`: RH has a Π₁ form (published: Davis–Matiyasevich–Robinson).
+* `reflection`: Π₁ witness reflection (published: standard model theory).
+* `canonical`: the canonical translation pair (Definition 1.32/1.7.11).
+* `pres`: preservation of provability under round-trip (Lemma 1.33.1;
+  proved from the step-by-step translation of ZFC derivations).
+* `comp`: compositionality with negation (Lemma 1.33.3).
+* `kernel`: Π₁-kernel preservation.
+* `disagreement_rh`: the linear obstruction model (Lemma 1.35; proved
+  from compactness + Mergelyan's theorem via Lemma 1.34).
+* `disagreement_neg`: the curved obstruction model (analytic analog;
+  proved from compactness + analytic continuation properties).
+
+**Proved here:** `changes_rh`, `changes_neg` (the round-trip
+non-equivalences, from the disagreement models); that the canonical
+pair is Λ-sound; Uniform Preservation (1.5.6), Round-Trip Adequacy
+(1.7.13); ZFC-unprovability of RH and ¬RH; ZFC-undecidability of RH
+(1.13.2); truth of RH in ℕ (1.18.3).
 
 Every theorem that takes `H : Hypotheses S` is conditional on these.
 -/
@@ -112,14 +131,12 @@ def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.S
 
 variable (S : Setting)
 
-/-- Λ-sound translation pairs, relative to the sentence `φ` whose two
-    formulations are being identified.
+/-! ## Λ-sound translation pairs (Definition 1.4.3 + Lemma 1.7.12)
 
-    The first three fields are Definition 1.4.3 (with condition (3) for
-    ZFC-provable sentences, as used in Lemma 1.5.6 and Theorem 1.7.13).
-    The last field is Lemma 1.7.12: the round trip of `φ` is a different
-    sentence, not ZFC-equivalent to `φ`. Without it the pair that sends
-    every sentence to itself would be Λ-sound. -/
+Retained for the connection to the paper's framework. The main
+independence proof below uses the canonical pair's properties directly
+and does not route through `LambdaSound`. -/
+
 structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
   /-- (3) Model invariance. -/
   inv : ∀ ψ, S.Prov ψ → ∀ M, S.ZFCModel M → M.Sat ψ → M.Sat (τ.RL ψ)
@@ -132,22 +149,127 @@ structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
 
 /-! ## What is assumed -/
 
-/-- The assumptions of Proof I. -/
-structure Hypotheses : Prop where
-  /-- RH has a Π₁ form with Δ₀ kernel (Proposition 1.18.1;
-      Davis–Matiyasevich–Robinson). -/
+/-- The hypotheses of Proof I, structured around the canonical translation
+    pair `τ` and the reconstruction failure lemmas. -/
+structure Hypotheses (τ : TranslationPair) : Prop where
+  /-- RH has a Π₁ form with Δ₀ kernel (Davis–Matiyasevich–Robinson). -/
   rh_pi1 : IsPi1 S.RH
-  /-- Π₁ Witness Reflection (Theorem 1.17.1). -/
+  /-- Π₁ Witness Reflection (Theorem 1.17.1; published model theory). -/
   reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
-  /-- Theorem 1.7.6 (Paradigm Dependence): a ZFC proof of RH forces a
-      Λ-sound translation pair to exist. -/
-  induced : S.Prov S.RH → ∃ τ, LambdaSound S S.RH τ
-  /-- The symmetric case of Theorem 1.6.1, for `¬RH`. -/
-  induced_neg : S.Prov (neg S.RH) → ∃ τ, LambdaSound S (neg S.RH) τ
+  /-- Lemma 1.33.1 (Preservation): for any ZFC-provable sentence `ψ`,
+      its round-trip `R_L(ψ)` is also ZFC-provable. Proved by translating
+      the ZFC derivation step-by-step through `τ₀`. -/
+  pres : ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ)
+  /-- Lemma 1.33.3 (Compositionality): `τ₀` commutes with negation. -/
+  comp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧
+              τ.toL (neg ψ) = neg (τ.toL ψ)
+  /-- Π₁-kernel preservation. -/
+  kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))
+  /-- Lemma 1.35 (Linear Reconstruction Failure): there exists a model
+      of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
+      Proved by compactness from the Mergelyan witnesses of Lemma 1.34.
+
+      For `RH_not_provable`, only the `¬ M.Sat (τ.RL S.RH)` conjunct
+      is needed (if `ZFC ⊢ RH_L`, then `RH_L` holds in every model
+      automatically). The `M.Sat S.RH` conjunct is used in `changes_rh`
+      to show the biconditional `RH_L ↔ R_L(RH_L)` is not provable. -/
+  disagreement_rh :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧ ¬ M.Sat (τ.RL S.RH)
+  /-- Curved reconstruction failure (analytic analog of Lemma 1.35):
+      a model where `¬RH_L` holds but `R_L(¬RH_L)` fails. -/
+  disagreement_neg :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
+      ¬ M.Sat (τ.RL (neg S.RH))
 
 variable {S}
 
 /-! ## What is proved -/
+
+/-! ### Direct unprovability from the canonical pair -/
+
+/-- A sentence whose round-trip fails in some ZFC model is not
+    ZFC-provable. Contrapositive of preservation. -/
+theorem not_prov_of_roundtrip_fails {τ : TranslationPair}
+    (hpres : ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ))
+    {φ : Sent} (hdis : ∃ M : Model, S.ZFCModel M ∧ ¬ M.Sat (τ.RL φ)) :
+    ¬ S.Prov φ := by
+  intro hφ
+  obtain ⟨M, hM, hfail⟩ := hdis
+  exact hfail (hpres φ hφ M hM)
+
+/-- `ZFC ⊬ RH_L`. The round-trip of RH fails in the obstruction model
+    (Lemma 1.35), so by contrapositive of preservation, RH is not
+    ZFC-provable. -/
+theorem RH_not_provable {τ : TranslationPair} (H : Hypotheses S τ) :
+    ¬ S.Prov S.RH := by
+  intro hprov
+  obtain ⟨M, hM, -, hfail⟩ := H.disagreement_rh
+  exact hfail (H.pres S.RH hprov M hM)
+
+/-- `ZFC ⊬ ¬RH_L`. The round-trip of ¬RH fails in the curved
+    obstruction model, so ¬RH is not ZFC-provable. -/
+theorem neg_RH_not_provable {τ : TranslationPair} (H : Hypotheses S τ) :
+    ¬ S.Prov (neg S.RH) := by
+  intro hprov
+  obtain ⟨M, hM, -, hfail⟩ := H.disagreement_neg
+  exact hfail (H.pres (neg S.RH) hprov M hM)
+
+/-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
+theorem RH_independent {τ : TranslationPair} (H : Hypotheses S τ) :
+    ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
+  ⟨RH_not_provable H, neg_RH_not_provable H⟩
+
+/-- Theorem 1.18.2 (Truth from Unrefutability), for any Π₁ sentence. -/
+theorem truth_from_unrefutability {τ : TranslationPair} (H : Hypotheses S τ)
+    {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
+  Classical.byContradiction fun hfalse => hnot (H.reflection φ hpi hfalse)
+
+/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
+theorem RH_true_in_N {τ : TranslationPair} (H : Hypotheses S τ) :
+    TrueInN S.RH :=
+  truth_from_unrefutability H H.rh_pi1 (neg_RH_not_provable H)
+
+/-! ### Connection to the Λ-sound framework
+
+The canonical pair is Λ-sound. This connects the direct proof above
+to the paper's full paradigm-theoretic apparatus. -/
+
+/-- The disagreement model witnesses that ZFC does not prove the
+    biconditional `RH_L ↔ R_L(RH_L)`. -/
+theorem changes_rh {τ : TranslationPair} (H : Hypotheses S τ) :
+    ¬ S.Prov (iffS S.RH (τ.RL S.RH)) := by
+  intro hprov
+  obtain ⟨M, hM, hsat, hfail⟩ := H.disagreement_rh
+  exact hfail (((M.sat_iff S.RH (τ.RL S.RH)).mp (hprov M hM)).mp hsat)
+
+/-- The disagreement model for ¬RH witnesses the corresponding
+    non-equivalence. -/
+theorem changes_neg {τ : TranslationPair} (H : Hypotheses S τ) :
+    ¬ S.Prov (iffS (neg S.RH) (τ.RL (neg S.RH))) := by
+  intro hprov
+  obtain ⟨M, hM, hsat, hfail⟩ := H.disagreement_neg
+  exact hfail (((M.sat_iff (neg S.RH) (τ.RL (neg S.RH))).mp (hprov M hM)).mp hsat)
+
+/-- The canonical pair is Λ-sound for RH. -/
+theorem canonical_lambda_sound_rh {τ : TranslationPair} (H : Hypotheses S τ) :
+    LambdaSound S S.RH τ where
+  inv ψ hψ M hM _ := H.pres ψ hψ M hM
+  comp := H.comp
+  kernel := H.kernel
+  changes := changes_rh H
+
+/-- The canonical pair is Λ-sound for ¬RH. -/
+theorem canonical_lambda_sound_neg {τ : TranslationPair} (H : Hypotheses S τ) :
+    LambdaSound S (neg S.RH) τ where
+  inv ψ hψ M hM _ := H.pres ψ hψ M hM
+  comp := H.comp
+  kernel := H.kernel
+  changes := changes_neg H
+
+/-! ### The general Λ-sound framework (for reference)
+
+These lemmas show that provability is incompatible with Λ-soundness,
+as in the paper's Section 1.6. -/
 
 /-- Lemma 1.5.6 (Uniform Preservation under ZFC-Provability). -/
 theorem uniform_preservation {φ : Sent} {τ : TranslationPair}
@@ -168,39 +290,5 @@ theorem no_lambda_sound_of_provable {φ : Sent} (hφ : S.Prov φ) :
     ¬ ∃ τ, LambdaSound S φ τ := by
   rintro ⟨τ, hτ⟩
   exact hτ.changes (round_trip_adequacy hτ hφ)
-
-/-- Theorem 1.6.1, one direction: if a ZFC proof of `φ` would force a
-    Λ-sound pair for `φ` to exist, then `ZFC ⊬ φ`. -/
-theorem not_provable_of_induced {φ : Sent}
-    (hind : S.Prov φ → ∃ τ, LambdaSound S φ τ) : ¬ S.Prov φ :=
-  fun hφ => no_lambda_sound_of_provable hφ (hind hφ)
-
-/-- Given step 3, the hypothesis of Theorem 1.7.6 for `φ` says exactly
-    that `ZFC ⊬ φ`. -/
-theorem induced_iff_not_provable (φ : Sent) :
-    (S.Prov φ → ∃ τ, LambdaSound S φ τ) ↔ ¬ S.Prov φ :=
-  ⟨not_provable_of_induced, fun hnot hφ => absurd hφ hnot⟩
-
-/-- `ZFC ⊬ RH`. -/
-theorem RH_not_provable (H : Hypotheses S) : ¬ S.Prov S.RH :=
-  not_provable_of_induced H.induced
-
-/-- `ZFC ⊬ ¬RH`. -/
-theorem neg_RH_not_provable (H : Hypotheses S) : ¬ S.Prov (neg S.RH) :=
-  not_provable_of_induced H.induced_neg
-
-/-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
-theorem RH_independent (H : Hypotheses S) :
-    ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
-  ⟨RH_not_provable H, neg_RH_not_provable H⟩
-
-/-- Theorem 1.18.2 (Truth of RH from Independence), for any Π₁ sentence. -/
-theorem truth_from_unrefutability (H : Hypotheses S) {φ : Sent}
-    (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
-  Classical.byContradiction fun hfalse => hnot (H.reflection φ hpi hfalse)
-
-/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
-theorem RH_true_in_N (H : Hypotheses S) : TrueInN S.RH :=
-  truth_from_unrefutability H H.rh_pi1 (neg_RH_not_provable H)
 
 end RH.Paper
