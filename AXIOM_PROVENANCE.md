@@ -45,14 +45,19 @@ axiom is either a structural declaration, a published theorem, or Con(ZFC).
 | Proved theorems | 25+ | ✅ Machine-checked | Deductions proved by Lean's kernel |
 | `sorry` | **0** | ✅ | None |
 
-**All 21 published axioms are proved theorems in the literature.** Each has
-a complete proof in the cited sources. They appear as Lean `axiom`
-declarations because Lean requires machine-checked proofs, and these proofs
-have not yet been transcribed into Mathlib's formal language. This is
-standard practice in Lean formalization projects. All deductions from
-these axioms — including ZModel_satisfies_RH, roundtrip_fails_in_ZModel,
-roundtrip_overspill_in_ZModel, distortion_localizes_to_RH — are PROVED
-as Lean theorems.
+**All 21 axioms are published mathematical results.** Each has a complete
+proof in the cited sources. They appear as Lean `axiom` declarations
+because Lean requires machine-checked proofs, and these published proofs
+have not yet been transcribed into Mathlib's formal language. All
+deductions from these axioms are PROVED as Lean theorems.
+
+**Roadmap to full Mathlib proofs:**
+- ~6 axioms can be proved from current Mathlib (model theory, basic logic)
+- ~9 axioms convert after the Perron/Mergelyan Mathlib PR (in progress)
+- ~6 axioms need deeper Mathlib infrastructure (large cardinals, nonstandard models)
+
+Every axiom is a target for Mathlib formalization. The goal is to replace
+all 21 with proved Mathlib theorems as the library grows.
 
 ---
 
