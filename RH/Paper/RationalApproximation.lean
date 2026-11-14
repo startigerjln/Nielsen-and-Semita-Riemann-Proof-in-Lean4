@@ -1,6 +1,6 @@
 import RH.Paper.Mergelyan
 import RH.Paper.PlantedZero
-import Mathlib.NumberTheory.LSeries.RiemannZeta
+import Mathlib.NumberTheory.LSeries.Dirichlet
 import Mathlib.Topology.Algebra.Order.Archimedean
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Linarith
@@ -248,5 +248,48 @@ theorem finite_zeta_approximations_with_standard_failure
     (fun z hz => (differentiable z hz).continuousAt.continuousWithinAt)
     (fun z hz => (differentiable z (interior_subset hz)).differentiableWithinAt)
     zerosOutside checks region tolerance contained positive
+
+/-- A standard rational code can meet any positive uniform error bound on
+    the compact checked region and still disagree with zeta at a point of
+    the Perron line outside that region. -/
+theorem zeta_approximation_can_disagree_on_perron_line
+    (K : Set ℂ) (compact : IsCompact K) (connected : IsConnected Kᶜ)
+    (poleOutside : (1 : ℂ) ∉ K) (c t : ℝ) (hc : 1 < c)
+    (outside : (c : ℂ) + (t : ℂ) * Complex.I ∉ K)
+    (ε : ℝ) (positive : 0 < ε) :
+    ∃ f : RationalFunction, (∀ z ∈ K, ‖evalComplex f z - riemannZeta z‖ < ε) ∧
+      evalComplex f ((c : ℂ) + (t : ℂ) * Complex.I) ≠
+        riemannZeta ((c : ℂ) + (t : ℂ) * Complex.I) := by
+  classical
+  let w : ℂ := (c : ℂ) + (t : ℂ) * Complex.I
+  have nonzero : riemannZeta w ≠ 0 :=
+    riemannZeta_ne_zero_of_one_lt_re (by simpa [w, Complex.mul_re] using hc)
+  have analyticAt (z : ℂ) (hz : z ∈ K) : DifferentiableAt ℂ riemannZeta z :=
+    differentiableAt_riemannZeta (fun eq => poleOutside (eq ▸ hz))
+  obtain ⟨p, zero, close⟩ := approximate_with_prescribed_zeros K riemannZeta {w}
+    compact connected (fun z hz => (analyticAt z hz).continuousAt.continuousWithinAt)
+    (fun z hz => (analyticAt z (interior_subset hz)).differentiableWithinAt)
+    (by simpa only [Finset.mem_singleton, forall_eq] using outside) (ε / 2) (half_pos positive)
+  let δ := min (ε / 2) (‖riemannZeta w‖ / 2)
+  have δPos : 0 < δ := lt_min (half_pos positive) (half_pos (norm_pos_iff.mpr nonzero))
+  obtain ⟨coefficients, approx⟩ := approximate_polynomial_by_rational_coefficients
+    (insert w K) (compact.insert w) p δ δPos
+  let f : RationalFunction := ([], coefficients, [(1, 0)])
+  have value (z : ℂ) : evalComplex f z =
+      (polynomialOfCoefficients (coefficients.map Point.toComplex)).eval z := by
+    have one : Point.toComplex (1, 0) = 1 := by
+      apply Complex.ext <;> simp [Point.toComplex]
+    simp [f, evalComplex, rootFactor, polynomialOfCoefficients, one]
+  refine ⟨f, ?_, ?_⟩
+  · intro z hz
+    rw [value, ← sub_add_sub_cancel _ (p.eval z)]
+    refine (norm_add_le _ _).trans_lt ?_
+    have h := (approx z (Set.mem_insert_of_mem _ hz)).trans_le (min_le_left _ _)
+    linarith only [h, close z hz]
+  · change evalComplex f w ≠ riemannZeta w
+    intro eq
+    have h := (approx w (Set.mem_insert _ _)).trans_le (min_le_right _ _)
+    rw [← value, eq, zero w (Finset.mem_singleton_self w), sub_zero] at h
+    linarith only [h, norm_nonneg (riemannZeta w)]
 
 end RH.Paper.PlantedZero
