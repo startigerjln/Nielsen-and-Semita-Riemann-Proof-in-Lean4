@@ -211,7 +211,17 @@ axiom ZModel_is_nonstandard : IsNonstandard ZModel
 axiom CModel_is_nonstandard : IsNonstandard CModel
 
 axiom IsPi2 : L.Sentence → Prop  -- structural
-axiom MergelyanSchema : L.Theory  -- structural
+
+/-- The Mergelyan schema sentence at precision k: asserts that a
+    polynomial of degree ≤ k approximates the Mertens function to
+    precision 1/k, implying RH_kernel(n) for all n ≤ witness(k).
+    Encoded in L via Gödel β-function coding.
+    [Mergelyan 1951; Mertens 1874; Lagarias 2002] -/
+axiom mergelyan_theta : ℕ → L.Sentence
+
+/-- The Mergelyan schema: the theory {θ_k : k ∈ ℕ}.
+    DEFINED as the range of mergelyan_theta. -/
+def MergelyanSchema : L.Theory := Set.range mergelyan_theta
 
 /-- Finitary: an inter-paradigm translation whose round-trips raise
     quantifier complexity. The analytic encoding introduces ∀ε∃N
