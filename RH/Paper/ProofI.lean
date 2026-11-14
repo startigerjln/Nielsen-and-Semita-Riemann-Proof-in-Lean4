@@ -114,12 +114,22 @@ def TranslationPair.RC (τ : TranslationPair) (φ : Sent) : Sent := τ.toC (τ.t
 
 /-! ## The setting -/
 
-/-- The data the paper works with. -/
+/-- The data the paper works with. The two `Prop` fields are published
+    facts about the Riemann Hypothesis in first-order arithmetic:
+    they constrain `RH` to a sentence with the right properties. -/
 structure Setting where
   /-- The arithmetical theorems of ZFC, as a theory in `L`. -/
   T : L.Theory
   /-- The arithmetic formulation `RH_L`. -/
   RH : Sent
+  /-- Published: RH has a Π₁ form with Δ₀ kernel.
+      Davis–Matiyasevich–Robinson 1976; paper Proposition 1.18.1. -/
+  rh_pi1 : IsPi1 RH
+  /-- Published: Π₁ witness reflection (Σ₁-completeness). If a Π₁
+      sentence is false in ℕ, ZFC refutes it.
+      Kaye 1991, Corollary 9.3; paper Theorem 1.17.1. -/
+  reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ →
+    (∀ M : Model, (∀ ψ ∈ T, M.Sat ψ) → M.Sat (neg φ))
 
 /-- Models of ZFC, through the arithmetic sentences they satisfy. -/
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
@@ -130,6 +140,11 @@ def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat �
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
 variable (S : Setting)
+
+/-- The reflection field of `Setting`, restated using `Prov`. -/
+theorem Setting.prov_neg_of_false {φ : Sent}
+    (hpi : IsPi1 φ) (hfalse : ¬ TrueInN φ) : S.Prov (neg φ) :=
+  fun M hM => S.reflection φ hpi hfalse M hM
 
 /-! ## Λ-sound translation pairs (Definition 1.4.3 + Lemma 1.7.12)
 
@@ -149,13 +164,10 @@ structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
 
 /-! ## What is assumed -/
 
-/-- The hypotheses of Proof I, structured around the canonical translation
+/-- The hypotheses of Proof I that come from the paper itself (not
+    published elsewhere), structured around the canonical translation
     pair `τ` and the reconstruction failure lemmas. -/
 structure Hypotheses (τ : TranslationPair) : Prop where
-  /-- RH has a Π₁ form with Δ₀ kernel (Davis–Matiyasevich–Robinson). -/
-  rh_pi1 : IsPi1 S.RH
-  /-- Π₁ Witness Reflection (Theorem 1.17.1; published model theory). -/
-  reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
   /-- Lemma 1.33.1 (Preservation): for any ZFC-provable sentence `ψ`,
       its round-trip `R_L(ψ)` is also ZFC-provable. Proved by translating
       the ZFC derivation step-by-step through `τ₀`. -/
@@ -219,15 +231,17 @@ theorem RH_independent {τ : TranslationPair} (H : Hypotheses S τ) :
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
   ⟨RH_not_provable H, neg_RH_not_provable H⟩
 
-/-- Theorem 1.18.2 (Truth from Unrefutability), for any Π₁ sentence. -/
-theorem truth_from_unrefutability {τ : TranslationPair} (H : Hypotheses S τ)
+/-- Theorem 1.18.2 (Truth from Unrefutability), for any Π₁ sentence.
+    Uses `Setting.reflection` (published: Σ₁-completeness). -/
+theorem truth_from_unrefutability
     {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
-  Classical.byContradiction fun hfalse => hnot (H.reflection φ hpi hfalse)
+  Classical.byContradiction fun hfalse => hnot (S.prov_neg_of_false hpi hfalse)
 
-/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
+/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`.
+    Uses `Setting.rh_pi1` (published: Davis–Matiyasevich–Robinson). -/
 theorem RH_true_in_N {τ : TranslationPair} (H : Hypotheses S τ) :
     TrueInN S.RH :=
-  truth_from_unrefutability H H.rh_pi1 (neg_RH_not_provable H)
+  truth_from_unrefutability S.rh_pi1 (neg_RH_not_provable H)
 
 /-! ### Connection to the Λ-sound framework
 
