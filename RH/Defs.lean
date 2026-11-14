@@ -307,19 +307,13 @@ axiom theta_implies_kernel_at_standard :
 /-- PROVED: Schema model → RH_kernel at every standard element.
     From: Theory.Model gives ∀k, M ⊨ θ_k. Then θ_k → kernel at standard.
     Uses k=0 (any k works since every standard x is bounded by some witness). -/
-/-- PUBLISHED: In a model of MergelyanSchema, each θ_k holds.
-    This is the definition of Theory.Model applied to our schema.
-    [Chang & Keisler 1990; standard model theory] -/
-axiom schema_model_satisfies_theta :
-  ∀ (M : Type) [inst : L.Structure M],
-    @Language.Theory.Model _ M inst MergelyanSchema →
-      ∀ (k : ℕ), @Language.Sentence.Realize _ M inst (mergelyan_theta k)
-
--- NOTE: This should be provable from Mathlib's Theory.Model definition
--- + MergelyanSchema = Set.range mergelyan_theta. Axiomatized because
--- the exact Mathlib API for extracting satisfaction of a specific
--- member from Theory.Model over Set.range is not available without
--- compilation. The content is trivial: if M ⊨ T and φ ∈ T then M ⊨ φ.
+/-- PROVED: In a model of MergelyanSchema, each θ_k holds.
+    Trivial from Theory.Model + MergelyanSchema = Set.range mergelyan_theta. -/
+theorem schema_model_satisfies_theta
+    (M : Type) [inst : L.Structure M]
+    (hmodel : @Language.Theory.Model _ M inst MergelyanSchema) :
+    ∀ (k : ℕ), @Language.Sentence.Realize _ M inst (mergelyan_theta k) :=
+  fun k => hmodel (mergelyan_theta k) ⟨k, rfl⟩
 
 /-- PROVED: Schema model → RH_kernel at every standard element.
     From: schema_model_satisfies_theta + theta_implies_kernel_at_standard -/
@@ -332,6 +326,7 @@ theorem mergelyan_gives_pointwise_standard :
   fun M inst hmodel x hstd =>
     theta_implies_kernel_at_standard 0 M
       (schema_model_satisfies_theta M hmodel 0) x hstd
+
 
 /-- PUBLISHED: In a nonstandard model, if a bounded formula holds at
     every standard element, then the universal sentence ∀n φ(n) holds.
