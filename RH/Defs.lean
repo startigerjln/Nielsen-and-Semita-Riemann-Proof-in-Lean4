@@ -13,7 +13,9 @@ Nielsen & Semita, Center for Topological Physics (2025)
 
 Every `axiom` is a published result from the cited source.
 No paper-specific axioms. Definitions are concrete.
-Zero sorry. RH_kernel and mergelyan_theta are concrete defs (from LArith).
+1 sorry: theta_implies_kernel_at_standard (open step, see below).
+RH_kernel and mergelyan_theta in LArith are still placeholders: they do not
+yet encode the Lagarias inequality or the Mergelyan approximation.
 
 ## Concrete Definitions (from LArith)
 
@@ -35,7 +37,6 @@ Zero sorry. RH_kernel and mergelyan_theta are concrete defs (from LArith).
 | relative_interpretation_exists | Shoenfield 1967; Rogers 1967 |
 | pi1_pi2_nontriviality | Kaye 1991 |
 | ZModel_is_nonstandard, CModel_is_nonstandard | Kaye 1991; Chang & Keisler 1990 |
-| theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
 | standard_instances_give_universal | Kaye 1991, Prop 11.3 |
 | mergelyan_finite_satisfiability | Mergelyan 1951; Rudin 1987 |
 | ZModel_is_mergelyan_model | Chang & Keisler 1990 |
@@ -295,42 +296,17 @@ theorem sigma1_holds_roundtrip_fails :
 def IsStandard (M : Type) [L.Structure M] (x : M) : Prop :=
   ∃ (n : ℕ), x = stdNumeral M n
 
-/-- PUBLISHED: Δ₀ absoluteness for standard elements. For any Δ₀ formula
-    ψ with one free variable, if x = stdNumeral M n then ψ(x) holds in M
-    iff ψ(n̄) holds in ℕ.
-    [Kaye 1991, Thm 11.4] -/
-axiom delta0_absoluteness
-    (ψ : L.BoundedFormula Empty 1)
-    (M : Type) [inst : L.Structure M]
-    (x : M) (n : ℕ) (hx : x = stdNumeral M n) :
-    @Language.BoundedFormula.Realize _ M inst default
-      (Language.BoundedFormula.castLE (by omega) ψ) ![x] ↔
-    @Language.BoundedFormula.Realize _ Nat NatStr default
-      (Language.BoundedFormula.castLE (by omega) ψ) ![stdNumeral Nat n]
-
-/-- PUBLISHED: The Lagarias inequality holds in ℕ at every standard n.
-    σ(n) ≤ H_n + exp(H_n)·ln(H_n) for all n ≥ 1.
-    This is the direction (RH → Lagarias inequality), and the Mergelyan
-    schema supplies the Mertens bound that makes RH hold at each n.
-    [Lagarias 2002, Thm 1.1; Mergelyan 1951] -/
-axiom lagarias_holds_in_nat
-    (n : ℕ) :
-    @Language.BoundedFormula.Realize _ Nat NatStr default
-      (Language.BoundedFormula.castLE (by omega) RH_kernel) ![stdNumeral Nat n]
-
-/-- PROVED: Each θ_k implies RH_kernel at standard elements.
-    From: delta0_absoluteness + lagarias_holds_in_nat.
-    [Mergelyan 1951; Lagarias 2002; Kaye 1991, Thm 11.4] -/
+/-- OPEN STEP (paper's argument, not yet formalized): each θ_k implies
+    RH_kernel at standard elements. This is not a published theorem, so it
+    is not an axiom. It stays `sorry` until the formulas in LArith really
+    encode σ, H_n and the Mertens function and the step is proved in Lean. -/
 theorem theta_implies_kernel_at_standard :
   ∀ (k : ℕ) (M : Type) [inst : L.Structure M],
     @Language.Sentence.Realize _ M inst (mergelyan_theta k) →
       ∀ (x : M), @IsStandard M inst x →
         @Language.BoundedFormula.Realize _ M inst default
           (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x] := by
-  intro k M inst _hθ x hx
-  obtain ⟨n, rfl⟩ := hx
-  exact (delta0_absoluteness RH_kernel M (stdNumeral M n) n rfl).mpr
-    (lagarias_holds_in_nat n)
+  sorry
 
 /-- PROVED: Schema model → RH_kernel at every standard element.
     From: Theory.Model gives ∀k, M ⊨ θ_k. Then θ_k → kernel at standard.
