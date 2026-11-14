@@ -3,6 +3,7 @@ import Mathlib.ModelTheory.Satisfiability
 import Mathlib.ModelTheory.Ultraproducts
 import Mathlib.Order.Filter.Ultrafilter
 import Mathlib.SetTheory.Cardinal.Basic
+import RH.LArith
 /-!
 # The Proof of the Riemann Hypothesis -- Lean 4 + Mathlib Formalization
 
@@ -56,18 +57,11 @@ roundtrip_equiv_verification). These mark where the paper's concrete
 
 open FirstOrder
 
-/-! ## Language of Arithmetic [Kaye 1991, Section 1.1] -/
+-- ArithFunctions, ArithRelations, L defined in RH.LArith
 
-def ArithFunctions : ℕ → Type
-  | 0 => Unit | 1 => Unit | 2 => Bool | _ => Empty
-def ArithRelations : ℕ → Type
-  | 2 => Unit | _ => Empty
-
-def L : Language.{0, 0} := ⟨ArithFunctions, ArithRelations⟩
-
-/-- The Lagarias bounded formula encoding RH_kernel(n): σ(n) ≤ Hₙ + eᴴⁿ ln Hₙ.
+/-- RH_kernel(n): σ(n) ≤ Hₙ + eᴴⁿ ln Hₙ. CONCRETE definition from LArith.
     [Davis, Matiyasevich & Robinson 1976; Lagarias 2002] -/
-axiom RH_kernel : L.BoundedFormula Empty 1
+def RH_kernel : L.BoundedFormula Empty 1 := RH.LArith.lagariasFormula
 noncomputable def RH_sent : L.Sentence := Language.BoundedFormula.all RH_kernel
 
 /-! ## Translation Pairs -/
@@ -259,9 +253,9 @@ axiom CModel_is_nonstandard : IsNonstandard CModel
 /-- The Mergelyan schema sentence at precision k: asserts that a
     polynomial of degree ≤ k approximates the Mertens function to
     precision 1/k, implying RH_kernel(n) for all n ≤ witness(k).
-    Encoded in L via Gödel β-function coding.
+    Encoded in L via Gödel β-function coding. CONCRETE definition from LArith.
     [Mergelyan 1951; Mertens 1874; Lagarias 2002] -/
-axiom mergelyan_theta : ℕ → L.Sentence
+noncomputable def mergelyan_theta : ℕ → L.Sentence := RH.LArith.mergelyan_theta_concrete
 
 /-- The Mergelyan schema: the theory {θ_k : k ∈ ℕ}.
     DEFINED as the range of mergelyan_theta. -/
