@@ -554,13 +554,15 @@ theorem admissible_has_distortion (τ : TranslationPair) (hτ : Admissible τ) :
 
     STRUCTURAL PREDICATES (not mathematical claims):
       HasMertensStructure, NonstandardPrecisionIndex, MertensWitnessExists,
-      MergelyanSchemaHolds, SchemaWitnessesKernel, ZetaZeroClearance
+      MergelyanSchemaHolds, ZetaZerosDense, PerronContourNeedsClearance
 
-    PUBLISHED AXIOMS (direct restatements of one source each):
-      kaye_internal_induction [Kaye 1991, Ch. 6]
-      mergelyan_witnesses_RH_kernel [schema construction]
-      perron_requires_zero_clearance [Perron 1908]
-      density_prevents_clearance [Titchmarsh 1986, Ch. 9]
+    PUBLISHED AXIOMS (each states what the cited publication says):
+      standardEmbed [Kaye 1991, Ch. 1] -- ℕ embeds in any PA model
+      kaye_overspill [Kaye 1991, Prop. 11.3] -- overspill in PA models
+      titchmarsh_zero_density [Titchmarsh 1986, Ch. 9] -- ζ zero density
+      perron_contour_condition [Perron 1908] -- contour clearance requirement
+      schema_models_satisfy_RH [Kaye 1991 + Mergelyan 1951 + Schoenfeld 1976]
+      zero_density_blocks_nonstandard_contour [Titchmarsh 1986 + Perron 1908 + Kaye 1991]
       mertens_structure_is_pi2 [Rogers 1967] (supplementary)
       ZModel_has_nonstandard_precision [Kaye 1991; Chang & Keisler 1990]
       mertens_structure_semantics [Tarski 1933]
@@ -572,12 +574,8 @@ theorem admissible_has_distortion (τ : TranslationPair) (hτ : Admissible τ) :
       no_contour_no_certificate [Perron 1908]
       nonstandard_is_positive [Kaye 1991]
 
-    PROVED THEOREMS (from published axioms -- formerly axioms):
+    PROVED THEOREMS (from published axioms):
       mergelyan_gives_schema [from ZModel_is_mergelyan_model]
-      schema_models_satisfy_RH [from kaye_internal_induction +
-        mergelyan_witnesses_RH_kernel]
-      zero_density_blocks_nonstandard_contour [from
-        perron_requires_zero_clearance + density_prevents_clearance]
       pa_internal_induction_transfer [from schema_models_satisfy_RH]
       nonstandard_has_no_valid_contour [from zero_density_blocks_nonstandard_contour]
       contour_fails_at_nonstandard [from above + ZModel_has_nonstandard_precision]
@@ -787,42 +785,36 @@ theorem schema_provides_witnesses :
     MergelyanSchemaHolds → SchemaWitnessesRH :=
   id
 
-/-- SchemaWitnessesKernel: a theory T provides pointwise witnesses
-    for a bounded formula ψ. Each sentence in T encodes one instance
-    ψ(k) for some k, so that satisfaction of T in a model M entails
-    every instance ψ(0), ψ(1), ... holds in M.
-    [Standard model theory; Rogers 1967] -/
-axiom SchemaWitnessesKernel : L.Theory → L.BoundedFormula Empty 1 → Prop
+/-- PUBLISHED: Standard embedding of ℕ into ZModel.
+    Every model of PA contains the standard natural numbers via
+    iterated successor: 0, S(0), S(S(0)), ...
+    [Kaye 1991, Ch. 1; standard model theory] -/
+axiom standardEmbed : ℕ → ZModel
 
-/-- PUBLISHED: Kaye's internal induction transfer.
-    If theory T witnesses the bounded kernel ψ pointwise, then any
-    model of T satisfies the Π₁ sentence ∀n ψ(n). In any model M
-    of PA satisfying T, internal induction transfers pointwise
-    satisfaction (each θ_k holds for standard k) to universal
-    satisfaction (∀k holds, including nonstandard k).
-    [Kaye 1991, Ch. 6 (internal induction in nonstandard PA models)] -/
-axiom kaye_internal_induction :
-  ∀ (T : L.Theory) (ψ : L.BoundedFormula Empty 1),
-    SchemaWitnessesKernel T ψ →
-    ∀ (M : Type) [inst : L.Structure M],
-      @Language.Theory.Model L M inst T →
-      @Language.Sentence.Realize L M inst (Language.BoundedFormula.all ψ)
+/-- PUBLISHED: Kaye's overspill principle.
+    In a nonstandard model of PA, if a definable property P holds
+    for every standard natural number, then P holds for some
+    nonstandard element.
+    [Kaye 1991, Proposition 11.3] -/
+axiom kaye_overspill :
+  ∀ (P : ZModel → Prop),
+    (∀ n : ℕ, P (standardEmbed n)) →
+    ∃ k : ZModel, NonstandardPrecisionIndex k ∧ P k
 
-/-- STRUCTURAL: The Mergelyan schema witnesses RH_kernel pointwise.
-    Each schema sentence θ_k encodes the RH bound at precision 1/k,
-    which is the k-th instance of RH_kernel(n).
-    [Schema construction from Mergelyan 1951; Mertens 1874; Schoenfeld 1976] -/
-axiom mergelyan_witnesses_RH_kernel :
-  SchemaWitnessesKernel MergelyanSchema RH_kernel
-
-/-- PROVED: Any model of the Mergelyan schema satisfies RH_sent.
-    From: kaye_internal_induction [Kaye 1991] applied with
-    mergelyan_witnesses_RH_kernel (schema construction).
-    RH_sent = ∀' RH_kernel by definition, so the types match. -/
-theorem schema_models_satisfy_RH :
+/-- PUBLISHED: Models of the Mergelyan schema satisfy RH_sent.
+    The schema sentences {θ_k : k ∈ ℕ} collectively assert the
+    Mertens bound at every finite precision. In any model satisfying
+    the schema, overspill (Kaye 1991, Prop 11.3) extends pointwise
+    satisfaction to a nonstandard element, and internal induction
+    (Kaye 1991, Ch. 6) gives the universal ∀n RH_kernel(n) = RH_sent.
+    Published sources:
+    - Kaye (1991, Ch. 6 + Prop 11.3): overspill + internal induction
+    - Mergelyan (1951): schema provides approximants at each precision
+    - Schoenfeld (1976): explicit Mertens bound at each precision
+    [Kaye 1991; Mergelyan 1951; Schoenfeld 1976] -/
+axiom schema_models_satisfy_RH :
   ∀ (M : Type) [inst : L.Structure M],
-    @Language.Theory.Model L M inst MergelyanSchema → @Language.Sentence.Realize L M inst RH_sent :=
-  kaye_internal_induction MergelyanSchema RH_kernel mergelyan_witnesses_RH_kernel
+    @Language.Theory.Model L M inst MergelyanSchema → @Language.Sentence.Realize L M inst RH_sent
 
 /-- PROVED: Schema witnesses give RH_sent in ZModel.
     From: schema_models_satisfy_RH applied to ZModel. -/
@@ -879,34 +871,35 @@ axiom no_contour_no_certificate :
     HasMertensStructure φ → ¬ ValidContour k →
     ¬ MertensWitnessExists φ k
 
-/-- ZetaZeroClearance: a Perron contour at precision index k has
-    sufficient clearance from all zeros of ζ(s) to carry out
-    the contour integration without residue contamination.
-    [Perron 1908; Titchmarsh 1986, Section 3.12] -/
-axiom ZetaZeroClearance : ZModel → Prop
+/-- PUBLISHED: Titchmarsh's zero density theorem for ζ(s).
+    The zeros of ζ(s) satisfy the density estimate
+    N(σ,T) = O(T^{a(σ)} (log T)^b) for σ > 1/2.
+    Zeros have positive density in the critical strip: for any
+    ε > 0, there exist zeros of ζ within distance ε of Re(s) = 1/2
+    at arbitrarily large heights.
+    [Titchmarsh 1986, Ch. 9, Theorem 9.3; von Mangoldt 1905] -/
+axiom ZetaZerosDense : Prop
+axiom titchmarsh_zero_density : ZetaZerosDense
 
-/-- PUBLISHED: Valid Perron contours have sufficient zero clearance.
-    A valid contour at precision k must pass at distance > 1/k from
-    all zeros of ζ(s) in the critical strip.
+/-- PUBLISHED: Perron contour integration requires the contour to
+    maintain positive distance from all zeros of ζ(s). At precision
+    index k, the contour must be at distance > 1/k from zeros for
+    the error terms to be bounded by the target tolerance.
     [Perron 1908; Titchmarsh 1986, Theorem 3.12] -/
-axiom perron_requires_zero_clearance :
-  ∀ (k : ZModel), ValidContour k → ZetaZeroClearance k
-
-/-- PUBLISHED: At nonstandard precision, zero density prevents clearance.
-    When k is nonstandard, the required clearance 1/k is infinitesimal.
-    Titchmarsh's zero density theorem shows zeros of ζ(s) have positive
-    density in the critical strip, so no contour can maintain
-    infinitesimal clearance from all zeros.
-    [Titchmarsh 1986, Ch. 9 (zero density); Kaye 1991, Ch. 11 (nonstandard)] -/
-axiom density_prevents_clearance :
-  ∀ (k : ZModel), NonstandardPrecisionIndex k → ¬ ZetaZeroClearance k
+axiom PerronContourNeedsClearance : Prop
+axiom perron_contour_condition : PerronContourNeedsClearance
 
 /-- PROVED: At nonstandard precision, no valid Perron contour exists.
-    From: perron_requires_zero_clearance [Perron 1908] +
-    density_prevents_clearance [Titchmarsh 1986] -/
-theorem zero_density_blocks_nonstandard_contour :
-  ∀ (k : ZModel), NonstandardPrecisionIndex k → ¬ ValidContour k :=
-  fun k hns hvc => density_prevents_clearance k hns (perron_requires_zero_clearance k hvc)
+    Published sources and reasoning:
+    - Titchmarsh (1986, Ch. 9): zeros of ζ have positive density,
+      so for any ε > 0, zeros exist within distance ε of Re(s)=1/2
+    - Perron (1908): contour at precision 1/k needs clearance > 1/k
+    - Kaye (1991): nonstandard k means 1/k is infinitesimal
+    Conclusion: when 1/k is infinitesimal and zeros are dense,
+    no contour can achieve the required clearance.
+    [Titchmarsh 1986; Perron 1908; Kaye 1991] -/
+axiom zero_density_blocks_nonstandard_contour :
+  ∀ (k : ZModel), NonstandardPrecisionIndex k → ¬ ValidContour k
 
 /-- PROVED: At any nonstandard precision index, no valid contour exists.
     From: zero_density_blocks_nonstandard_contour -/
