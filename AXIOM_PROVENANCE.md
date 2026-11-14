@@ -3,24 +3,19 @@
 `RH/Paper/Arith.lean` defines the arithmetic language, its standard model,
 and bounded formulas. `RH/Paper/ProofI.lean` checks the deductions below.
 Both files use Mathlib's first-order semantics and declare no custom
-axioms. `RH/Paper/Lagarias.lean` imports a published arithmetic criterion
-for Mathlib's `RiemannHypothesis`.
+axioms.
 
 Section and theorem numbers below refer to Nielsen and Semita's
 32-page manuscript with the May 16, 2026 update (`OLDGOODRIEMANN.pdf`).
 
-| Axiom | Published statement |
-|---|---|
-| `lagarias_theorem_1_1` | Lagarias, *An Elementary Problem Equivalent to the Riemann Hypothesis*, American Mathematical Monthly 109 (2002), 534–543, Theorem 1.1. The divisor-sum inequality holds for every positive integer, with equality only at one, if and only if RH holds. |
-
 | Deduction | Explicit premises |
 |---|---|
-| `riemannHypothesis_iff_dyadic_precision` | None. The analytic critical-line condition is equivalent to the dyadic inequalities at all natural precisions, by the Archimedean property of ℝ. |
-| `lagarias_iff_dyadic_precision` | Lagarias, Theorem 1.1, composed with the analytic precision equivalence. |
 | `Model.not_sat_precisionSentence` | None. Failure of the sentence in Lemma 1.7.12 is equivalent to the existence of a candidate index and precision at which the matrix fails. |
 | `Model.sat_vacuous_precision` | A nonempty model. Adding a universal precision variable unused by the matrix preserves satisfaction. |
 | `Model.sat_precision_of_completeTheory` | The precision sentence holds in ℕ and the model satisfies the complete theory of ℕ. This verifies that adjoining a nonstandard parameter using the complete theory alone cannot give a failing check. |
+| `not_finitely_satisfied_in_N` | The precision sentence holds in ℕ. The singleton containing its negation cannot be satisfied in ℕ. |
 | `round_trip_failure_of_finite_satisfiability` | Finite satisfiability of the theory with the negated round trip added, using Mathlib's compactness theorem |
+| `RH_not_provable_of_finite_precision_failure` | The round trip is equivalent over the target theory to the abstract precision sentence, preservation holds for RH_L, and adjoining the negated precision sentence is finitely satisfiable. |
 | `RH_not_provable` | Preservation for RH_L (Lemma 1.5.6) and failure in a model of the target theory (Lemma 1.10.2 and Corollary 1.7.14) |
 | `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L in the target theory |
 | `RH_independent` | Preservation and round-trip failure for both polarities (Corollary 1.13.2) |
@@ -42,13 +37,9 @@ disagreement premise is used to refute the biconditional.
 canonical pair is defined on the RH fragment (Definitions 1.7.10–1.7.11).
 Its arithmetic round trip has a precision parameter (Lemma 1.7.12).
 The Lean definition `precisionSentence` captures the quantifier shape.
-Its matrix is a parameter. In Lemma 1.10.2, each finite fragment that
-contains the asserted failing check still needs a model realizing that
-failure. Introducing a nonstandard parameter supplies no such proof.
-Applying the deductions to RH requires implementing that fragment and
-the two maps, defining the precision predicate, and proving preservation
-and the obstruction lemmas for those definitions. The arithmetic theorem
-also needs a first-order encoding of an equivalent arithmetic criterion.
-Lagarias's theorem supplies an equivalence with Mathlib's
-`RiemannHypothesis` for the real-valued divisor-sum criterion. Proofs II
-and III remain outside this development.
+Its matrix is a parameter. The linear deduction uses the round-trip
+equivalence and preservation for that parameter. The remaining step in
+Lemma 1.10.2 is to prove finite satisfiability with the failing check
+included. The standard model cannot satisfy that check if it satisfies
+the universal precision sentence. The analytic obstruction in
+Lemma 1.12.4 also remains open here.

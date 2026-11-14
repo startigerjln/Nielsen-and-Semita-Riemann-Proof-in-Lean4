@@ -122,22 +122,44 @@ theorem not_trueInN_neg_precisionSentence (check : L.BoundedFormula Empty 2)
     ¬ TrueInN (neg (precisionSentence check)) :=
   fun hneg => ((Model.sat_neg ⟨ℕ, natStructure⟩ (precisionSentence check)).mp hneg) hcheck
 
-/-- Mathlib's compactness theorem applied to the theory containing the
-    negation of the round trip. -/
-theorem round_trip_failure_of_finite_satisfiability {τ : TranslationPair} {φ : Sent}
-    (finite : (insert (neg (τ.RL φ)) S.T).IsFinitelySatisfiable) :
-    S.RoundTripFails τ φ := by
-  let T := insert (neg (τ.RL φ)) S.T
+/-- The finite satisfiability argument in Lemma 1.10.2 cannot use the
+    standard model for the singleton containing the negated precision
+    sentence if all its checks succeed there. -/
+theorem not_finitely_satisfied_in_N (check : L.BoundedFormula Empty 2)
+    (hcheck : TrueInN (precisionSentence check)) :
+    ¬ (∀ Γ : Finset Sent, (Γ : L.Theory) ⊆ insert (neg (precisionSentence check)) S.T →
+      ∀ φ ∈ Γ, TrueInN φ) := by
+  classical
+  intro h
+  let bad := neg (precisionSentence check)
+  have subset : (({bad} : Finset Sent) : L.Theory) ⊆ insert bad S.T := by
+    intro φ hφ
+    have heq : φ = bad := Finset.mem_singleton.mp hφ
+    exact heq ▸ Set.mem_insert bad S.T
+  exact not_trueInN_neg_precisionSentence check hcheck
+    (h {bad} subset bad (Finset.mem_singleton.mpr rfl))
+
+/-- Mathlib's compactness theorem gives a model of the target theory that
+    falsifies a sentence when adjoining its negation is finitely satisfiable. -/
+theorem sentence_failure_of_finite_satisfiability {φ : Sent}
+    (finite : (insert (neg φ) S.T).IsFinitelySatisfiable) :
+    ∃ M : Model, S.ZFCModel M ∧ ¬ M.Sat φ := by
+  let T := insert (neg φ) S.T
   have satisfiable : T.IsSatisfiable :=
     Language.Theory.isSatisfiable_iff_isFinitelySatisfiable.mpr finite
   obtain ⟨N⟩ := satisfiable
   let M : Model := ⟨N.Carrier, inferInstance⟩
-  have hneg : M.Sat (neg (τ.RL φ)) :=
+  have hneg : M.Sat (neg φ) :=
     Language.Theory.realize_sentence_of_mem (M := N.Carrier)
       (T := T) (Set.mem_insert _ _)
-  refine ⟨M, fun ψ hψ => ?_, (M.sat_neg (τ.RL φ)).mp hneg⟩
+  refine ⟨M, fun ψ hψ => ?_, (M.sat_neg φ).mp hneg⟩
   exact Language.Theory.realize_sentence_of_mem (M := N.Carrier)
     (T := T) (Set.mem_insert_of_mem _ hψ)
+
+theorem round_trip_failure_of_finite_satisfiability {τ : TranslationPair} {φ : Sent}
+    (finite : (insert (neg (τ.RL φ)) S.T).IsFinitelySatisfiable) :
+    S.RoundTripFails τ φ :=
+  sentence_failure_of_finite_satisfiability S finite
 
 /-- Jenny Lorraine Nielsen observed that any witness to round-trip failure
     suffices: preservation would force the round trip to hold in that model. -/
@@ -152,6 +174,19 @@ theorem RH_not_provable {τ : TranslationPair}
     (pres : S.Prov S.RH → S.Prov (τ.RL S.RH))
     (failure : S.RoundTripFails τ S.RH) : ¬ S.Prov S.RH :=
   not_provable_of_round_trip_failure S pres failure
+
+/-- The linear deduction with the precision formula left abstract.
+    The identification of the round trip with the precision sentence
+    is required only in models of the target theory. -/
+theorem RH_not_provable_of_finite_precision_failure {τ : TranslationPair}
+    (check : L.BoundedFormula Empty 2)
+    (roundTrip : S.Prov (iffS (τ.RL S.RH) (precisionSentence check)))
+    (pres : S.Prov S.RH → S.Prov (τ.RL S.RH))
+    (finite : (insert (neg (precisionSentence check)) S.T).IsFinitelySatisfiable) :
+    ¬ S.Prov S.RH := by
+  obtain ⟨M, hM, hfail⟩ := sentence_failure_of_finite_satisfiability S finite
+  have agreement := (M.sat_iff (τ.RL S.RH) (precisionSentence check)).mp (roundTrip M hM)
+  exact RH_not_provable S pres ⟨M, hM, fun h => hfail (agreement.mp h)⟩
 
 theorem neg_RH_not_provable {τ : TranslationPair}
     (pres : S.Prov (neg S.RH) → S.Prov (τ.RL (neg S.RH)))
