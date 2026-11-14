@@ -64,6 +64,7 @@ standard counterexample for a direct check of the coded function.
 |---|---|
 | `mergelyan` | The published polynomial approximation theorem for a compact plane set with connected complement, a continuous function holomorphic in the interior, and positive uniform tolerance. |
 | `approximate_with_polynomial_factor` | Proves that one can approximate with a prescribed polynomial factor that is nonzero on the compact set. The proof uses Mergelyan's theorem. |
+| `approximate_with_prescribed_zeros` | Uses Mergelyan's theorem to prove uniform approximation with exact zeros at a prescribed finite set disjoint from the compact. |
 | `PlantedZero.planted_code_fails` | Proves by exact rational arithmetic that the candidate code for the planted point fails at precision 3, provided the denominator is nonzero there. |
 | `PlantedZero.finite_checks_with_failure` | Combines the failing candidate with any finite list of bounds and local validity checks, given codes that pass the initial validity checks and exceed the cutoff. |
 
@@ -74,3 +75,18 @@ complex coefficients. The remaining bridge is to obtain rational codes
 passing the unified manuscript's specific local validity checks and to
 relate the direct check to the claimed first-order round trip. The finite
 arithmetic theorem uses the local validity property as an explicit premise.
+
+## Perron's formula
+
+`RH/Paper/Perron.lean` states Montgomery and Vaughan, *Multiplicative
+Number Theory I: Classical Theory* (2007), Theorem 5.1. The declaration
+`perron_formula` requires convergence of the ordinary Dirichlet series
+in a half-plane. It gives the limit along symmetric vertical contours
+and counts an integer cutoff with half weight. The theorem
+`perron_formula_of_nonintegral_cutoff` deduces the ordinary summatory
+formula away from integer cutoffs.
+
+The two custom axioms are the published analytic statements
+`mergelyan` and `perron_formula`. Compactness comes from Mathlib.
+Preservation of the canonical round trip is a separate premise of
+the relevant Proof I deductions.
