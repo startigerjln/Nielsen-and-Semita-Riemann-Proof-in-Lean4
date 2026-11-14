@@ -53,3 +53,24 @@ satisfiability claim is equivalent to non-entailment of the precision
 sentence. The quantifier shape alone gives neither, as the example
 `∀ n k, (check n k → check n k)` shows. The analytic obstruction in
 Lemma 1.12.4 also remains open here.
+
+## Planted-zero argument in the unified manuscript
+
+The following modules address Lemmas 1.34–1.35 of the unified manuscript.
+They use Jenny Lorraine Nielsen's observation that the planted zero is a
+standard counterexample for a direct check of the coded function.
+
+| Declaration | Scope |
+|---|---|
+| `mergelyan` | The published polynomial approximation theorem for a compact plane set with connected complement, a continuous function holomorphic in the interior, and positive uniform tolerance. |
+| `approximate_with_polynomial_factor` | Proves that one can approximate with a prescribed polynomial factor that is nonzero on the compact set. The proof uses Mergelyan's theorem. |
+| `PlantedZero.planted_code_fails` | Proves by exact rational arithmetic that the candidate code for the planted point fails at precision 3, provided the denominator is nonzero there. |
+| `PlantedZero.finite_checks_with_failure` | Combines the failing candidate with any finite list of bounds and local validity checks, given codes that pass the initial validity checks and exceed the cutoff. |
+
+The point code directly names rational coordinates. This implementation
+checks zeros given by those coordinates. It supplies no equivalence with
+the coded Lagarias inequality. The analytic approximation theorem has
+complex coefficients. The remaining bridge is to obtain rational codes
+passing the unified manuscript's specific local validity checks and to
+relate the direct check to the claimed first-order round trip. The finite
+arithmetic theorem uses the local validity property as an explicit premise.
