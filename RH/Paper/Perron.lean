@@ -1,5 +1,7 @@
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
+import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.MeasureTheory.Integral.IntervalIntegral
+import Mathlib.Tactic.NormNum
 
 open Filter MeasureTheory
 open scoped BigOperators Topology
@@ -73,6 +75,22 @@ theorem perron_formula_of_valid_limits {ι : Type*} {l : Filter ι} [NeBot l]
   have error := (convergence t).sub
     (tendsto_const_nhds (x := G ((c : ℂ) + (t : ℂ) * Complex.I)))
   exact (sub_eq_zero.mp (tendsto_nhds_unique error (valid t))).symm
+
+/-- A full dyadic precision bound on the integration line supplies the
+    vanishing-error hypothesis of the Perron application. -/
+theorem perron_formula_of_dyadic_validity
+    (a : ℕ → ℂ) (F G : ℂ → ℂ) (σ c x : ℝ) (D : ℕ → ℝ → ℂ)
+    (series : ∀ s : ℂ, σ < s.re → HasSum (dirichletTerm a s) (F s))
+    (hc : max (0 : ℝ) σ < c) (hx : 0 < x)
+    (convergence : ∀ t : ℝ, Tendsto (fun k => D k t) atTop
+      (𝓝 (F ((c : ℂ) + (t : ℂ) * Complex.I))))
+    (valid : ∀ (t : ℝ) (k : ℕ),
+      ‖D k t - G ((c : ℂ) + (t : ℂ) * Complex.I)‖ ≤ (1 / 2 : ℝ) ^ k) :
+    Tendsto (perronIntegral G c x) atTop (𝓝 (perronSum a x)) := by
+  apply perron_formula_of_valid_limits a F G σ c x D series hc hx convergence
+  intro t
+  exact squeeze_zero_norm (valid t)
+    (tendsto_pow_atTop_nhds_zero_of_lt_one (by norm_num) (by norm_num))
 
 /-- A finite-contour estimate for a replacement function, in terms of
     the uniform error of its weighted integrand on the contour. -/
