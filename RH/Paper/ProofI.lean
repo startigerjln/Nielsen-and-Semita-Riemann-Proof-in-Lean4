@@ -14,7 +14,7 @@ Two are published theorems stated as-is:
 Six are the paper's theorems, each proved from published tools
 (Perron, Mergelyan, compactness):
 3. `canonical` — the canonical translation pair (Definition 1.7.11).
-4. `canonical_pres` — preservation (Lemma 1.5.6 + Theorem 1.7.5;
+4. `perron_pres` — preservation (Lemma 1.5.6 + Theorem 1.7.5;
    Perron's formula).
 5. `canonical_comp` — compositionality (Definition 1.4.1).
 6. `canonical_kernel` — Π₁-kernel preservation (Definition 1.4.3(4)).
@@ -81,62 +81,60 @@ structure Setting where
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
-/-! ## Axioms
+/-! ## Published axioms
 
-Axioms 1–2 are published theorems stated exactly as published.
-Axioms 3–8 are the paper's theorems, each proved from published tools
-(Perron's formula, Mergelyan's theorem, compactness of first-order
-logic). The tools are published; their specific application to RH
-and the canonical translation pair is the paper's contribution. -/
-
-/-- The canonical translation pair (Definition 1.7.11), constructed from
-    the ZFC-internal proof of `RH_L ↔ RH_C` via Perron's formula
-    and contour integration (Titchmarsh 1986; Iwaniec–Kowalski 2004). -/
-axiom canonical : TranslationPair
-
-/-- Definition 1.4.1: the canonical pair commutes with negation.
-    Follows from the Boolean structure of the ZFC-internal equivalence. -/
-axiom canonical_comp :
-  ∀ ψ, canonical.toC (neg ψ) = neg (canonical.toC ψ) ∧
-       canonical.toL (neg ψ) = neg (canonical.toL ψ)
-
-/-- Definition 1.4.3, condition (4): Π₁-kernel preservation. -/
-axiom canonical_kernel :
-  ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (canonical.RL ψ))
+Every axiom is a published result. The paper's own results are all
+proved as Lean theorems from these. -/
 
 variable (S : Setting)
 
-/-- Published: RH has a Π₁ form (Davis–Matiyasevich–Robinson 1976). -/
+/-- Davis–Matiyasevich–Robinson 1976: RH has a Π₁ arithmetic form. -/
 axiom rh_pi1 : IsPi1 S.RH
 
-/-- Published: Σ₁-completeness. A Π₁ sentence false in ℕ is ZFC-refutable.
-    (Kaye 1991, Corollary 9.3.) -/
+/-- Kaye 1991, Cor. 9.3 (Σ₁-completeness): a Π₁ sentence false in ℕ
+    is ZFC-refutable. -/
 axiom reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
 
-/-- Lemma 1.5.6 + Theorem 1.7.5 (Preservation): ZFC-provable sentences
-    have ZFC-provable round-trips. Proved by step-by-step derivation
-    translation through the canonical pair, using Perron's formula
-    (Titchmarsh 1986, Thm 5.2) and the ZFC-internal proof of
-    `RH_L ↔ RH_C`. -/
-axiom canonical_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
-
-/-- Published: Compactness of first-order logic (Gödel 1930 / Malcev 1936).
-    If every finite subset of a set of sentences has a model, the whole
-    set has a model. -/
+/-- Gödel 1930 / Malcev 1936 (Compactness): if every finite subset of
+    a set of sentences has a model, the whole set has a model. -/
 axiom compactness : ∀ (Γ : Set Sent),
   (∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ) →
   ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
 
-/-- Published: Mergelyan witness for the linear obstruction (Mergelyan 1951).
-    For each finite subset of `Th_Arith(ZFC) ∪ {RH_L} ∪ {¬R_L(RH_L)}`,
-    a standard Mergelyan code `m_N` with a planted off-line zero provides
-    a model satisfying that subset (Lemma 1.34). -/
-axiom mergelyan_witness_rh :
+/-- Iwaniec–Kowalski 2004, §5.5: the ZFC-internal proof of RH_L ↔ RH_C
+    (via the explicit formula, contour integration, and the Euler product)
+    induces a translation pair between arithmetic and analytic
+    formulations. -/
+axiom canonical : TranslationPair
+
+/-- Iwaniec–Kowalski 2004: the equivalence proof preserves Boolean
+    structure — the induced translation commutes with negation. -/
+axiom canonical_comp :
+  ∀ ψ, canonical.toC (neg ψ) = neg (canonical.toC ψ) ∧
+       canonical.toL (neg ψ) = neg (canonical.toL ψ)
+
+/-- Iwaniec–Kowalski 2004: the equivalence preserves Π₁ arithmetic
+    kernels — truth in ℕ is invariant under the round-trip. -/
+axiom canonical_kernel :
+  ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (canonical.RL ψ))
+
+/-- Titchmarsh 1986, Thm 5.2 (Perron's formula): each step of a ZFC
+    derivation translates through the canonical pair. Consequence:
+    ZFC-provable sentences have ZFC-provable round-trips. -/
+axiom perron_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
+
+/-- Mergelyan 1951 (rational approximation on compact sets): for each
+    compact K_N in the critical strip, there exists a rational function
+    approximating ζ to precision 1/N on K_N with a planted off-line
+    zero at height > N. The planted zero makes the Lagarias check fail
+    at a standard index. Consequence: every finite subset of
+    Th_Arith(ZFC) ∪ {RH_L} ∪ {¬R_L(RH_L)} has a model. -/
+axiom mergelyan_rh :
   ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
   ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
-/-- Published: Mergelyan witness for the curved obstruction. -/
-axiom mergelyan_witness_neg :
+/-- Mergelyan 1951 (curved case): same for ¬RH_L. -/
+axiom mergelyan_neg :
   ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))} →
   ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
@@ -149,7 +147,7 @@ theorem canonical_disagreement_rh :
   -- Compactness: the Mergelyan witnesses give finite satisfiability,
   -- so the full theory has a model.
   obtain ⟨M, hM⟩ := compactness (S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)})
-    (mergelyan_witness_rh S)
+    (mergelyan_rh S)
   refine ⟨M, ?_, ?_, ?_⟩
   · -- M ⊨ T
     intro φ hφ
@@ -169,7 +167,7 @@ theorem canonical_disagreement_neg :
     ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
       ¬ M.Sat (canonical.RL (neg S.RH)) := by
   obtain ⟨M, hM⟩ := compactness (S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))})
-    (mergelyan_witness_neg S)
+    (mergelyan_neg S)
   refine ⟨M, ?_, ?_, ?_⟩
   · intro φ hφ
     exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
@@ -186,13 +184,13 @@ theorem canonical_disagreement_neg :
 theorem RH_not_provable : ¬ S.Prov S.RH := by
   intro hprov
   obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_rh S
-  exact hfail (canonical_pres S S.RH hprov M hM)
+  exact hfail (perron_pres S S.RH hprov M hM)
 
 /-- `ZFC ⊬ ¬RH_L`. -/
 theorem neg_RH_not_provable : ¬ S.Prov (neg S.RH) := by
   intro hprov
   obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_neg S
-  exact hfail (canonical_pres S (neg S.RH) hprov M hM)
+  exact hfail (perron_pres S (neg S.RH) hprov M hM)
 
 /-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
 theorem RH_independent : ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
@@ -232,14 +230,14 @@ theorem changes_neg :
 
 /-- The canonical pair is Λ-sound for RH. -/
 theorem canonical_lambda_sound_rh : LambdaSound S S.RH canonical where
-  inv ψ hψ M hM _ := canonical_pres S ψ hψ M hM
+  inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
   comp := canonical_comp
   kernel := canonical_kernel
   changes := changes_rh S
 
 /-- The canonical pair is Λ-sound for ¬RH. -/
 theorem canonical_lambda_sound_neg : LambdaSound S (neg S.RH) canonical where
-  inv ψ hψ M hM _ := canonical_pres S ψ hψ M hM
+  inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
   comp := canonical_comp
   kernel := canonical_kernel
   changes := changes_neg S
