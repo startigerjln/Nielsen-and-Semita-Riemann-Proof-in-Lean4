@@ -3,13 +3,20 @@
 `RH/Paper/Arith.lean` defines the arithmetic language, its standard model,
 and bounded formulas. `RH/Paper/ProofI.lean` checks the deductions below.
 Both files use Mathlib's first-order semantics and declare no custom
-axioms.
+axioms. `RH/Paper/Lagarias.lean` imports a published arithmetic criterion
+for Mathlib's `RiemannHypothesis`.
 
 Section and theorem numbers below refer to Nielsen and Semita's
 32-page manuscript with the May 16, 2026 update (`OLDGOODRIEMANN.pdf`).
 
+| Axiom | Published statement |
+|---|---|
+| `lagarias_theorem_1_1` | Lagarias, *An Elementary Problem Equivalent to the Riemann Hypothesis*, American Mathematical Monthly 109 (2002), 534–543, Theorem 1.1. The divisor-sum inequality holds for every positive integer, with equality only at one, if and only if RH holds. |
+
 | Deduction | Explicit premises |
 |---|---|
+| `riemannHypothesis_iff_dyadic_precision` | None. The analytic critical-line condition is equivalent to the dyadic inequalities at all natural precisions, by the Archimedean property of ℝ. |
+| `lagarias_iff_dyadic_precision` | Lagarias, Theorem 1.1, composed with the analytic precision equivalence. |
 | `Model.not_sat_precisionSentence` | None. Failure of the sentence in Lemma 1.7.12 is equivalent to the existence of a candidate index and precision at which the matrix fails. |
 | `Model.sat_vacuous_precision` | A nonempty model. Adding a universal precision variable unused by the matrix preserves satisfaction. |
 | `Model.sat_precision_of_completeTheory` | The precision sentence holds in ℕ and the model satisfies the complete theory of ℕ. This verifies that adjoining a nonstandard parameter using the complete theory alone cannot give a failing check. |
@@ -41,5 +48,7 @@ failure. Introducing a nonstandard parameter supplies no such proof.
 Applying the deductions to RH requires implementing that fragment and
 the two maps, defining the precision predicate, and proving preservation
 and the obstruction lemmas for those definitions. The arithmetic theorem
-also needs a bridge to Mathlib's `RiemannHypothesis`. Proofs II and III
-remain outside this development.
+also needs a first-order encoding of an equivalent arithmetic criterion.
+Lagarias's theorem supplies an equivalence with Mathlib's
+`RiemannHypothesis` for the real-valued divisor-sum criterion. Proofs II
+and III remain outside this development.

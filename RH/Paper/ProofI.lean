@@ -87,9 +87,9 @@ theorem Model.not_sat_precisionSentence (M : Model)
   change (¬ ∀ n k : M.carrier, check.Realize (default : Empty → M.carrier)
     (Fin.snoc (Fin.snoc (default : Fin 0 → M.carrier) n) k)) ↔ _
   have emptyAssignment : (default : Empty → M.carrier) = fun e => Empty.elim e :=
-    funext Empty.elim
+    funext (fun e => nomatch e)
   have noBoundVariables : (default : Fin 0 → M.carrier) = Fin.elim0 :=
-    funext Fin.elim0
+    funext (fun i => Fin.elim0 i)
   rw [emptyAssignment, noBoundVariables]
   simp only [not_forall]
 
@@ -113,6 +113,14 @@ theorem Model.sat_precision_of_completeTheory (M : Model)
     (check : L.BoundedFormula Empty 2) (hcheck : TrueInN (precisionSentence check)) :
     M.Sat (precisionSentence check) :=
   hM _ (Language.mem_completeTheory.mpr hcheck)
+
+/-- In the standard arithmetic structure, the finite fragment consisting
+    just of the negated precision sentence already requires a failing
+    pair. Compare the finite satisfiability step in Lemma 1.10.2. -/
+theorem not_trueInN_neg_precisionSentence (check : L.BoundedFormula Empty 2)
+    (hcheck : TrueInN (precisionSentence check)) :
+    ¬ TrueInN (neg (precisionSentence check)) :=
+  fun hneg => ((Model.sat_neg ⟨ℕ, natStructure⟩ (precisionSentence check)).mp hneg) hcheck
 
 /-- Mathlib's compactness theorem applied to the theory containing the
     negation of the round trip. -/
