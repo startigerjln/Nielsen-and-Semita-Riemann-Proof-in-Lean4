@@ -22,8 +22,10 @@ Round-Trip Adequacy (1.7.13), Independence from Obstruction Models (1.7.14),
 Λ-irreducibility of RH (1.13.1), ZFC-undecidability (1.13.2), truth of RH in
 ℕ (1.18.2, 1.18.3).
 
-**Assumed** (the structure `Hypotheses`): soundness and completeness for the
-class of ZFC models, the Π₁ form of RH, Π₁ witness reflection, Λ-soundness of
+Provability is defined as truth in all models of ZFC, so soundness and
+completeness are not assumptions.
+
+**Assumed** (the structure `Hypotheses`): the Π₁ form of RH, Π₁ witness reflection, Λ-soundness of
 the canonical pair, and the obstruction lemmas, each stated in the branch of
 the case split in which the paper proves it: the linear and curved
 obstructions for RH when RH holds in ℕ, and the curved obstruction for ¬RH
@@ -90,16 +92,23 @@ def TranslationPair.RC (τ : TranslationPair) (φ : Sent) : Sent := τ.toC (τ.t
 
 /-- The data the paper works with. -/
 structure Setting where
-  /-- `ZFC ⊢ φ` for (arithmetized) sentences. -/
-  Prov : Sent → Prop
-  /-- Models of ZFC, through the sentences they satisfy. -/
-  ZFCModel : Model → Prop
+  /-- The arithmetical theorems of ZFC, as a theory in `L`. -/
+  T : L.Theory
   /-- The curved model class `M_C` (Section 1.3). -/
   Cur : Model → Prop
   /-- The arithmetic formulation `RH_L`. -/
   RH : Sent
   /-- The canonical translation pair (Definition 1.7.11). -/
   can : TranslationPair
+
+/-- Models of ZFC, through the arithmetic sentences they satisfy. -/
+def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
+
+/-- `ZFC ⊢ φ`: `φ` holds in every model of ZFC. By Gödel's Completeness
+    Theorem this is the same as derivability; it is the notion of consequence
+    Mathlib's model theory uses. Soundness and completeness then hold by
+    definition and are not assumptions. -/
+def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
 variable (S : Setting)
 
@@ -139,11 +148,6 @@ def LIrreducible (φ : Sent) : Prop :=
 
 /-- The assumptions of Proof I. -/
 structure Hypotheses : Prop where
-  /-- Soundness: theorems of ZFC hold in every model of ZFC. -/
-  sound : ∀ φ, S.Prov φ → ∀ M, S.ZFCModel M → M.Sat φ
-  /-- Gödel's Completeness Theorem: what holds in every model of ZFC is
-      provable. Used in Theorem 1.7.13. -/
-  complete : ∀ φ, (∀ M, S.ZFCModel M → M.Sat φ) → S.Prov φ
   /-- RH has a Π₁ form with Δ₀ kernel (Proposition 1.18.1). -/
   rh_pi1 : IsPi1 S.RH
   /-- Π₁ Witness Reflection (Theorem 1.17.1). -/
@@ -171,23 +175,23 @@ variable {S}
 /-! ## What is proved -/
 
 /-- Lemma 1.5.6 (Uniform Preservation under ZFC-Provability). -/
-theorem uniform_preservation (H : Hypotheses S) {τ : TranslationPair}
+theorem uniform_preservation {τ : TranslationPair}
     (hτ : LambdaSound S τ) {φ : Sent} (hφ : S.Prov φ) (M : Model)
     (hM : S.ZFCModel M) : M.Sat φ ↔ M.Sat (τ.RL φ) :=
-  ⟨fun h => hτ.inv φ hφ M hM h, fun _ => H.sound φ hφ M hM⟩
+  ⟨fun h => hτ.inv φ hφ M hM h, fun _ => hφ M hM⟩
 
 /-- Theorem 1.5.2 (Λ-Reduction Soundness): `ZFC ⊢ φ` implies `Λ_L(φ) = 0`. -/
-theorem lambda_reduction_soundness (H : Hypotheses S) {τ : TranslationPair}
+theorem lambda_reduction_soundness {τ : TranslationPair}
     (hτ : LambdaSound S τ) {φ : Sent} (hφ : S.Prov φ) : ¬ LObstructs S τ φ := by
   rintro ⟨M, hM, hne⟩
-  exact hne (uniform_preservation H hτ hφ M hM)
+  exact hne (uniform_preservation hτ hφ M hM)
 
 /-- Theorem 1.7.13 (Round-Trip Adequacy):
     `ZFC ⊢ φ` implies `ZFC ⊢ φ ↔ R_L^can(φ)`. -/
 theorem round_trip_adequacy (H : Hypotheses S) {φ : Sent} (hφ : S.Prov φ) :
     S.Prov (iffS φ (S.can.RL φ)) :=
-  H.complete _ fun M hM =>
-    (M.sat_iff φ (S.can.RL φ)).mpr (uniform_preservation H H.can_sound hφ M hM)
+  fun M hM =>
+    (M.sat_iff φ (S.can.RL φ)).mpr (uniform_preservation H.can_sound hφ M hM)
 
 /-- Corollary 1.7.14 (Independence from Obstruction Models): a model of ZFC
     with `M ⊨ φ` and `M ⊭ R_L^can(φ)` gives `ZFC ⊬ φ`. -/
@@ -196,7 +200,7 @@ theorem not_provable_of_obstruction_model (H : Hypotheses S) {φ : Sent}
     ¬ S.Prov φ := by
   intro hφ
   obtain ⟨M, hM, h1, h2⟩ := hobs
-  have hiff := H.sound _ (round_trip_adequacy H hφ) M hM
+  have hiff := round_trip_adequacy H hφ M hM
   exact h2 (((M.sat_iff φ (S.can.RL φ)).mp hiff).mp h1)
 
 /-- Uniform Preservation, curved side. -/
@@ -237,7 +241,7 @@ theorem RH_not_provable (H : Hypotheses S) : ¬ S.Prov S.RH :=
 theorem neg_RH_not_provable (H : Hypotheses S) : ¬ S.Prov (neg S.RH) := by
   intro hneg
   obtain ⟨M, hM, h1, _⟩ := H.linear_failure (RH_true_in_N H) S.can H.can_sound
-  exact (M.sat_neg S.RH).mp (H.sound _ hneg M hM) h1
+  exact (M.sat_neg S.RH).mp (hneg M hM) h1
 
 /-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
 theorem RH_independent (H : Hypotheses S) :
