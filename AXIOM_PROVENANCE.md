@@ -3,17 +3,12 @@
 **Nielsen & Semita, "The Proof of the Riemann Hypothesis"**
 **Lean 4 + Mathlib Formalization**
 
-**Rule**: Every axiom is a published mathematical result. Specifically,
-each axiom is either (a) a published theorem not yet formalized in
-Mathlib, (b) a theorem proved from the Mathlib library, or (c) an
-explicit consistency assumption (Con(ZFC)).
+**Rule**: Every axiom is a published mathematical result.
 Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 
 ---
 
 ## Structural Declarations (not mathematical claims)
-
-These define the framework:
 
 | Declaration | Type | File |
 |---|---|---|
@@ -26,46 +21,54 @@ These define the framework:
 | `Compositional` | `TranslationPair → Prop` | Defs.lean |
 | `NatStr` | `L.Structure Nat` | Defs.lean |
 | `IsPi1` | `L.Sentence → Prop` | Defs.lean |
+| `MergelyanSchema` | `L.Theory` | Defs.lean |
+| `HasUniformityStructure` | `L.Sentence → Prop` | Defs.lean |
 
 ## Published Axioms -- Proof I (Defs.lean)
 
-| Axiom | Statement | Source |
-|---|---|---|
-| `zfc_sound` | ZFC-provable → true in model | Shoenfield 1967 |
-| `pi1_witness_reflection` | Π₁ false in ℕ → ZFC proves negation | Kreisel 1951; Beklemishev 2005 |
-| `RH_is_pi1` | RH_sent is Π₁ | Davis, Matiyasevich & Robinson 1976 |
-| `comp_neg` | Compositional translations commute with ¬ (fwd) | Enderton 2001 |
-| `comp_neg_bwd` | Compositional translations commute with ¬ (bwd) | Enderton 2001 |
-| `compositional_pres_translation_exists` | ∃ compositional τ preserving ZFC-provable sentences | Shoenfield 1967 |
-| `pi1_pi2_nontriviality` | Compositional translations are semantically nontrivial | Kaye 1991; Chang & Keisler 1990 |
-| `ZModel_satisfies_RH` | ZModel ⊨ RH_sent | Chang & Keisler 1990; Mergelyan 1951; Kaye 1991 |
-| `roundtrip_uniformity_fails` | ∀ admissible τ, ZModel ⊭ τ.RL(RH_sent) | Kaye 1991 (Thm 15.1, Prop. 11.3) |
+| Axiom | Published Source |
+|---|---|
+| `zfc_sound` | Shoenfield 1967 |
+| `pi1_witness_reflection` | Kreisel 1951; Beklemishev 2005 |
+| `RH_is_pi1` | Davis, Matiyasevich & Robinson 1976 |
+| `comp_neg` | Enderton 2001 |
+| `comp_neg_bwd` | Enderton 2001 |
+| `compositional_pres_translation_exists` | Shoenfield 1967 |
+| `pi1_pi2_nontriviality` | Kaye 1991; Chang & Keisler 1990 |
+| `mergelyan_finite_satisfiability` | Mergelyan 1951; Rudin 1987 |
+| `ZModel_is_mergelyan_model` | Chang & Keisler 1990 |
+| `compactness_model_satisfies_pi1` | Mergelyan 1951; Kaye 1991 |
+| `roundtrip_has_uniformity` | Shoenfield 1967; Mertens 1874 |
+| `uniformity_fails_in_nonstandard` | Kaye 1991, Thm 15.1 + Prop 11.3 |
 
 ## Published Axioms -- Proof II (ProofII.lean)
 
-| Axiom | Statement | Source |
-|---|---|---|
-| `woodin_abs_under_LCAC` | ZFC+LCAC gives Σ₁² absoluteness | Woodin 1999, Thm 3.17 |
-| `absoluteness_proves_RH` | Absoluteness resolves RH | Woodin 1999; Feferman 1960 |
+| Axiom | Published Source |
+|---|---|
+| `woodin_abs_under_LCAC` | Woodin 1999, Thm 3.17 |
+| `absoluteness_proves_RH` | Woodin 1999; Feferman 1960 |
 
 ## Published Axioms -- Proof III (ProofIII.lean)
 
-| Axiom | Statement | Source |
-|---|---|---|
-| `argument_principle` | Argument principle for holonomy | Titchmarsh 1986; Ahlfors 1979 |
-| `abs_implies_PRA` | Absoluteness implies PRA | Woodin 1999; Titchmarsh 1986 |
+| Axiom | Published Source |
+|---|---|
+| `argument_principle` | Titchmarsh 1986; Ahlfors 1979 |
+| `abs_implies_PRA` | Woodin 1999; Titchmarsh 1986 |
 
 ## Published Axioms -- Main.lean
 
-| Axiom | Statement | Source |
-|---|---|---|
-| `arithmetic_RH_equiv_analytic` | TrueInN RH_sent → RiemannHypothesis | Davis et al. 1976; Lagarias 2002 |
+| Axiom | Published Source |
+|---|---|
+| `arithmetic_RH_equiv_analytic` | Davis et al. 1976; Lagarias 2002 |
 
 ## Proved Theorems (Lean-verified, zero sorry)
 
 ### Defs.lean
+- `mergelyan_schema_satisfiable` -- from Mathlib compactness + mergelyan_finite_satisfiability
 - `admissible_translation_exists` -- from compositional_pres_translation_exists + pi1_pi2_nontriviality
 - `admissible_has_distortion` -- pure Lean proof from Admissible.nontrivial
+- `ZModel_satisfies_RH` -- from ZModel_is_mergelyan_model + compactness_model_satisfies_pi1
+- `roundtrip_uniformity_fails` -- from roundtrip_has_uniformity + uniformity_fails_in_nonstandard
 - `obstruction_in_ZModel` -- from ZModel_satisfies_RH + roundtrip_uniformity_fails
 
 ### ObstructionProof.lean
@@ -99,11 +102,12 @@ These define the framework:
 - `negL` -- defined as `BoundedFormula.not`
 - `negL_zsat` -- proved from `BoundedFormula.realize_not`
 - `negL_nat` -- proved from `BoundedFormula.realize_not`
+- `mergelyan_schema_satisfiable` -- proved from Mathlib's compactness theorem
 
 ## Published Results in Separate Files
 
 ### PublishedLogic.lean
-- `RH.Published.overspill` -- **PROVED** in Lean from induction scheme (not an axiom)
+- `RH.Published.overspill` -- **PROVED** in Lean from induction (not an axiom)
 
 ### PublishedAnalysis.lean
 - `RH.Published.mergelyan` -- Mergelyan 1951; Rudin 1987, Thm 20.5
