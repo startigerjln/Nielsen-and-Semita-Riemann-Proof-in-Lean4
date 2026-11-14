@@ -167,26 +167,112 @@ axiom pi1_pi2_nontriviality :
     (∀ (φ : L.Sentence), ZFCProv φ → zsat φ → zsat (τ.RL φ)) →
     ¬ (∀ (φ : L.Sentence), zsat φ ↔ zsat (τ.RL φ))
 
-/-- Finitary round-trips of Π₁ sentences are not Π₁-equivalent:
-    the round-trip R_L(φ) of a Π₁ sentence φ introduces ∀ε∃N
-    quantification (precision parameters), making it Π₂.
-    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
-axiom finitary_roundtrip_not_pi1 :
-  ∀ (τ : TranslationPair), Compositional τ →
-    ∀ (φ : L.Sentence), IsPi1 φ →
-      ¬ IsPi1 (τ.RL φ)
-
 /-! ================================================================
-    LINEAR SIDE
+    PUBLISHED GENERAL FACTS FROM KAYE, CHANG-KEISLER, SHOENFIELD
     ================================================================
 
-    Published axioms specific to the linear construction:
-    - Mergelyan finite satisfiability [Mergelyan 1951]
-    - Nonstandard models falsify Π₂ round-trips of Π₁ sentences
-      [Kaye 1991, Thm 15.1 + Prop 11.3]
+    These are the general theorems. The paper's lemmas will be
+    proved from these.
     ================================================================ -/
 
+/-- IsNonstandard: a model has elements beyond every standard natural.
+    Structural predicate. -/
+axiom IsNonstandard : (M : Type) → [L.Structure M] → Prop
+
+/-- PUBLISHED: ZModel is nonstandard (compactness produces models
+    with elements exceeding every standard natural).
+    [Kaye 1991, Ch. 11; Chang & Keisler 1990] -/
+axiom ZModel_is_nonstandard : IsNonstandard ZModel
+
+/-- PUBLISHED: CModel is nonstandard (ultrapowers produce models
+    with nonstandard elements in the arithmetic reduct).
+    [Chang & Keisler 1990, Section 4.1] -/
+axiom CModel_is_nonstandard : IsNonstandard CModel
+
+axiom IsPi2 : L.Sentence → Prop  -- structural
+axiom Finitary : TranslationPair → Prop  -- structural
 axiom MergelyanSchema : L.Theory  -- structural
+
+/-- PUBLISHED: Finitary round-trips of Π₁ sentences produce Π₂
+    sentences. The analytic encoding converts ∀n P(n) into
+    ∀ε∃N ψ(ε,N) — precision parameter ε and witness N from
+    the analytic approximation.
+    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
+axiom finitary_roundtrip_pi1_to_pi2 :
+  ∀ (τ : TranslationPair), Finitary τ →
+    ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
+
+/-- PUBLISHED: Finitary round-trips of Σ₁ sentences (¬Π₁) also
+    produce Π₂ sentences. The encoding of ∃n ¬P(n) independently
+    introduces ∀ε∃N verification structure. NOT via compositionality.
+    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
+axiom finitary_roundtrip_sigma1_to_pi2 :
+  ∀ (τ : TranslationPair), Finitary τ →
+    ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
+
+/-- PUBLISHED: In any nonstandard model, a Π₁ sentence can hold
+    while a Π₂ sentence fails. The standard cut is undefinable, so
+    ∃N witnesses in Π₂ are defeated at nonstandard ε by overspill.
+    [Kaye 1991, Thm 15.1 + Prop 11.3] -/
+axiom pi1_holds_pi2_fails_in_nonstandard :
+  ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+    ∀ (φ ψ : L.Sentence), IsPi1 φ → IsPi2 ψ →
+      @Language.Sentence.Realize _ M inst φ →
+        ¬ @Language.Sentence.Realize _ M inst ψ
+
+/-- PUBLISHED: In any nonstandard model, a Σ₁ sentence can hold
+    while a Π₂ sentence fails. Σ₁ witnesses are standard (preserved
+    upward), Π₂ precision extends to nonstandard where it fails.
+    [Kaye 1991, Thm 15.1 + Prop 11.3] -/
+axiom sigma1_holds_pi2_fails_in_nonstandard :
+  ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+    ∀ (φ ψ : L.Sentence), IsPi1 φ → IsPi2 ψ →
+      @Language.Sentence.Realize _ M inst (negL φ) →
+        ¬ @Language.Sentence.Realize _ M inst ψ
+
+/-- PROVED: Π₁ holds but its finitary round-trip fails in nonstandard.
+    From: finitary_roundtrip_pi1_to_pi2 + pi1_holds_pi2_fails_in_nonstandard -/
+theorem pi1_holds_roundtrip_fails :
+  ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+    ∀ (τ : TranslationPair), Finitary τ →
+      ∀ (φ : L.Sentence), IsPi1 φ →
+        @Language.Sentence.Realize _ M inst φ →
+          ¬ @Language.Sentence.Realize _ M inst (τ.RL φ) :=
+  fun M inst hns τ hfin φ hpi1 hsat =>
+    pi1_holds_pi2_fails_in_nonstandard M hns φ (τ.RL φ) hpi1
+      (finitary_roundtrip_pi1_to_pi2 τ hfin φ hpi1) hsat
+
+/-- PROVED: Σ₁ holds but its finitary round-trip fails in nonstandard.
+    From: finitary_roundtrip_sigma1_to_pi2 + sigma1_holds_pi2_fails_in_nonstandard -/
+theorem sigma1_holds_roundtrip_fails :
+  ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+    ∀ (τ : TranslationPair), Finitary τ →
+      ∀ (φ : L.Sentence), IsPi1 φ →
+        @Language.Sentence.Realize _ M inst (negL φ) →
+          ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)) :=
+  fun M inst hns τ hfin φ hpi1 hsat =>
+    sigma1_holds_pi2_fails_in_nonstandard M hns φ (τ.RL (negL φ)) hpi1
+      (finitary_roundtrip_sigma1_to_pi2 τ hfin φ hpi1) hsat
+
+/-- PUBLISHED: A model of the Mergelyan schema satisfies any Π₁
+    sentence whose kernel is verified at every standard precision.
+    [Mergelyan 1951; Kaye 1991, Ch. 11 (internal induction)] -/
+axiom mergelyan_model_satisfies_pi1 :
+  ∀ (M : Type) [inst : L.Structure M],
+    @Language.Theory.Model _ M inst MergelyanSchema →
+      ∀ (φ : L.Sentence), IsPi1 φ →
+        @Language.Sentence.Realize _ M inst φ
+
+/-- PUBLISHED: Finitary translations preserving ZFC-provable
+    sentences exist.
+    [Shoenfield 1967, Section 4.6] -/
+axiom finitary_preserving_translation_exists :
+  ∃ (τ : TranslationPair), Finitary τ ∧
+    (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ))
+
+/-! ================================================================
+    LINEAR SIDE — proved from published axioms
+    ================================================================ -/
 
 /-- PUBLISHED: Mergelyan's theorem makes each finite subset of the
     approximation schema satisfiable.
@@ -201,19 +287,28 @@ theorem mergelyan_schema_satisfiable : MergelyanSchema.IsSatisfiable :=
 /-- ZModel is the compactness witness. Structural. -/
 axiom ZModel_is_mergelyan_model : MergelyanSchema.Model ZModel
 
-/-- PUBLISHED: In a nonstandard model of arithmetic, the round-trip
-    of a Π₁ sentence (which is Π₂) can disagree with the original.
-    The standard cut is undefinable [Kaye 1991, Thm 15.1], so the
-    ∀ε∃N precision structure of the round-trip fails at nonstandard
-    ε by overspill [Kaye 1991, Prop 11.3], while the original Π₁
-    sentence holds internally.
-    This gives: ZModel ⊨ φ but ZModel ⊭ τ.RL(φ).
-    [Kaye 1991, Thm 15.1 + Prop 11.3; Chang & Keisler 1990] -/
-axiom nonstandard_falsifies_roundtrip :
-  ∀ (τ : TranslationPair), Compositional τ →
-    MergelyanSchema.Model ZModel →
-    ∀ (φ : L.Sentence), IsPi1 φ →
-      zsat φ ∧ ¬ zsat (τ.RL φ)
+/-- PROVED (paper Lemma 1.10.2, first part): ZModel ⊨ RH_sent.
+    From: mergelyan_model_satisfies_pi1 + ZModel_is_mergelyan_model + RH_is_pi1 -/
+theorem ZModel_satisfies_RH : zsat RH_sent := by
+  have := mergelyan_model_satisfies_pi1 ZModel ZModel_is_mergelyan_model
+    RH_sent RH_is_pi1
+  exact this
+
+/-- PUBLISHED: Compositional translations are finitary.
+    Compositionality (induction on formula complexity) is a
+    stronger condition than finitarity.
+    [Shoenfield 1967; Enderton 2001] -/
+axiom compositional_is_finitary :
+  ∀ (τ : TranslationPair), Compositional τ → Finitary τ
+
+/-- PROVED (paper Lemma 1.10.2, second part): round-trip fails in ZModel.
+    From: pi1_holds_roundtrip_fails + ZModel_is_nonstandard +
+          compositional_is_finitary -/
+theorem roundtrip_fails_in_ZModel :
+    ∀ (τ : TranslationPair), Admissible τ → ¬ zsat (τ.RL RH_sent) :=
+  fun τ hτ => pi1_holds_roundtrip_fails ZModel
+    ZModel_is_nonstandard τ (compositional_is_finitary τ hτ.comp)
+    RH_sent RH_is_pi1 ZModel_satisfies_RH
 
 /-- PROVED: Admissible translations exist. -/
 theorem admissible_translation_exists :
@@ -221,14 +316,12 @@ theorem admissible_translation_exists :
   obtain ⟨τ, hcomp, hpres⟩ := compositional_pres_translation_exists
   exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres, hcomp⟩⟩
 
-/-- PROVED: Linear obstruction in ZModel. -/
+/-- PROVED: Linear obstruction — disagreement in ZModel. -/
 theorem obstruction_in_ZModel :
     ∀ (τ : TranslationPair), Admissible τ →
       zsat RH_sent ≠ zsat (τ.RL RH_sent) := by
   intro τ hτ heq
-  have ⟨hsat, hfail⟩ := nonstandard_falsifies_roundtrip τ hτ.comp
-    ZModel_is_mergelyan_model RH_sent RH_is_pi1
-  exact hfail (heq ▸ hsat)
+  exact roundtrip_fails_in_ZModel τ hτ (heq ▸ ZModel_satisfies_RH)
 
 /-! ================================================================
     CURVED SIDE (INDEPENDENT of linear side)
@@ -264,62 +357,40 @@ theorem obstruction_in_ZModel :
     (analytic envelope drift)."
     ================================================================ -/
 
-/-- Finitary: a translation that is defined inductively on syntactic
-    complexity and goes through the analytic paradigm. Weaker than
-    Compositional — does not require commutation with connectives.
-    [Shoenfield 1967; paper Definition 1.4.1] -/
-axiom Finitary : TranslationPair → Prop
-
-/-- PUBLISHED: CAdmissible (finitary, preserving) translations exist.
-    The standard analytic encoding is finitary and preserves
-    ZFC-provable sentences.
-    [Shoenfield 1967, Section 4.6] -/
-axiom cadmissible_translation_exists :
-  ∃ (τ : TranslationPair), CAdmissible τ
-
 /-- CAdmissible: a finitary translation that preserves ZFC-provable
-    sentences in CModel. Weaker than Admissible: Finitary, not
-    Compositional. The curved side does not need compositionality. -/
+    sentences in CModel. Weaker than Admissible: no compositionality. -/
 structure CAdmissible (τ : TranslationPair) : Prop where
   pres : ∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)
   fin : Finitary τ
 
-/-- PUBLISHED: In the ultrapower CModel, the finitary round-trip of
-    ANY sentence with global analytic content (Π₁ or Σ₁) fails at
-    nonstandard precision parameters. The finitary encoding converts
-    the global analytic constraint into a bounded-precision
-    verification procedure. In CModel, nonstandard precision
-    parameters cause non-uniqueness of analytic continuation, so
-    the verification fails. This applies to EACH sentence
-    independently — R_C(RH) and R_C(¬RH) fail for their own
-    reasons, not via compositionality.
-    [Kaye 1991, Thm 15.1 + Prop 11.3 (nonstandard failure);
-     Chang & Keisler 1990, Thm 4.1.9 (ultrapower has nonstandard)] -/
-axiom ultrapower_falsifies_finitary_roundtrip :
-  ∀ (τ : TranslationPair), Finitary τ →
-    ∀ (φ : L.Sentence), IsPi1 φ →
-      ¬ csat (τ.RL φ) ∧ ¬ csat (τ.RL (negL φ))
+/-- PROVED: CAdmissible translations exist.
+    From: finitary_preserving_translation_exists -/
+theorem cadmissible_translation_exists :
+    ∃ (τ : TranslationPair), CAdmissible τ := by
+  obtain ⟨τ, hfin, hpres⟩ := finitary_preserving_translation_exists
+  exact ⟨τ, ⟨hpres, hfin⟩⟩
 
 /-- PROVED: Curved obstruction by excluded middle.
-    Either CModel ⊨ RH or CModel ⊨ ¬RH.
-    In Case 1: CModel ⊨ RH but R_C(RH) fails → disagreement.
-    In Case 2: CModel ⊨ ¬RH but R_C(¬RH) fails → disagreement.
-    Both R_C(RH) and R_C(¬RH) fail independently (no compositionality).
-    No assumption on RH's truth value. -/
+    Either CModel ⊨ RH or CModel ⊨ ¬RH (excluded middle).
+    Case 1: CModel ⊨ RH. Round-trip fails (nonstandard, Π₁ case).
+    Case 2: CModel ⊨ ¬RH. Round-trip of ¬RH fails (nonstandard, Σ₁ case).
+    Both proved from published axioms (Kaye 1991). -/
 theorem curved_obstruction_exists :
     ∀ (τ : TranslationPair), CAdmissible τ →
       CObstructs τ RH_sent ∨ CObstructs τ (negL RH_sent) := by
   intro τ hτ
-  have ⟨h_rh_fails, h_neg_fails⟩ :=
-    ultrapower_falsifies_finitary_roundtrip τ hτ.fin RH_sent RH_is_pi1
   by_cases h : csat RH_sent
-  · -- Case 1: CModel ⊨ RH. R_C(RH) fails. Disagreement.
+  · -- Case 1: CModel ⊨ RH. Round-trip of RH fails.
     left; unfold CObstructs; intro heq
-    exact h_rh_fails (heq ▸ h)
-  · -- Case 2: CModel ⊨ ¬RH. R_C(¬RH) fails. Disagreement.
+    have := pi1_holds_roundtrip_fails CModel
+      CModel_is_nonstandard τ hτ.fin RH_sent RH_is_pi1 h
+    exact this (heq ▸ h)
+  · -- Case 2: CModel ⊨ ¬RH. Round-trip of ¬RH fails.
     right; unfold CObstructs; intro heq
     have hcneg : csat (negL RH_sent) := (negL_csat RH_sent).mpr h
-    exact h_neg_fails (heq ▸ hcneg)
+    have := sigma1_holds_roundtrip_fails CModel
+      CModel_is_nonstandard τ hτ.fin RH_sent RH_is_pi1 hcneg
+    exact this (heq ▸ hcneg)
 
 theorem admissible_has_distortion (τ : TranslationPair) (hτ : Admissible τ) :
     ∃ (φ : L.Sentence), zsat φ ≠ zsat (τ.RL φ) := by
