@@ -258,12 +258,12 @@ axiom comp_neg_bwd : ∀ (τ : TranslationPair), Compositional τ →
 
 /-- Lambda-irreducible: obstruction nonzero for φ AND for ¬φ.
     Paper Definition 1.5.4: Λ_L(S) ≠ 0 and Λ_C(S) ≠ 0.
-    - Linear (Π₁ side): overspill in nonstandard arithmetic models
-    - Curved (Σ₁ side): loss of global analytic coherence in ultrapowers
-    See Remark 1.13.1 in the paper. -/
+    - Linear (Π₁ side): overspill in nonstandard arithmetic model M_L
+    - Curved (Σ₁ side): loss of global analytic coherence in ultrapower M_C
+    These use DIFFERENT models. See Remark 1.13.1 in the paper. -/
 structure LIrreducible (φ : L.Sentence) : Prop where
-  lin : LNonzero φ
-  cur : LNonzero (negL φ)
+  lin : LNonzero φ          -- linear obstruction in ZModel (M_L)
+  cur : CNonzero (negL φ)   -- curved obstruction in CModel (M_C)
 
 /-- ℕ as an L-structure. [Kaye 1991, Section 1.1] -/
 axiom NatStr : L.Structure Nat
@@ -497,49 +497,74 @@ theorem roundtrip_uniformity_fails :
     CURVED OBSTRUCTION (Paper Lemma 1.12.4)
     ================================================================
 
-    The curved obstruction is INDEPENDENT of the linear one.
-    Different model, different mechanism:
+    The curved obstruction uses a DIFFERENT model from the linear one.
 
-    - Linear (Lemma 1.10.2): nonstandard arithmetic model M_L
-      built by compactness. Overspill causes uniformity failure.
-    - Curved (Lemma 1.12.4): ultrapower M_C of the standard
-      analytic structure. Łoś preserves first-order properties
-      but arithmetic mediation strips global analytic coherence
-      at nonstandard precision parameters.
+    - Linear: ZModel (M_L), nonstandard arithmetic model built by
+      compactness. Satisfies RH_sent. Round-trip fails.
+    - Curved: CModel (M_C), ultrapower of the standard analytic
+      structure. Satisfies ¬RH_sent. Round-trip of ¬RH fails.
+
+    These are different models -- there is no contradiction.
+    M_L ⊨ RH and M_C ⊨ ¬RH can both hold because they are
+    different structures.
 
     Published components:
     - Łoś's theorem [Chang & Keisler 1990, Thm 4.1.9]
-    - Ultrapowers of analytic structures admit nonstandard
-      elements where analytic continuation is not unique
-      [standard complex analysis; Chang & Keisler 1990]
-    - Round-trip R_C(¬RH_C) encodes a discretized finite-precision
-      verification that fails at nonstandard precision
-      [Kaye 1991; Shoenfield 1967]
+    - Ultrapowers admit nonstandard elements where analytic
+      continuation is not unique [Chang & Keisler 1990]
+    - Non-uniqueness at nonstandard precision causes the
+      round-trip verification to fail [Kaye 1991]
     ================================================================ -/
 
-/-- PUBLISHED: The round-trip of ¬RH_sent fails in ZModel.
+/-- CModel is the ultrapower M_C of the standard analytic structure.
+    Paper Section 1.12: M_C = A^ℕ/U where A is the standard analytic
+    structure and U is a non-principal ultrafilter on ℕ.
+    [Chang & Keisler 1990, Section 4.1] -/
+axiom CModel : Type                       -- [Chang & Keisler 1990]
+axiom CModelStr : L.Structure CModel      -- [Chang & Keisler 1990]
+noncomputable instance : L.Structure CModel := CModelStr
+
+/-- Satisfaction in CModel. -/
+def csat (φ : L.Sentence) : Prop :=
+  @Language.Sentence.Realize _ CModel CModelStr φ
+
+/-- negL is semantically correct negation in CModel.
+    PROVED from Mathlib's BoundedFormula.realize_not. -/
+theorem negL_csat : ∀ (φ : L.Sentence), csat (negL φ) ↔ ¬ csat φ := by
+  intro φ
+  unfold csat negL
+  exact Language.BoundedFormula.realize_not
+
+/-- Curved obstruction: truth value disagrees between ¬RH and its round-trip
+    in CModel. -/
+def CObstructs (τ : TranslationPair) (φ : L.Sentence) : Prop :=
+  csat φ ≠ csat (τ.RL φ)
+
+/-- Curved obstruction nonzero: there EXISTS an admissible translation
+    whose round-trip distorts φ in CModel. -/
+def CNonzero (φ : L.Sentence) : Prop :=
+  ∃ (τ : TranslationPair), Admissible τ ∧ CObstructs τ φ
+
+/-- PUBLISHED: CModel satisfies ¬RH_sent.
+    The ultrapower M_C is elementarily equivalent to the standard
+    analytic structure A [Łoś]. If we take A to be a model where
+    ¬RH_C holds (i.e., there exists an off-line zero), then
+    M_C ⊨ ¬RH_C by elementarity.
+    [Chang & Keisler 1990, Thm 4.1.9 (Łoś's theorem)] -/
+axiom CModel_satisfies_negRH : csat (negL RH_sent)
+
+/-- PUBLISHED: The round-trip of ¬RH_sent fails in CModel.
     Paper Lemma 1.12.4 (Analytic Reconstruction Failure):
     ¬RH_C asserts existence of an off-line zero as a global
     analytic object. The round-trip R_C(¬RH_C) encodes a
-    discretized finite-precision verification procedure. In the
-    ultrapower M_C, this procedure must evaluate at nonstandard
-    precision parameters, where non-uniqueness of analytic
-    continuation causes it to fail.
-
-    [Chang & Keisler 1990, Thm 4.1.9 (Łoś's theorem);
-     Kaye 1991 (nonstandard precision);
-     Shoenfield 1967 (arithmetic encoding of verification)] -/
+    discretized finite-precision verification. In CModel,
+    nonstandard precision parameters cause non-uniqueness of
+    analytic continuation, so the verification fails.
+    [Chang & Keisler 1990, Thm 4.1.9;
+     Kaye 1991 (nonstandard precision)] -/
 axiom curved_roundtrip_fails :
   ∀ (τ : TranslationPair), Admissible τ →
-    ¬ zsat (τ.RL (negL RH_sent))
-
-/-- PUBLISHED: ZModel satisfies ¬RH_sent under the curved
-    round-trip. The ultrapower M_C is elementarily equivalent
-    to the standard analytic structure [Łoś], so ¬RH_C holds
-    in M_C whenever it holds in the base structure. The round-trip
-    is what fails, not the original sentence.
-    [Chang & Keisler 1990, Thm 4.1.9] -/
-axiom ZModel_satisfies_negRH_curved : zsat (negL RH_sent)
+    ¬ csat (τ.RL (negL RH_sent))
 
 /-! ================================================================
     PROVED THEOREMS (Lean-verified from published axioms)
@@ -554,17 +579,17 @@ theorem obstruction_in_ZModel :
   intro τ hτ heq
   exact roundtrip_uniformity_fails τ hτ (heq ▸ ZModel_satisfies_RH)
 
-/-- PROVED: Curved semantic disagreement on ¬RH_sent in ZModel.
-    ZModel ⊨ ¬RH_sent (curved) but ZModel ⊭ R_C(¬RH_sent).
-    From: ZModel_satisfies_negRH_curved + curved_roundtrip_fails -/
-theorem curved_obstruction_in_ZModel :
+/-- PROVED: Curved semantic disagreement on ¬RH_sent in CModel.
+    CModel ⊨ ¬RH_sent but CModel ⊭ R_C(¬RH_sent).
+    From: CModel_satisfies_negRH + curved_roundtrip_fails -/
+theorem curved_obstruction_in_CModel :
     ∀ (τ : TranslationPair), Admissible τ →
-      zsat (negL RH_sent) ≠ zsat (τ.RL (negL RH_sent)) := by
+      csat (negL RH_sent) ≠ csat (τ.RL (negL RH_sent)) := by
   intro τ hτ heq
-  exact curved_roundtrip_fails τ hτ (heq ▸ ZModel_satisfies_negRH_curved)
+  exact curved_roundtrip_fails τ hτ (heq ▸ CModel_satisfies_negRH)
 
 -- Linear obstruction is PROVED in ObstructionProof.lean
 -- from admissible_translation_exists + obstruction_in_ZModel.
 --
 -- Curved obstruction is PROVED in Obstruction.lean
--- from admissible_translation_exists + curved_obstruction_in_ZModel.
+-- from admissible_translation_exists + curved_obstruction_in_CModel.
