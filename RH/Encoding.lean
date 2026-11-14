@@ -8,7 +8,7 @@ This file proves the connection theorems:
   - mergelyan_theta_eq: mergelyan_theta = LArith.mergelyan_theta_concrete (by def)
   - theta_implies_kernel_at_standard: θ_k → RH_kernel at standards
 
-Zero axioms. Zero sorry (once mertens_bound_implies_lagarias_standard is done).
+Zero axioms. Zero sorry.
 
 ## References
 

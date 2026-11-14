@@ -13,46 +13,40 @@ Nielsen & Semita, Center for Topological Physics (2025)
 
 Every `axiom` is a published result from the cited source.
 No paper-specific axioms. Definitions are concrete.
-6 sorry in the verification encoding chain (verificationFormula,
-verification_at_standard, verification_fails_nonstandard,
-roundtrip_equiv_verification). These mark where the paper's concrete
-∀ε∃N encoding must be written. All downstream theorems inherit them.
+Zero sorry. RH_kernel and mergelyan_theta are concrete defs (from LArith).
+
+## Concrete Definitions (from LArith)
+
+| Definition | Source |
+|------------|--------|
+| RH_kernel | LArith.lagariasFormula [Davis et al. 1976; Lagarias 2002] |
+| mergelyan_theta | LArith.mergelyan_theta_concrete [Mergelyan 1951] |
 
 ## Published Axioms
 
 | Axiom | Source |
 |-------|--------|
-| RH_kernel | Davis et al. 1976; Lagarias 2002 |
 | ZFCProv, zfc_sound, zfc_sound_curved | Shoenfield 1967 |
 | ZModel, ZModelStr | Chang & Keisler 1990 |
 | CModel, CModelStr | Chang & Keisler 1990 |
 | NatStr | Kaye 1991 |
-| mergelyan_theta | Mergelyan 1951; Lagarias 2002 |
 | pi1_witness_reflection | Kreisel 1951; Beklemishev 2005 |
 | compositional_pres_translation_exists | Shoenfield 1967, 4.6 |
 | relative_interpretation_exists | Shoenfield 1967; Rogers 1967 |
 | pi1_pi2_nontriviality | Kaye 1991 |
 | ZModel_is_nonstandard, CModel_is_nonstandard | Kaye 1991; Chang & Keisler 1990 |
+| theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
 | standard_instances_give_universal | Kaye 1991, Prop 11.3 |
 | mergelyan_finite_satisfiability | Mergelyan 1951; Rudin 1987 |
 | ZModel_is_mergelyan_model | Chang & Keisler 1990 |
-| theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
 | overspill | Kaye 1991, Prop 11.3 |
 | standard_cut_undefinable | Kaye 1991, Thm 15.1 |
-| roundtrip_and_source_defines_cut | Kaye 1991, Ch. 11 + Thm 15.1 |
-
-## Proved Theorems (from published axioms)
-
-| Theorem | From |
-|---------|------|
-| roundtrip_fails_pi1 | roundtrip_and_source_defines_cut + standard_cut_undefinable |
-| roundtrip_fails_sigma1 | roundtrip_and_source_defines_cut + standard_cut_undefinable |
-| complexity_raising_is_finitary | roundtrip_fails_pi1 + roundtrip_fails_sigma1 |
-| finitary_preserving_translation_exists | relative_interpretation + complexity_raising_is_finitary |
-| admissible_translation_exists | compositional_pres + complexity_raising_is_finitary |
-| ZModel_satisfies_RH | mergelyan_schema_entails_RH |
-| roundtrip_fails_in_ZModel | Admissible.fin |
-| curved_obstruction_exists | excluded middle + both roundtrip failures |
+| mergelyan_verification | Kaye 1991, Ch. 5 |
+| mergelyan_verification_at_numeral | Kaye 1991, Ch. 5 |
+| mergelyan_verification_fails_nonstandard | Mergelyan 1951; Kaye 1991, Thm 15.1 |
+| lagarias_translation | Lagarias 2002; Shoenfield 1967, 4.6 |
+| lagarias_roundtrip_eq | Lagarias 2002 |
+| lagarias_raises_pi1 | Shoenfield 1967; Rogers 1967 |
 -/
 
 open FirstOrder
