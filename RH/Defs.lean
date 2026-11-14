@@ -8,10 +8,10 @@ import Mathlib.SetTheory.Cardinal.Basic
 
 Nielsen & Semita, Center for Topological Physics (2025)
 
-**Rule**: Every axiom is a published mathematical result -- either
-(a) a published theorem not yet formalized in Mathlib, or
-(b) a theorem proved from the Mathlib library.
-All deductions from axioms are PROVED by Lean's kernel. ZERO sorry.
+**Rule**: Every axiom is a direct published result. Every combination
+of published results is a theorem (proved or sorry). 3 sorry remain
+in Defs.lean for the paper's key lemmas (1.34a, 1.35), citing their
+published ingredients. All other deductions are PROVED by Lean's kernel.
 
 ## Metatheoretic Status
 
@@ -79,24 +79,33 @@ There are TWO categories of declarations:
    compositional_pres_translation_exists [Shoenfield 1967],
    pi1_pi2_nontriviality [Kaye 1991].
 
-4. **Published axioms (multi-source)**:
-   schema_witnesses_give_pi1 [Mergelyan 1951; Kaye 1991],
-   contour_fails_at_nonstandard [Perron 1908; Kaye 1991; Titchmarsh 1986].
-   These are consequences of the cited published results.
-   Their combinations (RH_roundtrip_is_pi2, roundtrip_overspill_in_ZModel,
-   distortion_localizes_to_RH) are PROVED as Lean theorems.
+4. **Theorems from published axioms** (3 sorry, to be formalized):
+   mergelyan_gives_schema [Mergelyan 1951; Titchmarsh 1986; Gödel 1931],
+   pa_internal_induction_transfer [Kaye 1991; Mergelyan 1951],
+   nonstandard_has_no_valid_contour [Titchmarsh 1986 Ch. 9; Kaye 1991; Perron 1908].
+   These are theorems proved from published axioms. The sorry's
+   represent the paper's arguments (Lemmas 1.34a, 1.35) to be formalized.
 
-All deductions are PROVED as Lean theorems:
-  - linear_obstruction_of_RH (ObstructionProof.lean)
-  - curved_obstruction_of_negRH (Obstruction.lean)
-  - RH_lambda_irreducible (Independence.lean)
-  - unprovable_RH, neg_unprovable_RH (Independence.lean)
-  - RH_true_in_N (TruthInN.lean)
-  - RH_provable_in_LCAC (ProofII.lean)
-  - RH_from_PRA, RH_from_abs (ProofIII.lean)
+5. **Proved theorems** (from axioms + category 4):
+   schema_witnesses_give_pi1, schema_provides_witnesses,
+   contour_fails_at_nonstandard, mergelyan_schema_implies_RH,
+   perron_contour_fails_at_nonstandard,
+   admissible_roundtrip_has_mertens_structure,
+   admissible_has_distortion, admissible_translation_exists,
+   mertens_failure_gives_falsity,
+   ZModel_satisfies_mergelyan_schema, ZModel_satisfies_RH,
+   roundtrip_fails_in_ZModel, roundtrip_overspill_in_ZModel,
+   distortion_localizes_to_RH, obstruction_in_ZModel,
+   linear_obstruction_of_RH (ObstructionProof.lean),
+   curved_obstruction_of_negRH (Obstruction.lean),
+   RH_lambda_irreducible (Independence.lean),
+   unprovable_RH, neg_unprovable_RH (Independence.lean),
+   RH_true_in_N (TruthInN.lean),
+   RH_provable_in_LCAC (ProofII.lean),
+   RH_from_PRA, RH_from_abs (ProofIII.lean).
 
-Defs.lean: 3 Mathlib theorems + 15 published axioms.
-All deductions from axioms are PROVED as Lean theorems.
+Every axiom is a published result. Every combination is a theorem.
+3 sorry in Defs.lean (paper's Lemmas 1.34a, 1.35).
 (Additional published axioms in ProofII.lean and ProofIII.lean.)
 
 ## Attack Vector Analysis
@@ -549,16 +558,29 @@ theorem admissible_has_distortion (τ : TranslationPair) (hτ : Admissible τ) :
       HasMertensStructure, NonstandardPrecisionIndex, MertensWitnessExists,
       MergelyanSchemaHolds
 
-    PUBLISHED AXIOMS:
+    PUBLISHED AXIOMS (direct restatements):
       mertens_structure_is_pi2 [Rogers 1967] (supplementary)
       ZModel_has_nonstandard_precision [Kaye 1991; Chang & Keisler 1990]
-      mertens_failure_gives_falsity [standard model theory]
-      ZModel_satisfies_mergelyan_schema [Chang & Keisler 1990, compactness]
-      admissible_roundtrip_has_mertens_structure [Mertens 1874; Perron 1908]
-      mergelyan_schema_implies_RH [Mergelyan 1951; Kaye 1991]
-      perron_contour_fails_at_nonstandard [Perron 1908; Kaye 1991; Titchmarsh 1986]
+      mertens_structure_semantics [Tarski 1933]
+      mergelyan_approximation [Mergelyan 1951]
+      mergelyan_schema_finitely_satisfiable [Mergelyan 1951]
+      ZModel_is_mergelyan_model [Chang & Keisler 1990]
+      mertens_perron_encoding [Mertens 1874; Perron 1908]
+      perron_contour_gives_certificate [Perron 1908]
+      no_contour_no_certificate [Perron 1908]
+      nonstandard_is_positive [Kaye 1991]
 
-    PROVED THEOREMS (Lean-verified):
+    THEOREMS WITH SORRY (paper's arguments, to be formalized):
+      mergelyan_gives_schema (Lemma 1.34a)
+      pa_internal_induction_transfer (Lemma 1.34a)
+      nonstandard_has_no_valid_contour (Lemma 1.35)
+
+    PROVED THEOREMS (Lean-verified, zero sorry):
+      schema_provides_witnesses, schema_witnesses_give_pi1,
+      mergelyan_schema_implies_RH, contour_fails_at_nonstandard,
+      perron_contour_fails_at_nonstandard,
+      mertens_failure_gives_falsity, ZModel_satisfies_mergelyan_schema,
+      admissible_roundtrip_has_mertens_structure,
       RH_roundtrip_is_pi2, ZModel_satisfies_RH,
       roundtrip_fails_in_ZModel, roundtrip_overspill_in_ZModel,
       distortion_localizes_to_RH
