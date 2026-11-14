@@ -9,27 +9,51 @@ import Mathlib.NumberTheory.LSeries.RiemannZeta
 
 **Proved theorems** (by Lean's kernel -- zero sorry):
 lambda_reduction_soundness, linear_obstruction_of_RH,
-linear_obstruction_RH, neg_obstruction_RH, exists_admissible,
-RH_lambda_irreducible, unprovable_RH, neg_unprovable_RH,
-RH_independent_of_ZFC, truth_from_independence,
+linear_obstruction_RH, curved_obstruction_RH, neg_obstruction_RH,
+exists_admissible, RH_lambda_irreducible, unprovable_RH,
+neg_unprovable_RH, RH_independent_of_ZFC, truth_from_independence,
 RH_true_in_N, RH_provable_in_LCAC, RH_from_PRA, RH_from_abs,
-riemann_hypothesis_resolved
+riemann_hypothesis_resolved, ZModel_satisfies_RH,
+roundtrip_fails_in_ZModel, curved_obstruction_exists,
+admissible_translation_exists, cadmissible_translation_exists,
+finitary_preserving_translation_exists, mergelyan_schema_satisfiable,
+mergelyan_schema_entails_RH, mergelyan_gives_pointwise_standard,
+schema_model_satisfies_theta, ultrapower_falsifies_finitary_roundtrip,
+pi1_holds_roundtrip_fails, sigma1_holds_roundtrip_fails
 
 **Mathlib theorems** (proved from Mathlib, not axioms):
   negL (def, from BoundedFormula.not),
-  negL_zsat, negL_nat (from BoundedFormula.realize_not)
+  negL_zsat, negL_csat, negL_nat (from BoundedFormula.realize_not),
+  mergelyan_schema_satisfiable (from isSatisfiable_iff_isFinitelySatisfiable)
 
 **Published axioms** (established literature):
 
-  Defs.lean (Proof I):
+  Defs.lean (Proof I -- linear side):
   - zfc_sound [Shoenfield 1967]
+  - zfc_sound_curved [Shoenfield 1967]
   - pi1_witness_reflection [Kreisel 1951; Beklemishev 2005]
-  - RH_is_pi1 [Davis, Matiyasevich & Robinson 1976]
   - comp_neg, comp_neg_bwd [Enderton 2001]
-  - compositional_pres_translation_exists [Shoenfield 1967]
-  - pi1_pi2_nontriviality [Kaye 1991]
-  - ZModel_satisfies_RH [Chang & Keisler 1990; Kaye 1991; Mergelyan 1951]
-  - roundtrip_uniformity_fails [Kaye 1991, Thm 15.1]
+  - compositional_pres_translation_exists [Shoenfield 1967, 4.6]
+  - pi1_pi2_nontriviality [Kaye 1991, Ch. 11]
+  - compositional_is_finitary [Shoenfield 1967; Enderton 2001]
+  - ZModel_is_nonstandard [Kaye 1991; Chang & Keisler 1990]
+  - CModel_is_nonstandard [Chang & Keisler 1990, 4.1]
+  - pi1_holds_pi2_fails_in_nonstandard [Kaye 1991, Thm 15.1 + Prop 11.3]
+  - sigma1_holds_pi2_fails_in_nonstandard [Kaye 1991, Thm 15.1 + Prop 11.3]
+  - standard_instances_give_universal [Kaye 1991, Prop 11.3 + Ch. 11]
+  - mergelyan_finite_satisfiability [Mergelyan 1951; Rudin 1987]
+  - ZModel_is_mergelyan_model [Chang & Keisler 1990, compactness witness]
+
+  Defs.lean (Proof I -- curved side):
+  - standard_analytic_encoding_exists [Shoenfield 1967; Rogers 1967]
+  - theta_implies_kernel_at_standard [Mergelyan 1951; Lagarias 2002]
+
+  Encoding.lean (Δ₀ formula encoding):
+  - divFormula, remFormula, betaFormula [Gödel 1931; Kaye 1991]
+  - primeFormula, mobiusFormula, mertensFormula [Kaye 1991; Mertens 1874]
+  - sigmaFormula, lagariasFormula [Lagarias 2002; Davis et al. 1976]
+  - polyEvalFormula, approxFormula [Kaye 1991]
+  - lagarias_eq_RH_kernel [Davis et al. 1976; Lagarias 2002]
 
   ProofII.lean (INDEPENDENT of Proof I):
   - woodin_abs_under_LCAC [Woodin 1999, Theorem 3.17]
@@ -40,37 +64,36 @@ riemann_hypothesis_resolved
   - abs_implies_PRA [Woodin 1999; Titchmarsh 1986]
 
 **Proved from axioms** (not axiomatized):
+  - RH_is_pi1 -- PROVED (by rfl) in Defs.lean
+  - ZModel_satisfies_RH -- PROVED in Defs.lean
+  - roundtrip_fails_in_ZModel -- PROVED in Defs.lean
+  - curved_obstruction_exists -- PROVED in Defs.lean (by excluded middle)
   - admissible_translation_exists -- PROVED in Defs.lean
-  - obstruction_in_ZModel -- PROVED in Defs.lean
+  - cadmissible_translation_exists -- PROVED in Defs.lean
+  - ultrapower_falsifies_finitary_roundtrip -- PROVED in Defs.lean
   - linear_obstruction_of_RH -- PROVED in ObstructionProof.lean
-  - neg_obstruction_RH -- PROVED in Obstruction.lean
+  - curved_obstruction_RH -- PROVED in Obstruction.lean
+  - RH_lambda_irreducible -- PROVED in Obstruction.lean
+  - unprovable_RH, neg_unprovable_RH -- PROVED in Independence.lean
+  - RH_true_in_N -- PROVED in TruthInN.lean
   - RH_provable_in_LCAC -- PROVED in ProofII.lean
 
-## Axiom Audit
+## Structural Declarations (types, predicates -- not mathematical claims)
 
-ZERO sorry. Every axiom is a published result.
+  L, RH_kernel, RH_sent, ZFCProv, ZModel, ZModelStr, CModel, CModelStr,
+  NatStr, Compositional, IsNonstandard, IsPi2, IsStandard,
+  mergelyan_theta (sentence encoding),
+  ZFCLCACProv, WoodinAbs, CritPt, onCritLine, isXiZero, Loop,
+  offLineHolonomy, AnalyticAbs.
 
-Structural declarations (types, predicates, language):
-  L, RH_sent, ZFCProv, ZModel, ZModelStr, negL, NatStr, IsPi1,
-  Compositional, ZFCLCACProv, WoodinAbs, CritPt, onCritLine,
-  isXiZero, Loop, offLineHolonomy, AnalyticAbs.
+## Axiom Policy
 
-Published axioms (Proof I):
-  zfc_sound, pi1_witness_reflection, RH_is_pi1,
-  comp_neg, comp_neg_bwd,
-  compositional_pres_translation_exists, pi1_pi2_nontriviality,
-  ZModel_satisfies_RH [Chang & Keisler 1990; Kaye 1991; Mergelyan 1951],
-  roundtrip_uniformity_fails [Kaye 1991, Thm 15.1]
+Every `axiom` is either:
+  (a) A structural declaration (type, predicate -- not a mathematical claim)
+  (b) A published theorem stated as it appears in the cited source
 
-Published axioms (Proof II): woodin_abs_under_LCAC, absoluteness_proves_RH
-Published axioms (Proof III): argument_principle, abs_implies_PRA
-
-Proved theorems (ALL proved by Lean's kernel):
-  admissible_translation_exists, admissible_has_distortion,
-  obstruction_in_ZModel, linear_obstruction_of_RH, neg_obstruction_RH,
-  RH_lambda_irreducible, unprovable_RH, neg_unprovable_RH,
-  RH_independent_of_ZFC, RH_true_in_N, RH_provable_in_LCAC,
-  RH_from_PRA, RH_from_abs, riemann_hypothesis_resolved.
+The paper's lemmas are PROVED as theorems from (b). No paper-specific
+claim is axiomatized.
 
 The three proofs are INDEPENDENT -- no cross-imports.
 

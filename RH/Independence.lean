@@ -28,11 +28,12 @@ theorem unprovable_RH : ¬ ZFCProv RH_sent := by
 theorem neg_unprovable_RH : ¬ ZFCProv (negL RH_sent) := by
   intro hprov
   obtain ⟨τ, hτ, hcases⟩ := curved_obstruction_RH
-  -- ZFC ⊢ ¬RH → csat(¬RH)
+  -- ZFC ⊢ ¬RH → csat(¬RH) by soundness
   have h_neg_holds : csat (negL RH_sent) := zfc_sound_curved _ hprov
-  -- Both round-trips fail in ultrapower
-  have ⟨h_rh_rt_fails, h_neg_rt_fails⟩ :=
-    ultrapower_falsifies_finitary_roundtrip τ hτ.fin RH_sent RH_is_pi1
+  -- Round-trip of ¬RH fails in CModel (from sigma1_holds_roundtrip_fails)
+  have h_neg_rt_fails : ¬ csat (τ.RL (negL RH_sent)) :=
+    (ultrapower_falsifies_finitary_roundtrip τ hτ.fin RH_sent RH_is_pi1).2
+      h_neg_holds
   -- CAdmissible.pres: ZFC ⊢ ¬RH → csat(¬RH) → csat(τ.RL(¬RH))
   have h_pres := hτ.pres (negL RH_sent) hprov h_neg_holds
   -- But ultrapower says ¬csat(τ.RL(¬RH)). Contradiction.

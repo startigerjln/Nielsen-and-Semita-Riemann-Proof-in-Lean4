@@ -25,6 +25,12 @@ theorem curved_obstruction_RH :
 theorem RH_lambda_irreducible : LIrreducible RH_sent :=
   ⟨linear_obstruction_RH, curved_obstruction_RH⟩
 
+/-- Alias for backward compatibility with Main.lean / Audit.lean. -/
+theorem neg_obstruction_RH :
+    ∃ (τ : TranslationPair), CAdmissible τ ∧
+      (CObstructs τ RH_sent ∨ CObstructs τ (negL RH_sent)) :=
+  curved_obstruction_RH
+
 /-- **Theorem 1.7.5** (PROVED): Admissible translations exist. -/
 theorem exists_admissible : ∃ (τ : TranslationPair), Admissible τ :=
   admissible_translation_exists

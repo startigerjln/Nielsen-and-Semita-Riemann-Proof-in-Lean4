@@ -506,6 +506,18 @@ theorem admissible_has_distortion (τ : TranslationPair) (hτ : Admissible τ) :
   by_contra h; push_neg at h
   exact hτ.nontrivial (fun φ => ⟨fun a => (h φ) ▸ a, fun a => (h φ) ▸ a⟩)
 
+/-- PROVED: In CModel, finitary round-trips of Π₁ and Σ₁ both fail.
+    Returns: (csat φ → ¬csat(τ.RL φ)) × (csat(¬φ) → ¬csat(τ.RL(¬φ))).
+    From: pi1_holds_roundtrip_fails + sigma1_holds_roundtrip_fails
+    applied to CModel with CModel_is_nonstandard. -/
+theorem ultrapower_falsifies_finitary_roundtrip
+    (τ : TranslationPair) (hfin : Finitary τ)
+    (φ : L.Sentence) (hpi1 : IsPi1 φ) :
+    (csat φ → ¬ csat (τ.RL φ)) ∧
+    (csat (negL φ) → ¬ csat (τ.RL (negL φ))) :=
+  ⟨pi1_holds_roundtrip_fails CModel CModel_is_nonstandard τ hfin φ hpi1,
+   sigma1_holds_roundtrip_fails CModel CModel_is_nonstandard τ hfin φ hpi1⟩
+
 -- Linear obstruction: PROVED in ObstructionProof.lean
 -- Curved obstruction: PROVED in Obstruction.lean
 -- Both independent, different models, different translation conditions.
