@@ -1,41 +1,11 @@
 import RH.Paper.Mergelyan
 import RH.Paper.PlantedZero
-import RH.Paper.PerronRecovery
 import Mathlib.NumberTheory.LSeries.RiemannZeta
-import Mathlib.Analysis.Complex.CauchyIntegral
 import Mathlib.Topology.Algebra.Order.Archimedean
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Linarith
 
 namespace RH.Paper.PlantedZero
-
-/-- Uniform boundary error on a disc controls each Taylor coefficient
-    of the error function by the Cauchy integral estimate. -/
-theorem cauchy_coefficient_error_le
-    (g target : ℂ → ℂ) (center : ℂ) (radius tolerance : ℝ) (n : ℕ)
-    (positive : 0 < radius)
-    (close : ∀ z ∈ Metric.sphere center radius, ‖g z - target z‖ ≤ tolerance) :
-    ‖(cauchyPowerSeries (fun z => g z - target z) center radius n) (fun _ => 1)‖ ≤
-      tolerance / radius ^ n := by
-  rw [cauchyPowerSeries_apply]
-  have bound : ∀ z ∈ Metric.sphere center radius,
-      ‖(1 / (z - center)) ^ n • (z - center)⁻¹ • (g z - target z)‖ ≤
-        radius⁻¹ ^ n * (radius⁻¹ * tolerance) := by
-    intro z hz
-    have normRadius : ‖z - center‖ = radius := by
-      simpa only [Metric.mem_sphere, dist_eq_norm] using hz
-    simp only [norm_smul, norm_pow, one_div, norm_inv, normRadius]
-    exact mul_le_mul_of_nonneg_left
-      (mul_le_mul_of_nonneg_left (close z hz) (inv_nonneg.mpr positive.le))
-      (pow_nonneg (inv_nonneg.mpr positive.le) _)
-  calc
-    _ ≤ radius * (radius⁻¹ ^ n * (radius⁻¹ * tolerance)) :=
-      circleIntegral.norm_two_pi_i_inv_smul_integral_le_of_norm_le_const positive.le bound
-    _ = tolerance / radius ^ n := by
-      calc
-        _ = (radius * radius⁻¹) * (tolerance * radius⁻¹ ^ n) := by ring
-        _ = tolerance / radius ^ n := by
-          rw [mul_inv_cancel₀ positive.ne', one_mul, inv_pow, div_eq_mul_inv]
 
 /-- Interpret a pair of rational coordinates as a complex number. -/
 def Point.toComplex (q : Point) : ℂ :=
@@ -166,7 +136,7 @@ theorem compact_approximation_with_standard_failure
     (compact : IsCompact K) (connected : IsConnected Kᶜ)
     (continuous : ContinuousOn target K) (holomorphic : DifferentiableOn ℂ target (interior K))
     (outside : ∀ w ∈ plantedRoots N, w.toComplex ∉ K) (ε : ℝ) (positive : 0 < ε) :
-    ∃ f : RationalFunction, N < Encodable.encode f ∧ Continuous (evalComplex f) ∧
+    ∃ f : RationalFunction, N < Encodable.encode f ∧
       (∀ z ∈ K, ‖evalComplex f z - target z‖ < ε) ∧
       ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
   let factor := rootFactor (plantedRoots N)
@@ -186,36 +156,33 @@ theorem compact_approximation_with_standard_failure
     change evalPolynomial (plantedPoint N) ((1, 0) :: List.replicate N (0, 0)) ≠ (0, 0)
     rw [evalPolynomial_one_padded]
     decide
-  have value (z : ℂ) : evalComplex (plant N base) z =
-      factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z := by
-    have one : Point.toComplex (1, 0) = 1 := by
-      apply Complex.ext <;> simp [Point.toComplex]
-    have zero : Point.toComplex (0, 0) = 0 := by
-      apply Complex.ext <;> simp [Point.toComplex]
-    have zeroCoefficients : ∀ n : ℕ,
-        polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0 := by
-      intro n
-      induction n with
-      | zero => rfl
-      | succ n ih =>
-        rw [List.replicate_succ]
-        change Polynomial.C 0 +
-          Polynomial.X * polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0
-        simp [ih]
-    have denominator : polynomialOfCoefficients (base.2.2.map Point.toComplex) = 1 := by
-      change polynomialOfCoefficients (List.map Point.toComplex
-        ((1, 0) :: List.replicate N (0, 0))) = 1
-      rw [List.map_cons, List.map_replicate, one, zero]
-      change Polynomial.C 1 + Polynomial.X * polynomialOfCoefficients (List.replicate N 0) = 1
-      simp [zeroCoefficients]
-    change factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z /
-      (polynomialOfCoefficients (base.2.2.map Point.toComplex)).eval z = _
-    simp [denominator]
-  refine ⟨plant N base, large, ?_, ?_, planted_code_fails N base defined⟩
-  · change Continuous (fun z => evalComplex (plant N base) z)
-    simp_rw [value]
-    exact factor.continuous.mul (polynomialOfCoefficients (cs.map Point.toComplex)).continuous
+  refine ⟨plant N base, large, ?_, planted_code_fails N base defined⟩
   · intro z hz
+    have value : evalComplex (plant N base) z =
+        factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z := by
+      have one : Point.toComplex (1, 0) = 1 := by
+        apply Complex.ext <;> simp [Point.toComplex]
+      have zero : Point.toComplex (0, 0) = 0 := by
+        apply Complex.ext <;> simp [Point.toComplex]
+      have zeroCoefficients : ∀ n : ℕ,
+          polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0 := by
+        intro n
+        induction n with
+        | zero => rfl
+        | succ n ih =>
+          rw [List.replicate_succ]
+          change Polynomial.C 0 +
+            Polynomial.X * polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0
+          simp [ih]
+      have denominator : polynomialOfCoefficients (base.2.2.map Point.toComplex) = 1 := by
+        change polynomialOfCoefficients (List.map Point.toComplex
+          ((1, 0) :: List.replicate N (0, 0))) = 1
+        rw [List.map_cons, List.map_replicate, one, zero]
+        change Polynomial.C 1 + Polynomial.X * polynomialOfCoefficients (List.replicate N 0) = 1
+        simp [zeroCoefficients]
+      change factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z /
+        (polynomialOfCoefficients (base.2.2.map Point.toComplex)).eval z = _
+      simp [denominator]
     have close := hp z hz
     rw [Polynomial.eval_mul] at close
     have scaled :
@@ -242,7 +209,7 @@ theorem finite_local_approximations_with_standard_failure
     (outside : ∀ w ∈ plantedRoots N, w.toComplex ∉ K)
     (checks : Finset ℕ) (region : ℕ → Set ℂ) (tolerance : ℕ → ℝ)
     (contained : ∀ k ∈ checks, region k ⊆ K) (positive : ∀ k ∈ checks, 0 < tolerance k) :
-    ∃ f : RationalFunction, N < Encodable.encode f ∧ Continuous (evalComplex f) ∧
+    ∃ f : RationalFunction, N < Encodable.encode f ∧
       (∀ k ∈ checks, ∀ z ∈ region k, ‖evalComplex f z - target z‖ < tolerance k) ∧
       ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
   classical
@@ -259,10 +226,10 @@ theorem finite_local_approximations_with_standard_failure
       · exact min_le_left _ _
       · exact (min_le_right _ _).trans (small j hj)
   obtain ⟨ε, εPos, small⟩ := boundedBelow checks positive
-  obtain ⟨f, large, continuousCode, approximation, failure⟩ :=
+  obtain ⟨f, large, approximation, failure⟩ :=
     compact_approximation_with_standard_failure K target N compact connected continuous
       holomorphic outside ε εPos
-  exact ⟨f, large, continuousCode, fun k hk z hz =>
+  exact ⟨f, large, fun k hk z hz =>
     (approximation z (contained k hk hz)).trans_le (small k hk), failure⟩
 
 /-- A single code meets finitely many local zeta-approximation
@@ -272,7 +239,7 @@ theorem finite_zeta_approximations_with_standard_failure
     (poleOutside : (1 : ℂ) ∉ K) (zerosOutside : ∀ w ∈ plantedRoots N, w.toComplex ∉ K)
     (checks : Finset ℕ) (region : ℕ → Set ℂ) (tolerance : ℕ → ℝ)
     (contained : ∀ k ∈ checks, region k ⊆ K) (positive : ∀ k ∈ checks, 0 < tolerance k) :
-    ∃ f : RationalFunction, N < Encodable.encode f ∧ Continuous (evalComplex f) ∧
+    ∃ f : RationalFunction, N < Encodable.encode f ∧
       (∀ k ∈ checks, ∀ z ∈ region k, ‖evalComplex f z - riemannZeta z‖ < tolerance k) ∧
       ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
   have differentiable (z : ℂ) (hz : z ∈ K) : DifferentiableAt ℂ riemannZeta z :=
@@ -281,61 +248,5 @@ theorem finite_zeta_approximations_with_standard_failure
     (fun z hz => (differentiable z hz).continuousAt.continuousWithinAt)
     (fun z hz => (differentiable z (interior_subset hz)).differentiableWithinAt)
     zerosOutside checks region tolerance contained positive
-
-/-- The planted-zero code can meet finitely many compact approximation
-    checks and recover any prescribed finite family of Mertens sums.
-    The common compact must contain the chosen Perron contour. -/
-theorem finite_zeta_approximations_with_recovery_and_failure
-    (inputs : Finset ℕ) (c : ℝ) (hc : 1 < c) :
-    ∃ H : ℝ, ∀ T ≥ H, ∀ (K : Set ℂ) (N : ℕ),
-      IsCompact K → IsConnected Kᶜ → (1 : ℂ) ∉ K →
-      (∀ w ∈ plantedRoots N, w.toComplex ∉ K) →
-      (∀ t ∈ Set.Icc (-T) T, (c : ℂ) + (t : ℂ) * Complex.I ∈ K) →
-      ∀ (checks : Finset ℕ) (region : ℕ → Set ℂ) (tolerance : ℕ → ℝ),
-      (∀ k ∈ checks, region k ⊆ K) → (∀ k ∈ checks, 0 < tolerance k) →
-      ∃ f : RationalFunction, N < Encodable.encode f ∧
-        (∀ k ∈ checks, ∀ z ∈ region k, ‖evalComplex f z - riemannZeta z‖ < tolerance k) ∧
-        (∀ n ∈ inputs,
-          round (perronIntegral (fun z => (evalComplex f z)⁻¹) c ((n : ℝ) + 1 / 2) T).re =
-            mertensValue n) ∧
-        ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
-  classical
-  obtain ⟨height, recovery⟩ := exists_finite_perron_recovery_threshold inputs c hc
-  refine ⟨height, fun T hT K N compact connected poleOutside zerosOutside contourInside
-    checks region tolerance contained positive => ?_⟩
-  obtain ⟨ε, εPos, recover⟩ := recovery T hT
-  let bound := checks.sup id + 1
-  have fresh : bound ∉ checks := by
-    intro mem
-    have small : bound ≤ checks.sup id := Finset.le_sup (f := id) mem
-    exact (Nat.not_succ_le_self _) small
-  let regions (k : ℕ) := if k = bound then K else region k
-  let tolerances (k : ℕ) := if k = bound then ε else tolerance k
-  have allContained : ∀ k ∈ insert bound checks, regions k ⊆ K := by
-    intro k hk
-    rcases Finset.mem_insert.mp hk with rfl | hk
-    · simp [regions]
-    · simpa [regions, show k ≠ bound from fun eq => fresh (eq ▸ hk)] using contained k hk
-  have allPositive : ∀ k ∈ insert bound checks, 0 < tolerances k := by
-    intro k hk
-    rcases Finset.mem_insert.mp hk with rfl | hk
-    · simpa [tolerances] using εPos
-    · simpa [tolerances, show k ≠ bound from fun eq => fresh (eq ▸ hk)] using positive k hk
-  obtain ⟨f, large, continuous, approximation, failure⟩ :=
-    finite_zeta_approximations_with_standard_failure K N compact connected poleOutside zerosOutside
-      (insert bound checks) regions tolerances allContained allPositive
-  refine ⟨f, large, ?_, ?_, failure⟩
-  · intro k hk z hz
-    have neq : k ≠ bound := fun eq => fresh (eq ▸ hk)
-    have close := approximation k (Finset.mem_insert_of_mem hk) z
-    simp only [regions, tolerances, if_neg neq] at close
-    exact close hz
-  · apply recover (evalComplex f)
-    · exact (continuous.comp (by fun_prop)).continuousOn
-    · intro t ht
-      have close := approximation bound (Finset.mem_insert_self ..)
-        ((c : ℂ) + (t : ℂ) * Complex.I)
-      simp only [regions, tolerances, if_pos rfl] at close
-      exact (close (contourInside t ht)).le
 
 end RH.Paper.PlantedZero

@@ -68,9 +68,7 @@ standard counterexample for a direct check of the coded function.
 | `PlantedZero.planted_code_fails` | Proves by exact rational arithmetic that the candidate code for the planted point fails at precision 3, provided the denominator is nonzero there. |
 | `PlantedZero.finite_checks_with_failure` | Combines the failing candidate with any finite list of bounds and local validity checks, given codes that pass the initial validity checks and exceed the cutoff. |
 | `PlantedZero.approximate_polynomial_by_rational_coefficients` | Proves uniform approximation of a complex polynomial on a compact set by Gaussian-rational coefficient lists. |
-| `PlantedZero.cauchy_coefficient_error_le` | Uses Mathlib's Cauchy integral to bound the degree-`n` coefficient of the error by the uniform boundary error divided by the disc radius to the power `n`. |
 | `PlantedZero.finite_zeta_approximations_with_standard_failure` | Uses Mergelyan's theorem to produce a single rational code above the cutoff, satisfying all the specified compact-set approximation tolerances for ζ and failing the direct zero-location check. The common compact must avoid the pole and the planted roots and have connected complement. |
-| `PlantedZero.finite_zeta_approximations_with_recovery_and_failure` | Uses Mergelyan and Perron to obtain one rational code that also recovers any finite collection of standard Mertens sums after rounding. The approximation compact must contain the chosen Perron contour. |
 
 The point code directly names rational coordinates. This implementation
 checks zeros given by those coordinates. The finite approximation
@@ -94,18 +92,9 @@ formula away from integer cutoffs.
 that agrees exactly with the Dirichlet series on the integration line.
 `perronIntegral_sub_le_of_integrand_bound` bounds the finite-contour
 error for a replacement function from an estimate on the weighted
-integrand. `PerronRecovery.lean` proves an explicit reciprocal error
-bound and the existence of one contour height and tolerance for any
-finite family of standard Mertens sums. The same file verifies
-compatibility with sufficiently late Dirichlet partial sums at any
-fixed standard point in the convergence half-plane.
-
-Lemma 1.33 and Remark 1.36 also use recovery on quantified lines
-of a proof. Finite sets of such lines can contain universally
-quantified formulas. The finite-input recovery theorem supplies
-concrete instances. Preservation of the quantified formulas for
-codes satisfying the manuscript's validity schema remains a separate
-proof obligation.
+integrand. The manuscript's proof translation still needs to justify
+that its local validity checks are sufficient for the coefficient
+identities invoked in the translation.
 
 The two custom axioms are the published analytic statements
 `mergelyan` and `perron_formula`. Compactness comes from Mathlib.
