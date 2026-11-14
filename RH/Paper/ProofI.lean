@@ -298,6 +298,95 @@ theorem RH_independent_of_finite_precision_failure {τ : TranslationPair}
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
   RH_independent_of_disagreement S pres (RH_disagrees_of_finite_precision_failure S check roundTrip finite)
 
+/-! ### The fresh constant in Lemma 1.10.2 -/
+
+/-- The formula `∃ k, ¬check(n,k)` with its index exposed as a free variable. -/
+def failedPrecisionAt (check : L.BoundedFormula Empty 2) : L.Formula Unit :=
+  (check.not.ex.toFormula).relabel (fun _ => ())
+
+/-- In the expanded language, the free index is named by the new constant. -/
+def namedPrecisionFailure (check : L.BoundedFormula Empty 2) : L[[Unit]].Sentence :=
+  Language.Formula.equivSentence (failedPrecisionAt check)
+
+/-- The expanded theory containing RH_L and the sentence asserting a
+    failed check at the newly named index. -/
+def Setting.precisionFailureTheory (check : L.BoundedFormula Empty 2) : L[[Unit]].Theory :=
+  insert (namedPrecisionFailure check) ((L.lhomWithConstants Unit).onTheory (insert S.RH S.T))
+
+theorem Model.realize_failedPrecisionAt (M : Model) (check : L.BoundedFormula Empty 2)
+    (n : M.carrier) :
+    @Language.Formula.Realize L M.carrier M.str Unit (failedPrecisionAt check) (fun _ => n) ↔
+      ∃ k : M.carrier, ¬ @Language.BoundedFormula.Realize L M.carrier M.str
+        Empty 2 check (fun e => Empty.elim e) (Fin.snoc (Fin.snoc Fin.elim0 n) k) := by
+  letI : L.Structure M.carrier := M.str
+  unfold failedPrecisionAt
+  rw [Language.Formula.realize_relabel, Language.BoundedFormula.realize_toFormula,
+    Language.BoundedFormula.realize_ex]
+  change (∃ k : M.carrier, check.not.Realize (fun _ : Empty => n)
+    (Fin.snoc (fun _ : Fin 1 => n) k)) ↔ _
+  have freeAssignment : (fun _ : Empty => n) = fun e => Empty.elim e :=
+    funext (fun e => nomatch e)
+  have indexAssignment : (fun _ : Fin 1 => n) = Fin.snoc Fin.elim0 n := by
+    funext i
+    have hi : i = 0 := Subsingleton.elim _ _
+    subst i
+    rfl
+  rw [freeAssignment, indexAssignment]
+  simp only [Language.BoundedFormula.realize_not]
+
+/-- If every precision check holds in ℕ, every interpretation of the
+    fresh constant in ℕ falsifies the added failure sentence. -/
+theorem named_precision_failure_false_in_N (check : L.BoundedFormula Empty 2)
+    (hcheck : TrueInN (precisionSentence check)) (n : ℕ) :
+    ¬ @Language.Sentence.Realize (L[[Unit]]) ℕ
+      (@Language.withConstantsStructure L ℕ natStructure Unit
+        (Language.constantsOn.structure (fun _ => n))) (namedPrecisionFailure check) := by
+  letI := Language.constantsOn.structure (fun _ : Unit => n)
+  intro named
+  have failed := (Language.Formula.realize_equivSentence ℕ (failedPrecisionAt check)).mp named
+  let M : Model := ⟨ℕ, natStructure⟩
+  have atIndex : @Language.Formula.Realize L ℕ natStructure Unit
+      (failedPrecisionAt check) (fun _ => n) := by
+    simpa only [show (fun a : Unit => (L.con a : ℕ)) = (fun _ => n) from rfl] using failed
+  obtain ⟨k, hk⟩ := (M.realize_failedPrecisionAt check n).mp atIndex
+  exact (M.not_sat_precisionSentence check).mpr ⟨n, k, hk⟩ hcheck
+
+/-- Compactness in the expanded language, followed by forgetting the
+    fresh constant. Any finitely satisfiable extension supplies the same
+    deduction, including extensions with additional conditions on the index. -/
+theorem RH_disagrees_of_named_precision_failure {τ : TranslationPair}
+    (check : L.BoundedFormula Empty 2)
+    (roundTrip : S.Prov (iffS (τ.RL S.RH) (precisionSentence check)))
+    {Γ : L[[Unit]].Theory} (includes : S.precisionFailureTheory check ⊆ Γ)
+    (finite : Γ.IsFinitelySatisfiable) :
+    S.Disagrees τ S.RH := by
+  have sat := Language.Theory.isSatisfiable_iff_isFinitelySatisfiable.mpr finite
+  obtain ⟨N⟩ := sat
+  let incl := L.lhomWithConstants Unit
+  letI : L.Structure N.Carrier := incl.reduct N.Carrier
+  let M : Model := ⟨N.Carrier, incl.reduct N.Carrier⟩
+  have base (φ : Sent) (hφ : φ ∈ insert S.RH S.T) : M.Sat φ := by
+    apply (incl.realize_onSentence (M := N.Carrier) φ).mp
+    apply Language.Theory.realize_sentence_of_mem Γ
+    exact includes (Set.mem_insert_of_mem _ (Language.LHom.mem_onTheory.mpr ⟨φ, hφ, rfl⟩))
+  have named : N.Carrier ⊨ namedPrecisionFailure check :=
+    Language.Theory.realize_sentence_of_mem Γ (includes (Set.mem_insert _ _))
+  have failed := (Language.Formula.realize_equivSentence N.Carrier (failedPrecisionAt check)).mp named
+  have hfail : ¬ M.Sat (precisionSentence check) := by
+    apply (M.not_sat_precisionSentence check).mpr
+    let n : M.carrier := L.con ()
+    have atIndex : @Language.Formula.Realize L M.carrier M.str Unit
+        (failedPrecisionAt check) (fun _ => n) := by
+      have same : (fun a : Unit => (L.con a : M.carrier)) = fun _ => n :=
+        funext (fun a => by cases a; rfl)
+      simpa only [same] using failed
+    obtain ⟨k, hk⟩ := (M.realize_failedPrecisionAt check n).mp atIndex
+    exact ⟨n, k, hk⟩
+  have hBase : S.ZFCModel M := fun φ hφ => base φ (Set.mem_insert_of_mem _ hφ)
+  have hRH : M.Sat S.RH := base S.RH (Set.mem_insert _ _)
+  have agreement := (M.sat_iff (τ.RL S.RH) (precisionSentence check)).mp (roundTrip M hBase)
+  exact ⟨M, hBase, hRH, fun h => hfail (agreement.mp h)⟩
+
 /-- Theorem 1.18.2 (Truth from Unrefutability). -/
 theorem truth_from_unrefutability
     (reflection : ∀ ψ, IsPi1 ψ → ¬ TrueInN ψ → S.Prov (neg ψ))

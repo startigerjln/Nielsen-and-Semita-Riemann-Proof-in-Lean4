@@ -21,6 +21,8 @@ Section and theorem numbers below refer to Nielsen and Semita's
 | `RH_disagrees_of_finite_precision_failure` | Round-trip equivalence and finite satisfiability after adjoining both RH_L and the negated precision sentence (§1.10.2). |
 | `RH_finite_precision_failure_iff` | None. The full finite-satisfiability condition is equivalent to the target theory failing to entail the implication from RH_L to the precision sentence. |
 | `RH_independent_of_finite_precision_failure` | The same compactness premises plus preservation for RH_L. |
+| `RH_disagrees_of_named_precision_failure` | Round-trip equivalence and finite satisfiability of the expanded theory with the fresh constant in §1.10.2. The named failure survives forgetting the new constant. |
+| `named_precision_failure_false_in_N` | The precision sentence holds in ℕ. For every interpretation of the fresh constant in ℕ, the added sentence asserting a failed check is false. |
 | `RH_not_provable` | Preservation for RH_L (Lemma 1.5.6) and failure in a model of the target theory (Lemma 1.10.2 and Corollary 1.7.14) |
 | `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L in the target theory |
 | `RH_independent` | Preservation and round-trip failure for both polarities (Corollary 1.13.2) |
