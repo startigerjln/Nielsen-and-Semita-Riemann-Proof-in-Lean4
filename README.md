@@ -2,15 +2,16 @@
 
 J. L. Nielsen and L. Semita, Center for Topological Physics (2025)
 
-Lean 4 + Mathlib formalization. Zero sorry, zero manuscript axioms, zero hypotheses on the final theorem.
+Lean 4 + Mathlib formalization of the deductive structure of Proof I.
 
-## Overview
+## Lean formalization
 
-We resolve the Riemann Hypothesis through three independent proofs formalized in Lean 4 with Mathlib. Every axiom is either proved from Mathlib or is a published theorem with a standard citation. All novel claims are proved as Lean theorems.
+`RH/Paper/ProofI.lean` formalizes Section 1 of the paper (version of May 16, 2026). It compiles with Lean 4.16.0, with no `axiom` and no `sorry`.
 
-The argument identifies a structural obstruction between arithmetic and analytic formulations of RH within ZFC, constructed from the compactness theorem (Chang and Keisler 1990), the overspill principle (Kaye 1991), Mergelyan's approximation theorem (1951), the Mertens-Schoenfeld bounds (1874, 1976), and Perron's contour method (1908). The round-trip translation of RH through its analytic encoding introduces Pi2 uniformity quantifiers that fail in nonstandard models where the Pi1 arithmetic statement holds.
+Proved in Lean: Uniform Preservation (Lemma 1.5.6), Round-Trip Adequacy (Theorem 1.7.13), the reductio step of Theorem 1.6.1, and, from the assumptions below, ZFC-undecidability of RH (Corollary 1.13.2) and truth of RH in the standard model (Theorem 1.18.3).
 
-Proof I: RH is independent of ZFC and true in the standard model, via the obstruction and Kreisel's observation on Pi1 sentences. Proof II: RH is provable in ZFC + Large Cardinal Analytic Completeness, where Woodin's Sigma12 absoluteness (1999) makes RH decidable and Sigma1-soundness excludes the negation. Proof III: phase rigidity implies all nontrivial zeros lie on the critical line, via the argument principle.
+Assumed, as explicit hypotheses of those theorems: two published results (the Π₁ form of RH; Π₁ witness reflection) and two results of the paper not yet formalized (Theorem 1.7.6 for RH and its symmetric case for ¬RH). See `AXIOM_PROVENANCE.md`.
 
+Proofs II and III are not formalized.
 
 The full paper with appendix is unified.pdf (62 pages). LaTeX source: unified.tex + appendix_body.tex.
