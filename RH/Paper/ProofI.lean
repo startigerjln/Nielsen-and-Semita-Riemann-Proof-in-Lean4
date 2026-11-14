@@ -1,4 +1,5 @@
 import RH.Paper.Arith
+import Mathlib.ModelTheory.Satisfiability
 /-!
 # Deductive structure of Proof I of Nielsen & Semita
 
@@ -69,6 +70,23 @@ def Setting.Disagrees (S : Setting) (τ : TranslationPair) (φ : Sent) : Prop :=
 
 /-! ## Theorems -/
 
+/-- Mathlib's compactness theorem applied to the theory containing the
+    negation of the round trip. -/
+theorem round_trip_failure_of_finite_satisfiability {τ : TranslationPair} {φ : Sent}
+    (finite : (insert (neg (τ.RL φ)) S.T).IsFinitelySatisfiable) :
+    S.RoundTripFails τ φ := by
+  let T := insert (neg (τ.RL φ)) S.T
+  have satisfiable : T.IsSatisfiable :=
+    Language.Theory.isSatisfiable_iff_isFinitelySatisfiable.mpr finite
+  obtain ⟨N⟩ := satisfiable
+  let M : Model := ⟨N.Carrier, inferInstance⟩
+  have hneg : M.Sat (neg (τ.RL φ)) :=
+    Language.Theory.realize_sentence_of_mem (M := N.Carrier)
+      (T := T) (Set.mem_insert _ _)
+  refine ⟨M, fun ψ hψ => ?_, (M.sat_neg (τ.RL φ)).mp hneg⟩
+  exact Language.Theory.realize_sentence_of_mem (M := N.Carrier)
+    (T := T) (Set.mem_insert_of_mem _ hψ)
+
 /-- Jenny Lorraine Nielsen observed that any witness to round-trip failure
     suffices: preservation would force the round trip to hold in that model. -/
 theorem not_provable_of_round_trip_failure {τ : TranslationPair} {φ : Sent}
@@ -96,6 +114,16 @@ theorem RH_independent {τ : TranslationPair}
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
   ⟨RH_not_provable S (pres S.RH) failure_rh,
     neg_RH_not_provable S (pres (neg S.RH)) failure_neg⟩
+
+/-- The two directions also follow from preservation for RH and a
+    single model satisfying RH while falsifying its round trip. -/
+theorem RH_independent_of_disagreement {τ : TranslationPair}
+    (pres : S.Prov S.RH → S.Prov (τ.RL S.RH))
+    (disagreement : S.Disagrees τ S.RH) :
+    ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) := by
+  obtain ⟨M, hM, hRH, hfail⟩ := disagreement
+  exact ⟨RH_not_provable S pres ⟨M, hM, hfail⟩,
+    fun hneg => ((M.sat_neg S.RH).mp (hneg M hM)) hRH⟩
 
 /-- Theorem 1.18.2 (Truth from Unrefutability). -/
 theorem truth_from_unrefutability
@@ -134,6 +162,23 @@ theorem changes_neg {τ : TranslationPair}
     (disagreement : S.Disagrees τ (neg S.RH)) :
     ¬ S.Prov (iffS (neg S.RH) (τ.RL (neg S.RH))) :=
   changes_of_disagreement S disagreement
+
+/-- Negation reverses the truth values of the two sentences in the
+    disagreement model, so the biconditional for ¬RH also fails there. -/
+theorem changes_neg_of_RH_disagreement {τ : TranslationPair}
+    (comp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ))
+    (disagreement : S.Disagrees τ S.RH) :
+    ¬ S.Prov (iffS (neg S.RH) (τ.RL (neg S.RH))) := by
+  intro hprov
+  obtain ⟨M, hM, hRH, hfail⟩ := disagreement
+  have roundTripNeg : τ.RL (neg S.RH) = neg (τ.RL S.RH) := by
+    unfold TranslationPair.RL
+    rw [(comp S.RH).1, (comp (τ.toC S.RH)).2]
+  have htranslated : M.Sat (τ.RL (neg S.RH)) := by
+    rw [roundTripNeg]
+    exact (M.sat_neg (τ.RL S.RH)).mpr hfail
+  have hiff := (M.sat_iff (neg S.RH) (τ.RL (neg S.RH))).mp (hprov M hM)
+  exact ((M.sat_neg S.RH).mp (hiff.mpr htranslated)) hRH
 
 theorem lambda_sound_of_disagreement {τ : TranslationPair} {φ : Sent}
     (pres : ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ))

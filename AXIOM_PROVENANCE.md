@@ -7,10 +7,13 @@ axioms.
 
 | Deduction | Explicit premises |
 |---|---|
+| `round_trip_failure_of_finite_satisfiability` | Finite satisfiability of the theory with the negated round trip added, using Mathlib's compactness theorem |
 | `RH_not_provable` | Preservation for RH_L (Lemma 1.33.1) and an eligible model where its round trip fails (the failure part of Lemma 1.35) |
 | `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L |
 | `RH_independent` | Preservation and round-trip failure for both polarities |
+| `RH_independent_of_disagreement` | Preservation for RH_L and one model satisfying RH_L while falsifying its round trip |
 | `changes_rh` and `changes_neg` | A model satisfying the original sentence and falsifying its round trip |
+| `changes_neg_of_RH_disagreement` | Commutation with negation and a model satisfying RH_L while falsifying its round trip (unified manuscript, Single-Model Formalization Note) |
 | `lambda_sound_of_disagreement` | Preservation, commutation with negation, Π₁ truth preservation in ℕ, and disagreement |
 | `RH_true_in_N` | The Π₁ form, reflection for the given theory (via Σ₁-completeness for ZFC), and unrefutability |
 | `uniform_preservation` and `round_trip_adequacy` | Λ-soundness and provability of the input sentence |
