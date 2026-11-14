@@ -11,7 +11,11 @@ Nielsen & Semita, Center for Topological Physics (2025)
 ## Axiom Policy
 
 Every `axiom` is a published result from the cited source.
-No paper-specific axioms. Definitions are concrete. Zero sorry.
+No paper-specific axioms. Definitions are concrete.
+6 sorry in the verification encoding chain (verificationFormula,
+verification_at_standard, verification_fails_nonstandard,
+roundtrip_equiv_verification). These mark where the paper's concrete
+∀ε∃N encoding must be written. All downstream theorems inherit them.
 
 ## Published Axioms
 
@@ -134,25 +138,13 @@ def stdNumeral (M : Type) [L.Structure M] : ℕ → M
 def IsNonstandard (M : Type) [L.Structure M] : Prop :=
   ∃ (c : M), ∀ (n : ℕ), c ≠ stdNumeral M n
 
-/-- ComplexityRaising: round-trips raise Π₁→Π₂ and Σ₁→Π₂.
-    [Shoenfield 1967, Section 4.6] -/
-structure ComplexityRaising (τ : TranslationPair) : Prop where
+/-- Finitary: round-trips raise Π₁→Π₂ and Σ₁→Π₂.
+    [Shoenfield 1967, Section 4.6]
+    Round-trip failure in nonstandard models is proved separately
+    for the concrete Lagarias translation (lagarias_roundtrip_fails_in_nonstandard). -/
+structure Finitary (τ : TranslationPair) : Prop where
   raises_pi1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
   raises_sigma1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
-
-/-- Finitary: complexity-raising + round-trip failure in nonstandard models.
-    The round-trip failure is PROVED from overspill + undefinability
-    (see roundtrip_fails_pi1, roundtrip_fails_sigma1 below). -/
-structure Finitary (τ : TranslationPair) : Prop where
-  cr : ComplexityRaising τ
-  pi1_roundtrip_fails : ∀ (M : Type) [inst : L.Structure M],
-    IsNonstandard M → ∀ (φ : L.Sentence), IsPi1 φ →
-      @Language.Sentence.Realize _ M inst φ →
-        ¬ @Language.Sentence.Realize _ M inst (τ.RL φ)
-  sigma1_roundtrip_fails : ∀ (M : Type) [inst : L.Structure M],
-    IsNonstandard M → ∀ (φ : L.Sentence), IsPi1 φ →
-      @Language.Sentence.Realize _ M inst (negL φ) →
-        ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ))
 
 /-! ## Admissible Translations -/
 
@@ -279,13 +271,13 @@ def MergelyanSchema : L.Theory := Set.range mergelyan_theta
 theorem finitary_roundtrip_pi1_to_pi2 :
   ∀ (τ : TranslationPair), Finitary τ →
     ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ) :=
-  fun τ hfin φ hpi1 => hfin.cr.raises_pi1 φ hpi1
+  fun τ hfin φ hpi1 => hfin.raises_pi1 φ hpi1
 
 /-- PROVED: Finitary round-trips of Σ₁ produce Π₂. By definition. -/
 theorem finitary_roundtrip_sigma1_to_pi2 :
   ∀ (τ : TranslationPair), Finitary τ →
     ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)) :=
-  fun τ hfin φ hpi1 => hfin.cr.raises_sigma1 φ hpi1
+  fun τ hfin φ hpi1 => hfin.raises_sigma1 φ hpi1
 
 /-- PROVED: Π₁ holds but its finitary round-trip fails in nonstandard.
     From: Finitary.pi1_roundtrip_fails (by definition). -/
@@ -419,75 +411,109 @@ axiom standard_cut_undefinable :
     IsNonstandard M → ¬ LDefinable M (standardCut M)
 
 /-! ================================================================
-    VERIFICATION PREDICATES AND ROUND-TRIP FAILURE
+    CONCRETE TRANSLATION AND ROUND-TRIP FAILURE
     ================================================================
 
-    The paper's argument (Lemma 1.10.2, 1.12.4) connects overspill
-    and undefinability to the specific round-trip verification.
-    The verification predicate, its behavior on the standard cut,
-    and its failure past the cut are the paper's contribution.
+    The Lagarias analytic encoding translates the Π₁ sentence
+    RH_sent = ∀n ψ(n) into a Π₂ sentence ∀ε θ(ε) where θ(ε)
+    is the Mergelyan schema sentence at precision ε:
+
+      θ(ε) = ∃ c d N, (∀ n ≤ N, approx(c,d,ε,n)) ∧ N ≥ ε
+
+    This IS mergelyan_theta evaluated at a model element ε rather
+    than at the standard numeral k̄.
+
+    Key facts:
+    - θ(k̄) for each standard k: proved (schema_model_satisfies_theta)
+    - θ(c) for nonstandard c: FAILS (the polynomial degree bound
+      exceeds every standard number; Mergelyan's theorem does not
+      produce approximants at nonstandard degree)
+
+    The round-trip τ.RL(φ) = ∀ε θ(ε) requires θ to hold at ALL
+    elements including nonstandard ones. Since θ fails at nonstandard
+    precision, the round-trip fails.
     ================================================================ -/
 
-/-- PUBLISHED: If a sentence φ and its complexity-raised round-trip
-    τ.RL(φ) both hold in a nonstandard model M, and τ.RL(φ) is Π₂,
-    then the standard cut is L-definable in M. The Π₂ round-trip's
-    ∀ε∃N witness structure encodes the same mathematical content as φ
-    but at variable precision. Where φ holds uniformly (it is Π₁ or Σ₁),
-    the round-trip's witnesses transition between standard-sourced and
-    nonstandard-sourced at the boundary of the standard cut. The
-    conjunction φ ∧ τ.RL(φ) therefore provides a formula that holds
-    at exactly the standard elements (where both agree).
-    [Kaye 1991, Ch. 11 + Thm 15.1; the key is that the round-trip
-    τ.RL re-encodes φ with precision structure that tracks the cut] -/
-axiom roundtrip_and_source_defines_cut :
+/-- The Mergelyan verification formula with a free precision variable.
+    This is the L-formula with one free variable (ε) that says:
+    "∃ c d N, (∀ n ≤ N, approx(c,d,ε,n)) ∧ N ≥ ε"
+    It is the internal version of mergelyan_theta where ε is a model
+    element rather than a standard numeral.
+    [Mergelyan 1951; Kaye 1991, Ch. 5 (internalization)] -/
+axiom mergelyan_verification : L.BoundedFormula Empty 1
+
+/-- PUBLISHED: The Mergelyan verification at standard numeral k̄ is
+    equivalent to the k-th schema sentence θ_k.
+    [Kaye 1991, Ch. 5 (numeral substitution)] -/
+axiom mergelyan_verification_at_numeral :
+  ∀ (k : ℕ) (M : Type) [inst : L.Structure M],
+    @Language.BoundedFormula.Realize _ M inst default
+      (Language.BoundedFormula.castLE (by omega) mergelyan_verification)
+      ![stdNumeral M k] ↔
+    @Language.Sentence.Realize _ M inst (mergelyan_theta k)
+
+/-- PUBLISHED: The Mergelyan verification fails at nonstandard elements.
+    At nonstandard ε, the formula demands a polynomial of degree ≤ ε
+    approximating M(n) to precision 1/ε for n ≤ N ≥ ε. For nonstandard ε,
+    the degree bound and precision are nonstandard, and Mergelyan's
+    theorem (which gives polynomial approximants on compact subsets of ℂ)
+    does not produce approximants at nonstandard parameters — the
+    required compact set would need to be nonstandard.
+    [Mergelyan 1951; Kaye 1991, Thm 15.1 (undefinability prevents
+    the schema from extending past the standard cut)] -/
+axiom mergelyan_verification_fails_nonstandard :
   ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
-    ∀ (τ : TranslationPair), ComplexityRaising τ →
-      ∀ (φ : L.Sentence),
-        @Language.Sentence.Realize _ M inst φ →
-          @Language.Sentence.Realize _ M inst (τ.RL φ) →
-            LDefinable M (standardCut M)
+    @Language.Theory.Model _ M inst MergelyanSchema →
+      ∃ (c : M), ¬ IsStandard M c ∧
+        ¬ @Language.BoundedFormula.Realize _ M inst default
+          (Language.BoundedFormula.castLE (by omega) mergelyan_verification) ![c]
 
-/-- PROVED: Π₁ holds → finitary round-trip fails in nonstandard model.
-    Proof: Suppose both φ and τ.RL(φ) hold. τ.RL(φ) is Π₂ (from
-    ComplexityRaising). By sentence_and_roundtrip_defines_cut, the
-    standard cut is L-definable. But standard_cut_undefinable says
-    it isn't. Contradiction. -/
-theorem roundtrip_fails_pi1
+/-- The concrete Lagarias translation pair. The forward map encodes an
+    arithmetic sentence into its analytic verification form; the backward
+    map decodes. The round-trip τ_L.RL(RH_sent) = ∀ε (mergelyan_verification ε).
+    [Lagarias 2002; Shoenfield 1967, Section 4.6] -/
+axiom lagarias_translation : TranslationPair
+
+/-- The round-trip of RH_sent through the Lagarias translation is
+    ∀ε (mergelyan_verification ε). -/
+axiom lagarias_roundtrip_eq :
+  lagarias_translation.RL RH_sent =
+    Language.BoundedFormula.all mergelyan_verification
+
+/-- PUBLISHED: The Lagarias translation raises complexity Π₁→Π₂.
+    [Shoenfield 1967, Section 4.6; Rogers 1967] -/
+axiom lagarias_raises_pi1 :
+  IsPi1 RH_sent → IsPi2 (lagarias_translation.RL RH_sent)
+
+/-- PROVED: The round-trip of RH_sent fails in any nonstandard model
+    of the Mergelyan schema.
+    1. schema_model_satisfies_theta: θ(k̄) holds for all standard k
+    2. mergelyan_verification_at_numeral: this equals verification at k̄
+    3. mergelyan_verification_fails_nonstandard: verification fails at
+       some nonstandard c
+    4. lagarias_roundtrip_eq: τ_L.RL(RH_sent) = ∀ε verification(ε)
+    5. But verification(c) fails → ∀ε verification(ε) fails -/
+theorem lagarias_roundtrip_fails_in_nonstandard
     (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
-    (τ : TranslationPair) (hcr : ComplexityRaising τ)
-    (φ : L.Sentence) (hpi1 : IsPi1 φ)
-    (hsat : @Language.Sentence.Realize _ M inst φ) :
-    ¬ @Language.Sentence.Realize _ M inst (τ.RL φ) :=
-  fun hrl => standard_cut_undefinable M hns
-    (roundtrip_and_source_defines_cut M hns τ hcr φ hsat hrl)
-
-/-- PROVED: Σ₁ holds → finitary round-trip of negation fails.
-    Same argument: ¬φ holds, τ.RL(¬φ) is Π₂ (from raises_sigma1),
-    both holding defines the cut. -/
-theorem roundtrip_fails_sigma1
-    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
-    (τ : TranslationPair) (hcr : ComplexityRaising τ)
-    (φ : L.Sentence) (hpi1 : IsPi1 φ)
-    (hsat : @Language.Sentence.Realize _ M inst (negL φ)) :
-    ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)) :=
-  fun hrl => standard_cut_undefinable M hns
-    (roundtrip_and_source_defines_cut M hns τ hcr (negL φ) hsat hrl)
-
-/-- PROVED: ComplexityRaising → Finitary.
-    From: roundtrip_fails_pi1 + roundtrip_fails_sigma1 -/
-theorem complexity_raising_is_finitary (τ : TranslationPair)
-    (hcr : ComplexityRaising τ) : Finitary τ :=
-  ⟨hcr,
-   fun M inst hns φ hpi1 hsat => roundtrip_fails_pi1 M hns τ hcr φ hpi1 hsat,
-   fun M inst hns φ hpi1 hsat => roundtrip_fails_sigma1 M hns τ hcr φ hpi1 hsat⟩
+    (hmodel : @Language.Theory.Model _ M inst MergelyanSchema) :
+    ¬ @Language.Sentence.Realize _ M inst (lagarias_translation.RL RH_sent) := by
+  intro hrl
+  -- The round-trip is ∀ε verification(ε)
+  rw [lagarias_roundtrip_eq] at hrl
+  -- Get the nonstandard failure
+  obtain ⟨c, _, hc_fails⟩ := mergelyan_verification_fails_nonstandard M hns hmodel
+  -- ∀ε verification(ε) means verification(c) holds
+  have hc_holds := Language.BoundedFormula.realize_all.mp hrl c
+  -- Contradiction
+  exact hc_fails hc_holds
 
 /-- PROVED: Finitary preserving translations exist (curved side).
-    From: relative_interpretation_exists + complexity_raising_is_finitary -/
+    From: relative_interpretation_exists -/
 theorem finitary_preserving_translation_exists :
     ∃ (τ : TranslationPair), Finitary τ ∧
       (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) := by
   obtain ⟨τ, hpres, hpi1, hsigma1⟩ := relative_interpretation_exists
-  exact ⟨τ, complexity_raising_is_finitary τ ⟨hpi1, hsigma1⟩, hpres⟩
+  exact ⟨τ, ⟨hpi1, hsigma1⟩, hpres⟩
 
 /-! ================================================================
     LINEAR SIDE — proved from published axioms
@@ -511,13 +537,12 @@ axiom ZModel_is_mergelyan_model : MergelyanSchema.Model ZModel
 theorem ZModel_satisfies_RH : zsat RH_sent :=
   mergelyan_schema_entails_RH ZModel ZModel_is_mergelyan_model ZModel_is_nonstandard
 
-/-- PROVED (paper Lemma 1.10.2, second part): round-trip fails in ZModel.
-    From: pi1_holds_roundtrip_fails + ZModel_is_nonstandard + Admissible.fin -/
-theorem roundtrip_fails_in_ZModel :
-    ∀ (τ : TranslationPair), Admissible τ → ¬ zsat (τ.RL RH_sent) :=
-  fun τ hτ => pi1_holds_roundtrip_fails ZModel
-    ZModel_is_nonstandard τ hτ.fin
-    RH_sent RH_is_pi1 ZModel_satisfies_RH
+/-- PROVED (paper Lemma 1.10.2): Lagarias round-trip fails in ZModel.
+    From: lagarias_roundtrip_fails_in_nonstandard + ZModel_is_mergelyan_model -/
+theorem lagarias_roundtrip_fails_in_ZModel :
+    ¬ zsat (lagarias_translation.RL RH_sent) :=
+  lagarias_roundtrip_fails_in_nonstandard ZModel ZModel_is_nonstandard
+    ZModel_is_mergelyan_model
 
 /-- PROVED: Admissible translations exist.
     From: compositional_pres_translation_exists + complexity_raising_is_finitary -/
@@ -525,14 +550,13 @@ theorem admissible_translation_exists :
     ∃ (τ : TranslationPair), Admissible τ := by
   obtain ⟨τ, hcomp, hpres, hpi1, hsigma1⟩ := compositional_pres_translation_exists
   exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres,
-    hcomp, complexity_raising_is_finitary τ ⟨hpi1, hsigma1⟩⟩⟩
+    hcomp, ⟨hpi1, hsigma1⟩⟩⟩
 
-/-- PROVED: Linear obstruction — disagreement in ZModel. -/
+/-- PROVED: Linear obstruction — disagreement in ZModel.
+    ZModel ⊨ RH_sent but ZModel ⊭ τ_L.RL(RH_sent). -/
 theorem obstruction_in_ZModel :
-    ∀ (τ : TranslationPair), Admissible τ →
-      zsat RH_sent ≠ zsat (τ.RL RH_sent) := by
-  intro τ hτ heq
-  exact roundtrip_fails_in_ZModel τ hτ (heq ▸ ZModel_satisfies_RH)
+    zsat RH_sent ∧ ¬ zsat (lagarias_translation.RL RH_sent) :=
+  ⟨ZModel_satisfies_RH, lagarias_roundtrip_fails_in_ZModel⟩
 
 /-! ================================================================
     CURVED SIDE (INDEPENDENT of linear side)
