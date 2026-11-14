@@ -179,7 +179,7 @@ axiom RH_kernel : L.BoundedFormula Empty 1
     The sentence is concrete and specific: it is the universal
     quantification of the Lagarias encoding.
     [Davis, Matiyasevich & Robinson 1976; Lagarias 2002] -/
-def RH_sent : L.Sentence := Language.BoundedFormula.all RH_kernel
+noncomputable def RH_sent : L.Sentence := Language.BoundedFormula.all RH_kernel
 
 /-! ## Translation Pairs (Definition 1.4.1)
 
@@ -224,7 +224,7 @@ axiom ZFCProv : L.Sentence → Prop       -- [Kunen 1980]
     EXPLICIT CONSISTENCY ASSUMPTION (Con(ZFC)).
     Not a theorem of ZFC itself (Goedel's second incompleteness theorem).
     Standard in metamathematics; assumed throughout the literature. -/
-axiom ZFC_consistent : ∀ (φ : L.Sentence), ¬ (ZFCProv φ ∧ ZFCProv (negL φ))
+axiom ZFC_consistent : ∀ (φ : L.Sentence), ¬ (ZFCProv φ ∧ ZFCProv (Language.BoundedFormula.not φ))
 /-- ZModel is the nonstandard model M_L constructed from Mergelyan
     witnesses via compactness [Chang & Keisler 1990, Thm 4.1.12].
     Its existence follows from three published results:
