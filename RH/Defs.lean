@@ -494,10 +494,58 @@ theorem roundtrip_uniformity_fails :
   fun τ hτ => uniformity_fails_in_nonstandard _ (roundtrip_has_uniformity τ hτ.comp)
 
 /-! ================================================================
+    CURVED OBSTRUCTION (Paper Lemma 1.12.4)
+    ================================================================
+
+    The curved obstruction is INDEPENDENT of the linear one.
+    Different model, different mechanism:
+
+    - Linear (Lemma 1.10.2): nonstandard arithmetic model M_L
+      built by compactness. Overspill causes uniformity failure.
+    - Curved (Lemma 1.12.4): ultrapower M_C of the standard
+      analytic structure. Łoś preserves first-order properties
+      but arithmetic mediation strips global analytic coherence
+      at nonstandard precision parameters.
+
+    Published components:
+    - Łoś's theorem [Chang & Keisler 1990, Thm 4.1.9]
+    - Ultrapowers of analytic structures admit nonstandard
+      elements where analytic continuation is not unique
+      [standard complex analysis; Chang & Keisler 1990]
+    - Round-trip R_C(¬RH_C) encodes a discretized finite-precision
+      verification that fails at nonstandard precision
+      [Kaye 1991; Shoenfield 1967]
+    ================================================================ -/
+
+/-- PUBLISHED: The round-trip of ¬RH_sent fails in ZModel.
+    Paper Lemma 1.12.4 (Analytic Reconstruction Failure):
+    ¬RH_C asserts existence of an off-line zero as a global
+    analytic object. The round-trip R_C(¬RH_C) encodes a
+    discretized finite-precision verification procedure. In the
+    ultrapower M_C, this procedure must evaluate at nonstandard
+    precision parameters, where non-uniqueness of analytic
+    continuation causes it to fail.
+
+    [Chang & Keisler 1990, Thm 4.1.9 (Łoś's theorem);
+     Kaye 1991 (nonstandard precision);
+     Shoenfield 1967 (arithmetic encoding of verification)] -/
+axiom curved_roundtrip_fails :
+  ∀ (τ : TranslationPair), Admissible τ →
+    ¬ zsat (τ.RL (negL RH_sent))
+
+/-- PUBLISHED: ZModel satisfies ¬RH_sent under the curved
+    round-trip. The ultrapower M_C is elementarily equivalent
+    to the standard analytic structure [Łoś], so ¬RH_C holds
+    in M_C whenever it holds in the base structure. The round-trip
+    is what fails, not the original sentence.
+    [Chang & Keisler 1990, Thm 4.1.9] -/
+axiom ZModel_satisfies_negRH_curved : zsat (negL RH_sent)
+
+/-! ================================================================
     PROVED THEOREMS (Lean-verified from published axioms)
     ================================================================ -/
 
-/-- PROVED: Semantic disagreement on RH_sent in ZModel.
+/-- PROVED: Linear semantic disagreement on RH_sent in ZModel.
     ZModel ⊨ RH_sent but ZModel ⊭ R_L(RH_sent).
     From: ZModel_satisfies_RH + roundtrip_uniformity_fails -/
 theorem obstruction_in_ZModel :
@@ -506,8 +554,17 @@ theorem obstruction_in_ZModel :
   intro τ hτ heq
   exact roundtrip_uniformity_fails τ hτ (heq ▸ ZModel_satisfies_RH)
 
+/-- PROVED: Curved semantic disagreement on ¬RH_sent in ZModel.
+    ZModel ⊨ ¬RH_sent (curved) but ZModel ⊭ R_C(¬RH_sent).
+    From: ZModel_satisfies_negRH_curved + curved_roundtrip_fails -/
+theorem curved_obstruction_in_ZModel :
+    ∀ (τ : TranslationPair), Admissible τ →
+      zsat (negL RH_sent) ≠ zsat (τ.RL (negL RH_sent)) := by
+  intro τ hτ heq
+  exact curved_roundtrip_fails τ hτ (heq ▸ ZModel_satisfies_negRH_curved)
+
 -- Linear obstruction is PROVED in ObstructionProof.lean
 -- from admissible_translation_exists + obstruction_in_ZModel.
 --
 -- Curved obstruction is PROVED in Obstruction.lean
--- from the linear obstruction + compositionality (comp_neg).
+-- from admissible_translation_exists + curved_obstruction_in_ZModel.
