@@ -1,30 +1,9 @@
 import RH.Paper.Arith
 /-!
-# Proof I of Nielsen & Semita, formalized
+# Deductive structure of Proof I of Nielsen & Semita
 
-Every named result is a Lean `theorem`, proved from definitions and
-published axioms. There is no `sorry`.
-
-## Axioms (8)
-
-Two are published theorems stated as-is:
-1. `rh_pi1` — Davis–Matiyasevich–Robinson 1976.
-2. `reflection` — Σ₁-completeness (Kaye 1991, Cor. 9.3).
-
-Six are the paper's theorems (Lemmas 1.33–1.35), each proved from
-published tools (Perron, Mergelyan, compactness):
-3. `canonical` — the canonical translation pair (Definition 1.32).
-4. `canonical_pres` — preservation (Lemma 1.33.1; Perron's formula).
-5. `canonical_comp` — compositionality (Lemma 1.33.3).
-6. `canonical_kernel` — Π₁-kernel preservation.
-7. `canonical_disagreement_rh` — linear obstruction (Lemma 1.35;
-   compactness + Mergelyan).
-8. `canonical_disagreement_neg` — curved obstruction.
-
-## Theorems proved (12)
-
-All conditional only on definitions + the published axioms. No
-`Hypotheses` structure; no `sorry`.
+The arithmetic theory, its designated RH sentence, and the translation pair
+are parameters. The theorem signatures give the premises for each deduction.
 -/
 
 open FirstOrder
@@ -80,87 +59,56 @@ structure Setting where
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
-/-! ## Axioms
-
-Axioms 1–2 are published theorems stated exactly as published.
-Axioms 3–8 are the paper's theorems (Lemmas 1.33–1.35), each proved
-from published tools (Perron's formula, Mergelyan's theorem,
-compactness). The tools are published; their specific application to
-the Riemann Hypothesis and the canonical translation pair is the
-paper's contribution. -/
-
-/-- The canonical translation pair (Definition 1.32), constructed from
-    the ZFC-internal proof of `RH_L ↔ RH_C` via Perron's formula
-    and contour integration (Titchmarsh 1986; Iwaniec–Kowalski 2004). -/
-axiom canonical : TranslationPair
-
-/-- Lemma 1.33.3: the canonical pair commutes with negation.
-    Follows from the Boolean structure of the ZFC-internal equivalence. -/
-axiom canonical_comp :
-  ∀ ψ, canonical.toC (neg ψ) = neg (canonical.toC ψ) ∧
-       canonical.toL (neg ψ) = neg (canonical.toL ψ)
-
-/-- Lemma 1.33 / Definition 1.4.3(4): Π₁-kernel preservation. -/
-axiom canonical_kernel :
-  ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (canonical.RL ψ))
-
 variable (S : Setting)
 
-/-- Published: RH has a Π₁ form (Davis–Matiyasevich–Robinson 1976). -/
-axiom rh_pi1 : IsPi1 S.RH
+def Setting.RoundTripFails (S : Setting) (τ : TranslationPair) (φ : Sent) : Prop :=
+  ∃ M : Model, S.ZFCModel M ∧ ¬ M.Sat (τ.RL φ)
 
-/-- Published: Σ₁-completeness. A Π₁ sentence false in ℕ is ZFC-refutable.
-    (Kaye 1991, Corollary 9.3.) -/
-axiom reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
-
-/-- Lemma 1.33.1 (Preservation): ZFC-provable sentences have ZFC-provable
-    round-trips. Proved by step-by-step derivation translation through
-    the canonical pair, using Perron's formula (Titchmarsh 1986, Thm 5.2)
-    and the ZFC-internal proof of `RH_L ↔ RH_C`. -/
-axiom canonical_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
-
-/-- Lemma 1.35 (Linear Reconstruction Failure): there exists a model
-    of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
-    Proved from the compactness theorem (Gödel 1930 / Malcev 1936)
-    and the Mergelyan witnesses of Lemma 1.34 (Mergelyan 1951). -/
-axiom canonical_disagreement_rh :
-  ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
-    ¬ M.Sat (canonical.RL S.RH)
-
-/-- Curved Reconstruction Failure (analytic analog of Lemma 1.35):
-    a model where `¬RH_L` holds but `R_L(¬RH_L)` fails.
-    Proved from compactness + the analytic obstruction. -/
-axiom canonical_disagreement_neg :
-  ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
-    ¬ M.Sat (canonical.RL (neg S.RH))
+def Setting.Disagrees (S : Setting) (τ : TranslationPair) (φ : Sent) : Prop :=
+  ∃ M : Model, S.ZFCModel M ∧ M.Sat φ ∧ ¬ M.Sat (τ.RL φ)
 
 /-! ## Theorems -/
 
-/-- `ZFC ⊬ RH_L`. Contrapositive of preservation against the
-    disagreement model. -/
-theorem RH_not_provable : ¬ S.Prov S.RH := by
+/-- Jenny Lorraine Nielsen observed that any witness to round-trip failure
+    suffices: preservation would force the round trip to hold in that model. -/
+theorem not_provable_of_round_trip_failure {τ : TranslationPair} {φ : Sent}
+    (pres : S.Prov φ → S.Prov (τ.RL φ))
+    (failure : S.RoundTripFails τ φ) : ¬ S.Prov φ := by
   intro hprov
-  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_rh S
-  exact hfail (canonical_pres S S.RH hprov M hM)
+  obtain ⟨M, hM, hfail⟩ := failure
+  exact hfail (pres hprov M hM)
 
-/-- `ZFC ⊬ ¬RH_L`. -/
-theorem neg_RH_not_provable : ¬ S.Prov (neg S.RH) := by
-  intro hprov
-  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_neg S
-  exact hfail (canonical_pres S (neg S.RH) hprov M hM)
+theorem RH_not_provable {τ : TranslationPair}
+    (pres : S.Prov S.RH → S.Prov (τ.RL S.RH))
+    (failure : S.RoundTripFails τ S.RH) : ¬ S.Prov S.RH :=
+  not_provable_of_round_trip_failure S pres failure
+
+theorem neg_RH_not_provable {τ : TranslationPair}
+    (pres : S.Prov (neg S.RH) → S.Prov (τ.RL (neg S.RH)))
+    (failure : S.RoundTripFails τ (neg S.RH)) : ¬ S.Prov (neg S.RH) :=
+  not_provable_of_round_trip_failure S pres failure
 
 /-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
-theorem RH_independent : ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
-  ⟨RH_not_provable S, neg_RH_not_provable S⟩
+theorem RH_independent {τ : TranslationPair}
+    (pres : ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ))
+    (failure_rh : S.RoundTripFails τ S.RH)
+    (failure_neg : S.RoundTripFails τ (neg S.RH)) :
+    ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
+  ⟨RH_not_provable S (pres S.RH) failure_rh,
+    neg_RH_not_provable S (pres (neg S.RH)) failure_neg⟩
 
 /-- Theorem 1.18.2 (Truth from Unrefutability). -/
 theorem truth_from_unrefutability
+    (reflection : ∀ ψ, IsPi1 ψ → ¬ TrueInN ψ → S.Prov (neg ψ))
     {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
-  Classical.byContradiction fun hfalse => hnot (reflection S φ hpi hfalse)
+  Classical.byContradiction fun hfalse => hnot (reflection φ hpi hfalse)
 
 /-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
-theorem RH_true_in_N : TrueInN S.RH :=
-  truth_from_unrefutability S (rh_pi1 S) (neg_RH_not_provable S)
+theorem RH_true_in_N
+    (rh_pi1 : IsPi1 S.RH)
+    (reflection : ∀ ψ, IsPi1 ψ → ¬ TrueInN ψ → S.Prov (neg ψ))
+    (hnot : ¬ S.Prov (neg S.RH)) : TrueInN S.RH :=
+  truth_from_unrefutability S reflection rh_pi1 hnot
 
 /-! ### Connection to the Λ-sound framework -/
 
@@ -170,34 +118,32 @@ structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
   kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))
   changes : ¬ S.Prov (iffS φ (τ.RL φ))
 
-/-- The round-trip non-equivalence for RH. -/
-theorem changes_rh :
-    ¬ S.Prov (iffS S.RH ((canonical).RL S.RH)) := by
+/-- A model in which the original sentence is true and its round trip
+    fails refutes the biconditional. -/
+theorem changes_of_disagreement {τ : TranslationPair} {φ : Sent}
+    (disagreement : S.Disagrees τ φ) : ¬ S.Prov (iffS φ (τ.RL φ)) := by
   intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_rh S
-  exact hfail (((M.sat_iff S.RH ((canonical).RL S.RH)).mp (hprov M hM)).mp hsat)
+  obtain ⟨M, hM, hsat, hfail⟩ := disagreement
+  exact hfail (((M.sat_iff φ (τ.RL φ)).mp (hprov M hM)).mp hsat)
 
-/-- The round-trip non-equivalence for ¬RH. -/
-theorem changes_neg :
-    ¬ S.Prov (iffS (neg S.RH) ((canonical).RL (neg S.RH))) := by
-  intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_neg S
-  exact hfail (((M.sat_iff (neg S.RH) ((canonical).RL (neg S.RH))).mp
-    (hprov M hM)).mp hsat)
+theorem changes_rh {τ : TranslationPair} (disagreement : S.Disagrees τ S.RH) :
+    ¬ S.Prov (iffS S.RH (τ.RL S.RH)) :=
+  changes_of_disagreement S disagreement
 
-/-- The canonical pair is Λ-sound for RH. -/
-theorem canonical_lambda_sound_rh : LambdaSound S S.RH canonical where
-  inv ψ hψ M hM _ := canonical_pres S ψ hψ M hM
-  comp := canonical_comp
-  kernel := canonical_kernel
-  changes := changes_rh S
+theorem changes_neg {τ : TranslationPair}
+    (disagreement : S.Disagrees τ (neg S.RH)) :
+    ¬ S.Prov (iffS (neg S.RH) (τ.RL (neg S.RH))) :=
+  changes_of_disagreement S disagreement
 
-/-- The canonical pair is Λ-sound for ¬RH. -/
-theorem canonical_lambda_sound_neg : LambdaSound S (neg S.RH) canonical where
-  inv ψ hψ M hM _ := canonical_pres S ψ hψ M hM
-  comp := canonical_comp
-  kernel := canonical_kernel
-  changes := changes_neg S
+theorem lambda_sound_of_disagreement {τ : TranslationPair} {φ : Sent}
+    (pres : ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ))
+    (comp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ))
+    (kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ)))
+    (disagreement : S.Disagrees τ φ) : LambdaSound S φ τ where
+  inv ψ hψ M hM _ := pres ψ hψ M hM
+  comp := comp
+  kernel := kernel
+  changes := changes_of_disagreement S disagreement
 
 /-- Lemma 1.5.6 (Uniform Preservation). -/
 theorem uniform_preservation {S' : Setting} {φ : Sent} {τ : TranslationPair}
