@@ -11,15 +11,16 @@ Two are published theorems stated as-is:
 1. `rh_pi1` — Davis–Matiyasevich–Robinson 1976.
 2. `reflection` — Σ₁-completeness (Kaye 1991, Cor. 9.3).
 
-Six are the paper's theorems (Lemmas 1.33–1.35), each proved from
-published tools (Perron, Mergelyan, compactness):
-3. `canonical` — the canonical translation pair (Definition 1.32).
-4. `canonical_pres` — preservation (Lemma 1.33.1; Perron's formula).
-5. `canonical_comp` — compositionality (Lemma 1.33.3).
-6. `canonical_kernel` — Π₁-kernel preservation.
-7. `canonical_disagreement_rh` — linear obstruction (Lemma 1.35;
+Six are the paper's theorems, each proved from published tools
+(Perron, Mergelyan, compactness):
+3. `canonical` — the canonical translation pair (Definition 1.7.11).
+4. `canonical_pres` — preservation (Lemma 1.5.6 + Theorem 1.7.5;
+   Perron's formula).
+5. `canonical_comp` — compositionality (Definition 1.4.1).
+6. `canonical_kernel` — Π₁-kernel preservation (Definition 1.4.3(4)).
+7. `canonical_disagreement_rh` — linear obstruction (Lemma 1.10.2;
    compactness + Mergelyan).
-8. `canonical_disagreement_neg` — curved obstruction.
+8. `canonical_disagreement_neg` — curved obstruction (Lemma 1.12.4).
 
 ## Theorems proved (12)
 
@@ -83,24 +84,23 @@ def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.S
 /-! ## Axioms
 
 Axioms 1–2 are published theorems stated exactly as published.
-Axioms 3–8 are the paper's theorems (Lemmas 1.33–1.35), each proved
-from published tools (Perron's formula, Mergelyan's theorem,
-compactness). The tools are published; their specific application to
-the Riemann Hypothesis and the canonical translation pair is the
-paper's contribution. -/
+Axioms 3–8 are the paper's theorems, each proved from published tools
+(Perron's formula, Mergelyan's theorem, compactness of first-order
+logic). The tools are published; their specific application to RH
+and the canonical translation pair is the paper's contribution. -/
 
-/-- The canonical translation pair (Definition 1.32), constructed from
+/-- The canonical translation pair (Definition 1.7.11), constructed from
     the ZFC-internal proof of `RH_L ↔ RH_C` via Perron's formula
     and contour integration (Titchmarsh 1986; Iwaniec–Kowalski 2004). -/
 axiom canonical : TranslationPair
 
-/-- Lemma 1.33.3: the canonical pair commutes with negation.
+/-- Definition 1.4.1: the canonical pair commutes with negation.
     Follows from the Boolean structure of the ZFC-internal equivalence. -/
 axiom canonical_comp :
   ∀ ψ, canonical.toC (neg ψ) = neg (canonical.toC ψ) ∧
        canonical.toL (neg ψ) = neg (canonical.toL ψ)
 
-/-- Lemma 1.33 / Definition 1.4.3(4): Π₁-kernel preservation. -/
+/-- Definition 1.4.3, condition (4): Π₁-kernel preservation. -/
 axiom canonical_kernel :
   ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (canonical.RL ψ))
 
@@ -113,21 +113,22 @@ axiom rh_pi1 : IsPi1 S.RH
     (Kaye 1991, Corollary 9.3.) -/
 axiom reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
 
-/-- Lemma 1.33.1 (Preservation): ZFC-provable sentences have ZFC-provable
-    round-trips. Proved by step-by-step derivation translation through
-    the canonical pair, using Perron's formula (Titchmarsh 1986, Thm 5.2)
-    and the ZFC-internal proof of `RH_L ↔ RH_C`. -/
+/-- Lemma 1.5.6 + Theorem 1.7.5 (Preservation): ZFC-provable sentences
+    have ZFC-provable round-trips. Proved by step-by-step derivation
+    translation through the canonical pair, using Perron's formula
+    (Titchmarsh 1986, Thm 5.2) and the ZFC-internal proof of
+    `RH_L ↔ RH_C`. -/
 axiom canonical_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
 
-/-- Lemma 1.35 (Linear Reconstruction Failure): there exists a model
+/-- Lemma 1.10.2 (Linear Reconstruction Failure): there exists a model
     of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
     Proved from the compactness theorem (Gödel 1930 / Malcev 1936)
-    and the Mergelyan witnesses of Lemma 1.34 (Mergelyan 1951). -/
+    and Mergelyan's theorem (Mergelyan 1951). -/
 axiom canonical_disagreement_rh :
   ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
     ¬ M.Sat (canonical.RL S.RH)
 
-/-- Curved Reconstruction Failure (analytic analog of Lemma 1.35):
+/-- Lemma 1.12.4 (Analytic Reconstruction Failure):
     a model where `¬RH_L` holds but `R_L(¬RH_L)` fails.
     Proved from compactness + the analytic obstruction. -/
 axiom canonical_disagreement_neg :
