@@ -1,18 +1,8 @@
 import RH.Defs
 /-! # Theorem 1.5.2: Λ-Reduction Soundness. PROVED.
 
-ZFC ⊢ φ means φ holds in any model. In particular, in ZModel.
-So the round-trip preserves it → Λ vanishes → no obstruction.
-
-For the curved side (ZFC ⊬ ¬RH), we don't need Λ-reduction
-soundness at all. We just need: ZFC ⊢ ¬RH → CModel ⊨ ¬RH,
-contradicting CModel ⊨ RH. That uses zfc_sound_curved directly.
--/
-
-/-- PUBLISHED: ZFC soundness in CModel.
-    ZFC-provable sentences hold in CModel.
-    [Goedel completeness; Shoenfield 1967] -/
-axiom zfc_sound_curved : ∀ (φ : L.Sentence), ZFCProv φ → csat φ
+If ZFC ⊢ φ, then every admissible translation preserves φ in ZModel.
+So the round-trip matches φ → no distortion → Λ vanishes. -/
 
 /-- **Theorem 1.5.2** (PROVED): ZFC ⊢ φ ⟹ Λ_L(φ) vanishes in ZModel. -/
 theorem lambda_reduction_soundness
