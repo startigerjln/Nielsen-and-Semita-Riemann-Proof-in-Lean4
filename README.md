@@ -14,4 +14,6 @@ parameters. See [provenance](AXIOM_PROVENANCE.md) for the exact premises.
 
 Proofs II and III are not formalized.
 
-The full paper with appendix is unified.pdf (62 pages). LaTeX source: unified.tex + appendix_body.tex.
+The reference for this formalization is Nielsen and Semita's 32-page
+manuscript with the May 16, 2026 update (`OLDGOODRIEMANN.pdf`). The repository also
+contains a separate manuscript revision, `unified.pdf`.

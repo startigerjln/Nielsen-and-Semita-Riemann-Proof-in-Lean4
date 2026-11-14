@@ -5,15 +5,18 @@ and bounded formulas. `RH/Paper/ProofI.lean` checks the deductions below.
 Both files use Mathlib's first-order semantics and declare no custom
 axioms.
 
+Section and theorem numbers below refer to Nielsen and Semita's
+32-page manuscript with the May 16, 2026 update (`OLDGOODRIEMANN.pdf`).
+
 | Deduction | Explicit premises |
 |---|---|
 | `round_trip_failure_of_finite_satisfiability` | Finite satisfiability of the theory with the negated round trip added, using Mathlib's compactness theorem |
-| `RH_not_provable` | Preservation for RH_L (Lemma 1.33.1) and an eligible model where its round trip fails (the failure part of Lemma 1.35) |
-| `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L |
-| `RH_independent` | Preservation and round-trip failure for both polarities |
+| `RH_not_provable` | Preservation for RH_L (Lemma 1.5.6) and failure in a model of the target theory (Lemma 1.10.2 and Corollary 1.7.14) |
+| `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L in the target theory |
+| `RH_independent` | Preservation and round-trip failure for both polarities (Corollary 1.13.2) |
 | `RH_independent_of_disagreement` | Preservation for RH_L and one model satisfying RH_L while falsifying its round trip |
 | `changes_rh` and `changes_neg` | A model satisfying the original sentence and falsifying its round trip |
-| `changes_neg_of_RH_disagreement` | Commutation with negation and a model satisfying RH_L while falsifying its round trip (unified manuscript, Single-Model Formalization Note) |
+| `changes_neg_of_RH_disagreement` | Commutation with negation and a model satisfying RH_L while falsifying its round trip. This is a consequence about the arithmetic biconditional. Lemma 1.12.4 concerns the analytic round trip. |
 | `lambda_sound_of_disagreement` | Preservation, commutation with negation, Π₁ truth preservation in ℕ, and disagreement |
 | `RH_true_in_N` | The Π₁ form, reflection for the given theory (via Σ₁-completeness for ZFC), and unrefutability |
 | `uniform_preservation` and `round_trip_adequacy` | Λ-soundness and provability of the input sentence |
@@ -25,8 +28,11 @@ disagreement premise is used to refute the biconditional.
 
 `Setting` supplies an arithmetic theory and a designated sentence.
 `Setting.Prov` is semantic consequence in the bundled models.
-`TranslationPair` supplies two maps on arithmetic syntax. Applying the
-deductions to RH requires instantiating these parameters and proving the
-relevant premises. This development leaves the specific translation
-clauses, preservation and obstruction arguments, the bridge to Mathlib's
-`RiemannHypothesis`, and Proofs II and III outside its scope.
+`TranslationPair` supplies two maps on arithmetic syntax. The manuscript's
+canonical pair is defined on the RH fragment (Definitions 1.7.10–1.7.11).
+Its arithmetic round trip has a precision parameter (Lemma 1.7.12).
+Applying the deductions to RH requires implementing that fragment and
+the two maps, defining the precision predicate, and proving preservation
+and the obstruction lemmas for those definitions. The arithmetic theorem
+also needs a bridge to Mathlib's `RiemannHypothesis`. Proofs II and III
+remain outside this development.
