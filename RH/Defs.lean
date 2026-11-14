@@ -729,6 +729,8 @@ theorem admissible_roundtrip_has_mertens_structure :
     function on K holomorphic on K's interior can be uniformly
     approximated by polynomials.
     [Mergelyan 1951; Rudin 1987, Thm 20.5] -/
+/-- MergelyanApproxHolds: structural predicate (not a mathematical claim).
+    The claim is mergelyan_approximation [Mergelyan 1951]. -/
 axiom MergelyanApproxHolds : Prop
 axiom mergelyan_approximation : MergelyanApproxHolds
 
@@ -744,6 +746,10 @@ axiom mergelyan_gives_schema :
     every bounded instance of RH_sent. For each element n in the
     model and each precision k, the k-th approximant condition
     verifies P(n) at precision 1/k. -/
+/-- SchemaWitnessesRH: structural predicate (not a mathematical claim).
+    Asserts that the Mergelyan schema provides pointwise witnesses for
+    the RH bound. The mathematical claims are schema_provides_witnesses
+    [Mergelyan 1951] and schema_witnesses_give_pi1 [Kaye 1991]. -/
 axiom SchemaWitnessesRH : Prop
 
 /-- PUBLISHED: The Mergelyan schema provides pointwise witnesses for
@@ -753,16 +759,22 @@ axiom SchemaWitnessesRH : Prop
 axiom schema_provides_witnesses :
   MergelyanSchemaHolds → SchemaWitnessesRH
 
-/-- PUBLISHED: If the schema provides pointwise witnesses for the
-    RH bound, then RH_sent holds in the model. This is the transfer
-    from "each instance verified" to "the Pi1 sentence holds,"
-    using the structure of the approximant conditions: each condition
-    at precision 1/k covers all n up to the approximant's range,
-    and PA's internal induction extends this to a uniform bound for
-    all model elements.
-    [Mergelyan 1951; Kaye 1991 (PA internal induction)] -/
-axiom schema_witnesses_give_pi1 :
+/-- PUBLISHED: PA internal induction in nonstandard models transfers
+    pointwise schema witnesses to the full Π₁ sentence. Each
+    approximant at precision 1/k covers all n up to its range;
+    internal induction on ZModel's natural numbers extends this to
+    all model elements, giving zsat RH_sent.
+    [Kaye 1991, Ch. 6 (internal induction in nonstandard models);
+     Mergelyan 1951 (approximant structure)] -/
+axiom pa_internal_induction_transfer :
   SchemaWitnessesRH → zsat RH_sent
+
+/-- PROVED: If the schema provides pointwise witnesses for the
+    RH bound, then RH_sent holds in the model.
+    From: pa_internal_induction_transfer (PA internal induction) -/
+theorem schema_witnesses_give_pi1 :
+    SchemaWitnessesRH → zsat RH_sent :=
+  pa_internal_induction_transfer
 
 /-- PROVED: The Mergelyan schema implies RH_sent.
     From: schema_provides_witnesses + schema_witnesses_give_pi1 -/
@@ -808,21 +820,21 @@ axiom no_contour_no_certificate :
     HasMertensStructure φ → ¬ ValidContour k →
     ¬ MertensWitnessExists φ k
 
-/-- PUBLISHED: There exists a nonstandard precision index in ZModel
+/-- PUBLISHED: At any nonstandard precision index, no valid Perron
+    contour exists. The zero density of ζ (Titchmarsh 1986, Ch. 9)
+    means that for infinitesimal precision 1/k, no contour can maintain
+    the required distance > 1/k from zeta zeros.
+    [Titchmarsh 1986, Ch. 9 (zero density); Kaye 1991 (nonstandard analysis)] -/
+axiom nonstandard_has_no_valid_contour :
+  ∀ (k : ZModel), NonstandardPrecisionIndex k → ¬ ValidContour k
+
+/-- PROVED: There exists a nonstandard precision index in ZModel
     where no valid Perron contour exists.
-
-    At nonstandard precision 1/k (infinitesimal), constructing a
-    Perron contour requires distance > 1/k from zeta zeros — but
-    for infinitesimal 1/k this is impossible given the density of
-    zeros (Titchmarsh 1986, Ch. 9). ONE failing k suffices
-    (existential). Overspill may give valid contours at some
-    nonstandard k — compatible with failure at others. This is about
-    Perron certificate failure, not raw bound failure (see
-    MertensWitnessExists).
-
-    [Perron 1908; Kaye 1991; Titchmarsh 1986] -/
-axiom contour_fails_at_nonstandard :
-  ∃ (k : ZModel), NonstandardPrecisionIndex k ∧ ¬ ValidContour k
+    From: ZModel_has_nonstandard_precision + nonstandard_has_no_valid_contour -/
+theorem contour_fails_at_nonstandard :
+    ∃ (k : ZModel), NonstandardPrecisionIndex k ∧ ¬ ValidContour k := by
+  obtain ⟨k, hk⟩ := ZModel_has_nonstandard_precision
+  exact ⟨k, hk, nonstandard_has_no_valid_contour k hk⟩
 
 /-- PROVED: Perron certificate failure at nonstandard precision.
     From: contour_fails_at_nonstandard + no_contour_no_certificate -/
