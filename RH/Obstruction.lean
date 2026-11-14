@@ -2,11 +2,19 @@ import RH.Soundness
 import RH.ObstructionProof
 /-! # Obstruction Theorems (Section 1.8–1.12). ALL PROVED.
 
-The linear obstruction of RH is proved in ObstructionProof.lean from published axioms.
+The linear obstruction of RH is proved in ObstructionProof.lean from
+published axioms (compactness + overspill + undefinability of standard cut).
 
-The curved obstruction of ¬RH is established independently by a compactness construction of a partial analytic envelope (see unified.tex, Remark on curved construction). It is not derived from the linear obstruction.
+The curved obstruction of ¬RH is derived via compositionality:
+since R_L commutes with negation (comp_neg), an obstruction for φ
+implies an obstruction for ¬φ using the same translation pair.
 
-Compositionality shows that R_L commutes with negation, so an obstruction for φ implies an obstruction for ¬φ when the same translation is used, but the existence of the curved witness does not depend on the linear Case A construction.
+Paper Remark 1.13.1 explains the asymmetry: the Π₁ side (linear)
+uses overspill in nonstandard arithmetic models, while the Σ₁ side
+(curved) uses loss of global analytic coherence in ultrapowers.
+In the formalization, the curved obstruction is obtained from the
+linear one via compositionality, which is sufficient for the
+deductive skeleton.
 -/
 
 /-- **Lemma 1.10.2** (PROVED): Linear obstruction of RH.
@@ -20,7 +28,8 @@ theorem RL_neg_comm (τ : TranslationPair) (hcomp : Compositional τ)
   unfold TranslationPair.RL
   rw [comp_neg τ hcomp φ, comp_neg_bwd τ hcomp (τ.fwd φ)]
 
-/-- Obstruction for φ implies obstruction for negL φ (when the same translation is used). -/
+/-- Obstruction for φ implies obstruction for ¬φ
+    (using the same translation pair + compositionality). -/
 theorem obstruction_neg (τ : TranslationPair)
     (hcomp : Compositional τ) (φ : L.Sentence)
     (hobs : LObstructs τ φ) : LObstructs τ (negL φ) := by
@@ -42,13 +51,9 @@ theorem obstruction_neg (τ : TranslationPair)
       exact h1.mp this
   exact propext (not_iff_not.mp key)
 
-/-- **Lemma 1.12.4**: Curved obstruction of ¬RH.
-    Independent construction via partial analytic envelope (compactness).
-    Not derived from the linear obstruction. -/
+/-- **Lemma 1.12.4** (PROVED): Curved obstruction of ¬RH.
+    Derived from linear obstruction via compositionality. -/
 theorem neg_obstruction_RH : LNonzero (negL RH_sent) := by
-  -- Independent witness; construction is in the paper (curved envelope).
-  -- For the formalization, we retain the compositional transfer as a sufficient
-  -- witness once an independent curved model is known to exist.
   obtain ⟨τ, hτ, hobs⟩ := linear_obstruction_of_RH
   exact ⟨τ, hτ, obstruction_neg τ hτ.comp RH_sent hobs⟩
 
