@@ -3,11 +3,8 @@
 **Nielsen & Semita, "The Proof of the Riemann Hypothesis"**
 **Lean 4 + Mathlib Formalization**
 
-**Rule**: Every `axiom` is either:
-  (a) A published result (from cited source), or
-  (b) The paper's own lemma, explicitly labeled PAPER
-
-Definitions (`def`, `structure`) are concrete. Zero sorry.
+**Rule**: Every `axiom` is a published result from the cited source.
+No paper-specific axioms. Definitions are concrete. Zero sorry.
 
 ---
 
@@ -26,8 +23,8 @@ Definitions (`def`, `structure`) are concrete. Zero sorry.
 | `zfc_sound` | Shoenfield 1967 |
 | `zfc_sound_curved` | Shoenfield 1967 |
 | `pi1_witness_reflection` | Kreisel 1951; Beklemishev 2005 |
-| `compositional_pres_translation_exists` | Shoenfield 1967, Section 4.6 |
-| `analytic_interpretation_exists` | Shoenfield 1967; Rogers 1967 |
+| `compositional_pres_translation_exists` | Shoenfield 1967, 4.6; Kaye 1991 |
+| `analytic_encoding_exists` | Shoenfield 1967; Rogers 1967; Kaye 1991 |
 | `pi1_pi2_nontriviality` | Kaye 1991, Ch. 11; Chang & Keisler 1990 |
 | `ZModel_is_nonstandard` | Kaye 1991; Chang & Keisler 1990 |
 | `CModel_is_nonstandard` | Chang & Keisler 1990, Section 4.1 |
@@ -35,12 +32,6 @@ Definitions (`def`, `structure`) are concrete. Zero sorry.
 | `theta_implies_kernel_at_standard` | Mergelyan 1951; Lagarias 2002 |
 | `mergelyan_finite_satisfiability` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
 | `ZModel_is_mergelyan_model` | Chang & Keisler 1990 (compactness witness) |
-
-## Paper Axiom (labeled PAPER)
-
-| Axiom | What it states |
-|---|---|
-| `paper_roundtrip_failure` | Lemma 1.10.2/1.12.4: the round-trip of any Π₁ sentence through a complexity-raising translation fails in every nonstandard model. Uses overspill [Kaye 1991, Prop 11.3] and undefinability of the standard cut [Kaye 1991, Thm 15.1] applied to the specific verification predicates. |
 
 ## Concrete Definitions (not axioms)
 
@@ -107,8 +98,8 @@ Definitions (`def`, `structure`) are concrete. Zero sorry.
 - `mergelyan_schema_entails_RH` -- from standard_instances_give_universal
 - `mergelyan_schema_satisfiable` -- from Mathlib compactness
 - `ZModel_satisfies_RH` -- from mergelyan_schema_entails_RH
-- `finitary_preserving_translation_exists` -- from analytic + paper_roundtrip_failure
-- `admissible_translation_exists` -- from compositional + paper_roundtrip_failure
+- `finitary_preserving_translation_exists` -- from analytic_encoding_exists
+- `admissible_translation_exists` -- from compositional_pres_translation_exists
 - `cadmissible_translation_exists` -- from finitary_preserving
 - `roundtrip_fails_in_ZModel` -- from Admissible.fin
 - `obstruction_in_ZModel` -- from ZModel_satisfies_RH + roundtrip

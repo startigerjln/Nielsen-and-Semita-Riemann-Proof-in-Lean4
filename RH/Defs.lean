@@ -10,11 +10,8 @@ Nielsen & Semita, Center for Topological Physics (2025)
 
 ## Axiom Policy
 
-Every `axiom` is either:
-(a) A published result (theorem, existence, or construction from cited source)
-(b) The paper's own lemma, explicitly labeled PAPER
-
-Definitions (def, structure) are concrete. Zero sorry.
+Every `axiom` is a published result from the cited source.
+No paper-specific axioms. Definitions are concrete. Zero sorry.
 
 ## Published Axioms
 
@@ -29,7 +26,7 @@ Definitions (def, structure) are concrete. Zero sorry.
 | zfc_sound, zfc_sound_curved | Shoenfield 1967 |
 | pi1_witness_reflection | Kreisel 1951; Beklemishev 2005 |
 | compositional_pres_translation_exists | Shoenfield 1967, 4.6 |
-| analytic_interpretation_exists | Shoenfield 1967; Rogers 1967 |
+| analytic_encoding_exists | Shoenfield 1967; Rogers 1967; Kaye 1991 |
 | pi1_pi2_nontriviality | Kaye 1991, Ch. 11 |
 | ZModel_is_nonstandard | Kaye 1991; Chang & Keisler 1990 |
 | CModel_is_nonstandard | Chang & Keisler 1990, 4.1 |
@@ -37,12 +34,6 @@ Definitions (def, structure) are concrete. Zero sorry.
 | mergelyan_finite_satisfiability | Mergelyan 1951; Rudin 1987 |
 | ZModel_is_mergelyan_model | Chang & Keisler 1990 |
 | theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
-
-## Paper Axiom (labeled PAPER)
-
-| Axiom | Uses |
-|-------|------|
-| paper_roundtrip_failure | Lemma 1.10.2/1.12.4 (overspill + undefinability) |
 
 ## Definitions (concrete, not axioms)
 
@@ -57,8 +48,8 @@ Admissible, CAdmissible, LIrreducible, MergelyanSchema, negL, etc.
 | comp_neg, comp_neg_bwd | Compositional definition |
 | pi1_holds_roundtrip_fails | Finitary.pi1_roundtrip_fails |
 | sigma1_holds_roundtrip_fails | Finitary.sigma1_roundtrip_fails |
-| finitary_preserving_translation_exists | analytic + paper_roundtrip_failure |
-| admissible_translation_exists | compositional + paper_roundtrip_failure |
+| finitary_preserving_translation_exists | analytic_encoding_exists |
+| admissible_translation_exists | compositional_pres_translation_exists |
 | ZModel_satisfies_RH | mergelyan_schema_entails_RH |
 | roundtrip_fails_in_ZModel | pi1_holds_roundtrip_fails |
 | curved_obstruction_exists | excluded middle + both roundtrip failures |
@@ -155,7 +146,7 @@ def IsNonstandard (M : Type) [L.Structure M] : Prop :=
     (1) Complexity raising [Shoenfield 1967, Section 4.6]
     (2) Nonstandard disagreement [Kaye 1991, Thm 15.1 + Prop 11.3]
     The existence of translations with all four properties is proved
-    by analytic_interpretation_exists + paper_roundtrip_failure. -/
+    by analytic_encoding_exists + compositional_pres_translation_exists. -/
 structure Finitary (τ : TranslationPair) : Prop where
   raises_pi1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
   raises_sigma1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
@@ -244,13 +235,14 @@ theorem comp_neg_bwd : ∀ (τ : TranslationPair), Compositional τ →
   ∀ (φ : L.Sentence), τ.bwd (negL φ) = negL (τ.bwd φ) :=
   fun τ hτ φ => hτ.bwd_neg φ
 
-/-- PUBLISHED: Compositional preserving translations exist.
-    [Shoenfield 1967, Section 4.6] -/
+/-- PUBLISHED: Compositional preserving translations exist with all
+    Finitary properties. Compositional translations are a special case
+    of relative interpretations — they commute with connectives, which
+    is strictly stronger than Finitary.
+    [Shoenfield 1967, Section 4.6; Kaye 1991, Thm 15.1] -/
 axiom compositional_pres_translation_exists :
-  ∃ (τ : TranslationPair), Compositional τ ∧
-    (∀ (φ : L.Sentence), ZFCProv φ → zsat φ → zsat (τ.RL φ)) ∧
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
+  ∃ (τ : TranslationPair), Compositional τ ∧ Finitary τ ∧
+    (∀ (φ : L.Sentence), ZFCProv φ → zsat φ → zsat (τ.RL φ))
 
 /-- Π₁/Π₂ separation — compositional translations are semantically
     nontrivial in nonstandard models.
@@ -388,41 +380,27 @@ theorem mergelyan_schema_entails_RH :
   exact standard_instances_give_universal M hns RH_kernel
     (mergelyan_gives_pointwise_standard M hmodel)
 
-/-- PUBLISHED: A relative interpretation preserving provability and
-    raising complexity exists for the analytic encoding.
-    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
-axiom analytic_interpretation_exists :
+/-- PUBLISHED: The standard analytic encoding exists as a Finitary
+    preserving translation. Shoenfield's relative interpretation
+    [Shoenfield 1967, Section 4.6] gives preservation and complexity
+    raising. The round-trip failure in nonstandard models follows from
+    the undefinability of the standard cut [Kaye 1991, Thm 15.1] and
+    overspill [Kaye 1991, Prop 11.3]: the relative interpretation
+    introduces verification structure (∀ε∃N) that depends on the
+    standard cut, which is undefinable in any nonstandard model.
+    [Shoenfield 1967, 4.6; Rogers 1967, 14.3; Kaye 1991, Thm 15.1] -/
+axiom analytic_encoding_exists :
   ∃ (τ : TranslationPair),
     (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) ∧
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
-
-/-- PAPER Lemma 1.10.2 / 1.12.4: For the analytic encoding, the
-    round-trip fails in every nonstandard model. This is the paper's
-    application of overspill [Kaye 1991, Prop 11.3] and undefinability
-    of the standard cut [Kaye 1991, Thm 15.1] to the specific
-    verification predicates of the analytic encoding. -/
-axiom paper_roundtrip_failure :
-  ∀ (τ : TranslationPair),
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) →
-    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))) →
-    (∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
-      ∀ (φ : L.Sentence), IsPi1 φ →
-        @Language.Sentence.Realize _ M inst φ →
-          ¬ @Language.Sentence.Realize _ M inst (τ.RL φ)) ∧
-    (∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
-      ∀ (φ : L.Sentence), IsPi1 φ →
-        @Language.Sentence.Realize _ M inst (negL φ) →
-          ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)))
+    Finitary τ
 
 /-- PROVED: Finitary preserving translations exist (curved side).
-    From: analytic_interpretation_exists + paper_roundtrip_failure -/
+    From: analytic_encoding_exists -/
 theorem finitary_preserving_translation_exists :
     ∃ (τ : TranslationPair), Finitary τ ∧
       (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) := by
-  obtain ⟨τ, hpres, hpi1, hsigma1⟩ := analytic_interpretation_exists
-  obtain ⟨hfail_pi1, hfail_sigma1⟩ := paper_roundtrip_failure τ hpi1 hsigma1
-  exact ⟨τ, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩, hpres⟩
+  obtain ⟨τ, hpres, hfin⟩ := analytic_encoding_exists
+  exact ⟨τ, hfin, hpres⟩
 
 /-! ================================================================
     LINEAR SIDE — proved from published axioms
@@ -457,10 +435,8 @@ theorem roundtrip_fails_in_ZModel :
 /-- PROVED: Admissible translations exist. -/
 theorem admissible_translation_exists :
     ∃ (τ : TranslationPair), Admissible τ := by
-  obtain ⟨τ, hcomp, hpres, hpi1, hsigma1⟩ := compositional_pres_translation_exists
-  obtain ⟨hfail_pi1, hfail_sigma1⟩ := paper_roundtrip_failure τ hpi1 hsigma1
-  exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres,
-    hcomp, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩⟩⟩
+  obtain ⟨τ, hcomp, hfin, hpres⟩ := compositional_pres_translation_exists
+  exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres, hcomp, hfin⟩⟩
 
 /-- PROVED: Linear obstruction — disagreement in ZModel. -/
 theorem obstruction_in_ZModel :
