@@ -57,6 +57,23 @@ theorem perron_formula_of_vertical_agreement (a : ℕ → ℂ) (F G : ℂ → �
   rw [same]
   exact perron_formula a F σ c x series hc hx
 
+/-- If the validity checks control the limiting error on the integration
+    line, the coded function has the same Perron limit as the series. -/
+theorem perron_formula_of_valid_limits {ι : Type*} {l : Filter ι} [NeBot l]
+    (a : ℕ → ℂ) (F G : ℂ → ℂ) (σ c x : ℝ) (D : ι → ℝ → ℂ)
+    (series : ∀ s : ℂ, σ < s.re → HasSum (dirichletTerm a s) (F s))
+    (hc : max (0 : ℝ) σ < c) (hx : 0 < x)
+    (convergence : ∀ t : ℝ, Tendsto (fun k => D k t) l
+      (𝓝 (F ((c : ℂ) + (t : ℂ) * Complex.I))))
+    (valid : ∀ t : ℝ, Tendsto (fun k => D k t - G ((c : ℂ) + (t : ℂ) * Complex.I)) l
+      (𝓝 0)) :
+    Tendsto (perronIntegral G c x) atTop (𝓝 (perronSum a x)) := by
+  apply perron_formula_of_vertical_agreement a F G σ c x series hc hx
+  intro t
+  have error := (convergence t).sub
+    (tendsto_const_nhds (x := G ((c : ℂ) + (t : ℂ) * Complex.I)))
+  exact (sub_eq_zero.mp (tendsto_nhds_unique error (valid t))).symm
+
 /-- A finite-contour estimate for a replacement function, in terms of
     the uniform error of its weighted integrand on the contour. -/
 theorem perronIntegral_sub_le_of_integrand_bound

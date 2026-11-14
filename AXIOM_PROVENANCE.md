@@ -90,6 +90,8 @@ formula away from integer cutoffs.
 
 `perron_formula_of_vertical_agreement` transfers the limit to a function
 that agrees exactly with the Dirichlet series on the integration line.
+`perron_formula_of_valid_limits` proves that agreement from convergence
+of the Dirichlet approximants and convergence of their coded error to zero.
 `perronIntegral_sub_le_of_integrand_bound` bounds the finite-contour
 error for a replacement function from an estimate on the weighted
 integrand. The manuscript's proof translation still needs to justify
