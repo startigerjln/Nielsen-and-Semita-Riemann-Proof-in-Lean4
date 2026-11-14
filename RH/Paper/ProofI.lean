@@ -298,6 +298,41 @@ theorem RH_independent_of_finite_precision_failure {τ : TranslationPair}
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
   RH_independent_of_disagreement S pres (RH_disagrees_of_finite_precision_failure S check roundTrip finite)
 
+/-! ### Standard validity checks -/
+
+/-- If all standard instances of a schema rule out a first-order
+    counterexample, a finite initial segment already rules it out.
+    Include the negation of the proposed conclusion in `T`. -/
+theorem standard_checks_unsatisfiable_iff_finite_prefix {L' : Language}
+    (T : L'.Theory) (check : ℕ → L'.Sentence) :
+    ¬ (T ∪ Set.range check).IsSatisfiable ↔
+      ∃ N : ℕ, ¬ (T ∪ check '' Set.Iic N).IsSatisfiable := by
+  classical
+  have union : (⋃ N : ℕ, T ∪ check '' Set.Iic N) = T ∪ Set.range check := by
+    ext φ
+    constructor
+    · intro h
+      obtain ⟨N, hN⟩ := Set.mem_iUnion.mp h
+      exact hN.imp id (fun ⟨k, _, hk⟩ => ⟨k, hk⟩)
+    · intro h
+      rcases h with hT | ⟨k, rfl⟩
+      · exact Set.mem_iUnion.mpr ⟨0, Or.inl hT⟩
+      · exact Set.mem_iUnion.mpr ⟨k, Or.inr ⟨k, Set.mem_Iic.mpr le_rfl, rfl⟩⟩
+  have directed : Directed (· ⊆ ·) (fun N : ℕ => T ∪ check '' Set.Iic N) :=
+    (show Monotone (fun N : ℕ => T ∪ check '' Set.Iic N) from fun _ _ h =>
+      Set.union_subset_union_right _ (Set.image_mono (Set.Iic_subset_Iic.mpr h))).directed_le
+  rw [← union, Language.Theory.isSatisfiable_directed_union_iff directed]
+  exact not_forall
+
+/-- To prove that standard validity checks entail a first-order translated
+    conclusion, it suffices and is necessary to give a finite prefix. -/
+theorem standard_checks_entail_iff_finite_prefix {L' : Language}
+    (T : L'.Theory) (check : ℕ → L'.Sentence) (φ : L'.Sentence) :
+    (T ∪ Set.range check) ⊨ᵇ φ ↔ ∃ N : ℕ, (T ∪ check '' Set.Iic N) ⊨ᵇ φ := by
+  simp_rw [Language.Theory.models_iff_not_satisfiable]
+  simpa only [Set.union_right_comm] using
+    standard_checks_unsatisfiable_iff_finite_prefix (T ∪ {φ.not}) check
+
 /-! ### The fresh constant in Lemma 1.10.2 -/
 
 /-- The formula `∃ k, ¬check(n,k)` with its index exposed as a free variable. -/
