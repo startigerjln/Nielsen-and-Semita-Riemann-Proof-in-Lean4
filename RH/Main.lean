@@ -98,7 +98,7 @@ Supplementary (not in critical path):
 
 The three proofs are INDEPENDENT -- no cross-imports.
 
-Novel claims (ALL proved as Lean theorems):
+Proved theorems (ALL proved by Lean's kernel):
   admissible_translation_exists, admissible_has_distortion,
   RH_roundtrip_is_pi2 (supplementary),
   ZModel_satisfies_RH, roundtrip_fails_in_ZModel,

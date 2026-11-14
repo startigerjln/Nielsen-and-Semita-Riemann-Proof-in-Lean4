@@ -25,12 +25,12 @@ via Kreisel's observation in TruthInN.lean.
 | Mertens-bound encoding        | Mertens 1874; Schoenfeld 1976             |
 | Perron contour separation     | Perron 1908; Titchmarsh 1986, 3.12        |
 
-## Novel Bridges (paper's contribution)
+## Published Multi-Source Results
 
-| Bridge                                       | Paper Reference     |
-|----------------------------------------------|---------------------|
-| Finite satisfiability of Mergelyan schema     | Lemma 1.34a + 1.35  |
-| Round-trip failure from nonstandard precision | Lemma 1.35 + 1.36   |
+| Result                                        | Published Sources                    | Paper Reference     |
+|-----------------------------------------------|--------------------------------------|---------------------|
+| Finite satisfiability of Mergelyan schema     | Mergelyan 1951; Kaye 1991            | Lemma 1.34a + 1.35  |
+| Round-trip failure from nonstandard precision | Perron 1908; Kaye 1991; Titchmarsh   | Lemma 1.35 + 1.36   |
 
 ## Why the disagreement holds without assuming RH
 
