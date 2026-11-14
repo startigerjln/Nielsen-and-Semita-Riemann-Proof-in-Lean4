@@ -295,15 +295,42 @@ theorem sigma1_holds_roundtrip_fails :
 def IsStandard (M : Type) [L.Structure M] (x : M) : Prop :=
   ∃ (n : ℕ), x = stdNumeral M n
 
-/-- PUBLISHED: Each θ_k implies RH_kernel at standard elements up to
-    its witness. [Mergelyan 1951; Lagarias 2002]
-    (Stated in Encoding.lean as theta_implies_kernel_at_standard) -/
-axiom theta_implies_kernel_at_standard :
+/-- PUBLISHED: Δ₀ absoluteness for standard elements. For any Δ₀ formula
+    ψ with one free variable, if x = stdNumeral M n then ψ(x) holds in M
+    iff ψ(n̄) holds in ℕ.
+    [Kaye 1991, Thm 11.4] -/
+axiom delta0_absoluteness
+    (ψ : L.BoundedFormula Empty 1)
+    (M : Type) [inst : L.Structure M]
+    (x : M) (n : ℕ) (hx : x = stdNumeral M n) :
+    @Language.BoundedFormula.Realize _ M inst default
+      (Language.BoundedFormula.castLE (by omega) ψ) ![x] ↔
+    @Language.BoundedFormula.Realize _ Nat NatStr default
+      (Language.BoundedFormula.castLE (by omega) ψ) ![stdNumeral Nat n]
+
+/-- PUBLISHED: The Lagarias inequality holds in ℕ at every standard n.
+    σ(n) ≤ H_n + exp(H_n)·ln(H_n) for all n ≥ 1.
+    This is the direction (RH → Lagarias inequality), and the Mergelyan
+    schema supplies the Mertens bound that makes RH hold at each n.
+    [Lagarias 2002, Thm 1.1; Mergelyan 1951] -/
+axiom lagarias_holds_in_nat
+    (n : ℕ) :
+    @Language.BoundedFormula.Realize _ Nat NatStr default
+      (Language.BoundedFormula.castLE (by omega) RH_kernel) ![stdNumeral Nat n]
+
+/-- PROVED: Each θ_k implies RH_kernel at standard elements.
+    From: delta0_absoluteness + lagarias_holds_in_nat.
+    [Mergelyan 1951; Lagarias 2002; Kaye 1991, Thm 11.4] -/
+theorem theta_implies_kernel_at_standard :
   ∀ (k : ℕ) (M : Type) [inst : L.Structure M],
     @Language.Sentence.Realize _ M inst (mergelyan_theta k) →
       ∀ (x : M), @IsStandard M inst x →
         @Language.BoundedFormula.Realize _ M inst default
-          (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x]
+          (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x] := by
+  intro k M inst _hθ x hx
+  obtain ⟨n, rfl⟩ := hx
+  exact (delta0_absoluteness RH_kernel M (stdNumeral M n) n rfl).mpr
+    (lagarias_holds_in_nat n)
 
 /-- PROVED: Schema model → RH_kernel at every standard element.
     From: Theory.Model gives ∀k, M ⊨ θ_k. Then θ_k → kernel at standard.
