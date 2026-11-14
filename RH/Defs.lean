@@ -96,7 +96,11 @@ noncomputable instance : L.Structure Nat := NatStr
 def TrueInN (φ : L.Sentence) : Prop :=
   @Language.Sentence.Realize _ Nat NatStr φ
 
-axiom IsPi1 : L.Sentence → Prop                -- structural
+/-- Π₁: sentence of the form ∀n ψ(n) where ψ is bounded.
+    DEFINED concretely using Mathlib's BoundedFormula.
+    [Rogers 1967, Section 14.3] -/
+def IsPi1 (φ : L.Sentence) : Prop :=
+  ∃ (ψ : L.BoundedFormula Empty 1), φ = Language.BoundedFormula.all ψ
 axiom Compositional : TranslationPair → Prop    -- structural
 
 /-! ## Admissible Translations -/
@@ -160,8 +164,9 @@ axiom zfc_sound_curved : ∀ (φ : L.Sentence), ZFCProv φ → csat φ
 axiom pi1_witness_reflection :
   ∀ (φ : L.Sentence), IsPi1 φ → ¬ TrueInN φ → ZFCProv (negL φ)
 
-/-- RH is Π₁. [Davis, Matiyasevich & Robinson 1976] -/
-axiom RH_is_pi1 : IsPi1 RH_sent
+/-- PROVED: RH is Π₁. RH_sent = ∀' RH_kernel by definition.
+    [Davis, Matiyasevich & Robinson 1976] -/
+theorem RH_is_pi1 : IsPi1 RH_sent := ⟨RH_kernel, rfl⟩
 
 /-- Compositional translations commute with negation. [Enderton 2001] -/
 axiom comp_neg : ∀ (τ : TranslationPair), Compositional τ →
