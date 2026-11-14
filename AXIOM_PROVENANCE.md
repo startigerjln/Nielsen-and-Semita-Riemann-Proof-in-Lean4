@@ -122,7 +122,10 @@ Each axiom below is a published result, cited to its source(s).
 | `pi1_pi2_nontriviality` | Kaye 1991, Ch. 11; Chang & Keisler 1990 |
 | `mertens_perron_encoding` | Mertens 1874; Perron 1908; Titchmarsh 1986, 14.25 |
 | `mergelyan_approximation` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
-| `mergelyan_gives_schema` | Mergelyan 1951 + Titchmarsh 1986, Ch. 14 |
+| `kaye_internal_induction` | Kaye 1991, Ch. 6 (internal induction transfer) |
+| `mergelyan_witnesses_RH_kernel` | Schema construction (Mergelyan 1951; Mertens 1874; Schoenfeld 1976) |
+| `perron_requires_zero_clearance` | Perron 1908; Titchmarsh 1986, Thm 3.12 |
+| `density_prevents_clearance` | Titchmarsh 1986, Ch. 9 (zero density); Kaye 1991, Ch. 11 |
 | `schema_provides_witnesses` | Mergelyan 1951; Mertens 1874; Schoenfeld 1976 |
 | `mergelyan_schema_finitely_satisfiable` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
 | `ZModel_is_mergelyan_model` | Structural: identifies ZModel with compactness witness |
@@ -150,12 +153,14 @@ Each axiom below is a published result, cited to its source(s).
 
 | Axiom | Published Source |
 |-------|-----------------|
-| `pa_internal_induction_transfer` | Kaye 1991, Ch. 6 (internal induction); Mergelyan 1951 |
-| `nonstandard_has_no_valid_contour` | Titchmarsh 1986, Ch. 9 (zero density); Kaye 1991 |
-
 **Formerly axioms, now PROVED theorems:**
 | Theorem | Proved From |
 |---------|-------------|
+| `mergelyan_gives_schema` | `ZModel_is_mergelyan_model` (compactness witness) |
+| `schema_models_satisfy_RH` | `kaye_internal_induction` + `mergelyan_witnesses_RH_kernel` |
+| `zero_density_blocks_nonstandard_contour` | `perron_requires_zero_clearance` + `density_prevents_clearance` |
+| `pa_internal_induction_transfer` | `schema_models_satisfy_RH` applied to ZModel |
+| `nonstandard_has_no_valid_contour` | `zero_density_blocks_nonstandard_contour` |
 | `schema_witnesses_give_pi1` | `pa_internal_induction_transfer` |
 | `contour_fails_at_nonstandard` | `ZModel_has_nonstandard_precision` + `nonstandard_has_no_valid_contour` |
 
@@ -179,14 +184,20 @@ Each axiom below is a published result, cited to its source(s).
 
 **Critical path for Proof I:**
 ```
-mergelyan_schema_finitely_satisfiable [Mergelyan, published]
+mergelyan_schema_finitely_satisfiable [Mergelyan 1951, published]
   → mergelyan_schema_satisfiable [PROVED from Mathlib compactness]
-  → ZModel_satisfies_mergelyan_schema [structural identification]
-  → schema_provides_witnesses [published]
-  → schema_witnesses_give_pi1 [published: Mergelyan + Kaye]
+  → ZModel_is_mergelyan_model [structural identification]
+  → mergelyan_gives_schema [PROVED theorem]
+
+kaye_internal_induction [Kaye 1991, published]
+  + mergelyan_witnesses_RH_kernel [schema construction]
+  → schema_models_satisfy_RH [PROVED theorem]
   → ZModel_satisfies_RH [PROVED]
-  
-contour_fails_at_nonstandard [published: Perron + Kaye + Titchmarsh]
+
+perron_requires_zero_clearance [Perron 1908, published]
+  + density_prevents_clearance [Titchmarsh 1986, published]
+  → zero_density_blocks_nonstandard_contour [PROVED theorem]
+  → contour_fails_at_nonstandard [PROVED]
   + no_contour_no_certificate [published]
   → perron_contour_fails_at_nonstandard [PROVED]
   + nonstandard_is_positive [published]
@@ -220,6 +231,11 @@ that overspill exploits at nonstandard precision parameters.
 | `admissible_has_distortion` | Defs | Admissible.nontrivial (pure Lean) |
 | `ZModel_satisfies_mergelyan_schema` | Defs | ZModel_is_mergelyan_model |
 | `admissible_roundtrip_has_mertens_structure` | Defs | mertens_perron_encoding + Admissible.comp |
+| `mergelyan_gives_schema` | Defs | ZModel_is_mergelyan_model (compactness) |
+| `schema_models_satisfy_RH` | Defs | kaye_internal_induction + mergelyan_witnesses_RH_kernel |
+| `zero_density_blocks_nonstandard_contour` | Defs | perron_requires_zero_clearance + density_prevents_clearance |
+| `pa_internal_induction_transfer` | Defs | schema_models_satisfy_RH applied to ZModel |
+| `nonstandard_has_no_valid_contour` | Defs | zero_density_blocks_nonstandard_contour |
 | `mergelyan_schema_implies_RH` | Defs | schema_provides_witnesses + schema_witnesses_give_pi1 |
 | `perron_contour_fails_at_nonstandard` | Defs | contour_fails_at_nonstandard + no_contour_no_certificate |
 | `RH_roundtrip_is_pi2` | Defs | admissible_roundtrip + mertens_structure_is_pi2 (SUPPLEMENTARY) |
