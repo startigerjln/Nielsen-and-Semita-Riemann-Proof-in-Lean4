@@ -253,6 +253,51 @@ theorem RH_independent_of_disagreement {τ : TranslationPair}
   exact ⟨RH_not_provable S pres ⟨M, hM, hfail⟩,
     fun hneg => ((M.sat_neg S.RH).mp (hneg M hM)) hRH⟩
 
+/-- The compactness step of Lemma 1.10.2 with the original RH sentence
+    included in the theory and the precision matrix left abstract. -/
+theorem RH_disagrees_of_finite_precision_failure {τ : TranslationPair}
+    (check : L.BoundedFormula Empty 2)
+    (roundTrip : S.Prov (iffS (τ.RL S.RH) (precisionSentence check)))
+    (finite : (insert (neg (precisionSentence check)) (insert S.RH S.T)).IsFinitelySatisfiable) :
+    S.Disagrees τ S.RH := by
+  let extended : Setting := { S with T := insert S.RH S.T }
+  obtain ⟨M, hExtended, hfail⟩ := sentence_failure_of_finite_satisfiability extended finite
+  have hBase : S.ZFCModel M := fun ψ hψ => hExtended ψ (Set.mem_insert_of_mem _ hψ)
+  have hRH : M.Sat S.RH := hExtended S.RH (Set.mem_insert _ _)
+  have agreement := (M.sat_iff (τ.RL S.RH) (precisionSentence check)).mp (roundTrip M hBase)
+  exact ⟨M, hBase, hRH, fun h => hfail (agreement.mp h)⟩
+
+/-- The exact finite-satisfiability obligation of the linear argument,
+    expressed as a semantic consequence test in the original theory. -/
+theorem RH_finite_precision_failure_iff (check : L.BoundedFormula Empty 2) :
+    (insert (neg (precisionSentence check)) (insert S.RH S.T)).IsFinitelySatisfiable ↔
+      ¬ S.Prov (impS S.RH (precisionSentence check)) := by
+  let extended : Setting := { S with T := insert S.RH S.T }
+  have entailment : extended.Prov (precisionSentence check) ↔
+      S.Prov (impS S.RH (precisionSentence check)) := by
+    constructor
+    · intro h M hBase
+      apply (M.sat_imp _ _).mpr
+      intro hRH
+      apply h M
+      intro ψ hψ
+      rcases Set.mem_insert_iff.mp hψ with heq | hmem
+      · exact heq ▸ hRH
+      · exact hBase ψ hmem
+    · intro h M hExtended
+      have hBase : S.ZFCModel M := fun ψ hψ => hExtended ψ (Set.mem_insert_of_mem _ hψ)
+      exact (M.sat_imp _ _).mp (h M hBase) (hExtended S.RH (Set.mem_insert _ _))
+  exact (finitely_satisfiable_neg_iff_not_provable extended _).trans (not_congr entailment)
+
+/-- The single-model deduction from the full compactness premise. -/
+theorem RH_independent_of_finite_precision_failure {τ : TranslationPair}
+    (check : L.BoundedFormula Empty 2)
+    (roundTrip : S.Prov (iffS (τ.RL S.RH) (precisionSentence check)))
+    (pres : S.Prov S.RH → S.Prov (τ.RL S.RH))
+    (finite : (insert (neg (precisionSentence check)) (insert S.RH S.T)).IsFinitelySatisfiable) :
+    ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
+  RH_independent_of_disagreement S pres (RH_disagrees_of_finite_precision_failure S check roundTrip finite)
+
 /-- Theorem 1.18.2 (Truth from Unrefutability). -/
 theorem truth_from_unrefutability
     (reflection : ∀ ψ, IsPi1 ψ → ¬ TrueInN ψ → S.Prov (neg ψ))

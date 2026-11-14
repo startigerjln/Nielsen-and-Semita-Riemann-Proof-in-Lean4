@@ -18,6 +18,9 @@ Section and theorem numbers below refer to Nielsen and Semita's
 | `precision_shape_does_not_imply_finite_satisfiability` | None. For any two-variable matrix `check`, the matrix `check → check` gives a precision sentence whose negation is unsatisfiable over any arithmetic theory. |
 | `round_trip_failure_of_finite_satisfiability` | Finite satisfiability of the theory with the negated round trip added, using Mathlib's compactness theorem |
 | `RH_not_provable_of_finite_precision_failure` | The round trip is equivalent over the target theory to the abstract precision sentence, preservation holds for RH_L, and adjoining the negated precision sentence is finitely satisfiable. |
+| `RH_disagrees_of_finite_precision_failure` | Round-trip equivalence and finite satisfiability after adjoining both RH_L and the negated precision sentence (§1.10.2). |
+| `RH_finite_precision_failure_iff` | None. The full finite-satisfiability condition is equivalent to the target theory failing to entail the implication from RH_L to the precision sentence. |
+| `RH_independent_of_finite_precision_failure` | The same compactness premises plus preservation for RH_L. |
 | `RH_not_provable` | Preservation for RH_L (Lemma 1.5.6) and failure in a model of the target theory (Lemma 1.10.2 and Corollary 1.7.14) |
 | `neg_RH_not_provable` | Preservation and round-trip failure for ¬RH_L in the target theory |
 | `RH_independent` | Preservation and round-trip failure for both polarities (Corollary 1.13.2) |
