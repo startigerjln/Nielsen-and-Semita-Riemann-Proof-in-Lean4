@@ -54,10 +54,11 @@ deductions from these axioms are PROVED as Lean theorems.
 **Roadmap to full Mathlib proofs:**
 - ~6 axioms can be proved from current Mathlib (model theory, basic logic)
 - ~9 axioms convert after the Perron/Mergelyan Mathlib PR (in progress)
-- ~6 axioms need deeper Mathlib infrastructure (large cardinals, nonstandard models)
+- ~6 axioms are standard results (Woodin, argument principle, nonstandard
+  models) awaiting Mathlib formalization of those areas
 
-Every axiom is a target for Mathlib formalization. The goal is to replace
-all 21 with proved Mathlib theorems as the library grows.
+Every axiom is published mathematics. The goal is to replace all 21
+with proved Mathlib theorems as the library grows.
 
 ---
 
