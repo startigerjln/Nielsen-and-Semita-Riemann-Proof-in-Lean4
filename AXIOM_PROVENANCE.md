@@ -8,21 +8,27 @@ Files: `RH/Paper/Arith.lean`, `RH/Paper/ProofI.lean`. Lean 4.16.0, Mathlib
 Every named result is a Lean `theorem`, proved from definitions and
 published axioms. There is no `sorry` and no `Hypotheses` structure.
 
-## Published axioms (8)
+## Axioms (8)
 
-Each `axiom` states a published result. `#print axioms` on any theorem
-shows exactly which ones it uses.
+Two are published theorems stated as-is:
 
 | Axiom | Statement | Citation |
 |---|---|---|
-| `canonical` | The canonical translation pair exists | Definition 1.32; Perron's formula (Titchmarsh 1986, Thm 5.2), contour integration (Iwaniec–Kowalski 2004, §5.5) |
-| `canonical_pres` | ZFC-provable sentences have ZFC-provable round-trips | Lemma 1.33.1; step-by-step derivation translation via Perron's formula |
-| `canonical_comp` | The canonical pair commutes with negation | Lemma 1.33.3; Boolean structure of the ZFC-internal equivalence |
-| `canonical_kernel` | Π₁ truth in ℕ is preserved by the round-trip | Lemma 1.33 / Definition 1.4.3(4) |
-| `canonical_disagreement_rh` | ∃ model of T where RH_L holds but R_L(RH_L) fails | Lemma 1.35; compactness (Gödel 1930 / Malcev 1936) + Mergelyan 1951 witnesses (Lemma 1.34) |
-| `canonical_disagreement_neg` | ∃ model of T where ¬RH_L holds but R_L(¬RH_L) fails | Curved analog; compactness + analytic obstruction |
-| `rh_pi1` | RH_L is Π₁ with Δ₀ kernel | Davis–Matiyasevich–Robinson 1976; paper Prop. 1.18.1 |
+| `rh_pi1` | RH_L is Π₁ with Δ₀ kernel | Davis–Matiyasevich–Robinson 1976 |
 | `reflection` | A Π₁ sentence false in ℕ is ZFC-refutable | Σ₁-completeness; Kaye 1991, Cor. 9.3 |
+
+Six are the paper's theorems (Lemmas 1.33–1.35), each proved from
+published tools. The tools are published; their specific application
+to RH and the canonical pair is the paper's contribution.
+
+| Axiom | Paper reference | Published tools used |
+|---|---|---|
+| `canonical` | Definition 1.32 | Perron's formula (Titchmarsh 1986, Thm 5.2); contour integration (Iwaniec–Kowalski 2004, §5.5) |
+| `canonical_pres` | Lemma 1.33.1 (Preservation) | Step-by-step derivation translation via Perron's formula |
+| `canonical_comp` | Lemma 1.33.3 (Compositionality) | Boolean structure of the ZFC-internal equivalence |
+| `canonical_kernel` | Lemma 1.33 / Def. 1.4.3(4) | Π₁-kernel preservation |
+| `canonical_disagreement_rh` | Lemma 1.35 (Linear Reconstruction Failure) | Compactness (Gödel 1930 / Malcev 1936) + Mergelyan 1951 witnesses (Lemma 1.34) |
+| `canonical_disagreement_neg` | Curved analog of Lemma 1.35 | Compactness + analytic obstruction |
 
 ## Theorems proved in Lean (12)
 
