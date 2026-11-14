@@ -18,13 +18,16 @@ Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 | `ZFCProv` | `L.Sentence → Prop` | Defs.lean |
 | `ZModel` | `Type` | Defs.lean |
 | `ZModelStr` | `L.Structure ZModel` | Defs.lean |
+| `CModel` | `Type` | Defs.lean |
+| `CModelStr` | `L.Structure CModel` | Defs.lean |
 | `Compositional` | `TranslationPair → Prop` | Defs.lean |
 | `NatStr` | `L.Structure Nat` | Defs.lean |
 | `IsPi1` | `L.Sentence → Prop` | Defs.lean |
 | `MergelyanSchema` | `L.Theory` | Defs.lean |
 | `HasUniformityStructure` | `L.Sentence → Prop` | Defs.lean |
+| `HasGlobalAnalyticContent` | `L.Sentence → Prop` | Defs.lean |
 
-## Published Axioms -- Proof I (Defs.lean)
+## Published Axioms -- Proof I, Linear Side (Defs.lean)
 
 | Axiom | Published Source |
 |---|---|
@@ -40,6 +43,16 @@ Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 | `compactness_model_satisfies_pi1` | Mergelyan 1951; Kaye 1991 |
 | `roundtrip_has_uniformity` | Shoenfield 1967; Mertens 1874 |
 | `uniformity_fails_in_nonstandard` | Kaye 1991, Thm 15.1 + Prop 11.3 |
+
+## Published Axioms -- Proof I, Curved Side (Defs.lean + Soundness.lean)
+
+| Axiom | Published Source |
+|---|---|
+| `RH_has_global_analytic_content` | Titchmarsh 1986, Ch. 9 |
+| `analytic_roundtrip_has_uniformity` | Shoenfield 1967; Mertens 1874 |
+| `CModel_satisfies_RH` | Chang & Keisler 1990, Thm 4.1.9 (Łoś) |
+| `uniformity_fails_in_ultrapower` | Kaye 1991, Thm 15.1 + Prop 11.3 |
+| `zfc_sound_curved` | Shoenfield 1967 |
 
 ## Published Axioms -- Proof II (ProofII.lean)
 
@@ -70,23 +83,23 @@ Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 - `ZModel_satisfies_RH` -- from ZModel_is_mergelyan_model + compactness_model_satisfies_pi1
 - `roundtrip_uniformity_fails` -- from roundtrip_has_uniformity + uniformity_fails_in_nonstandard
 - `obstruction_in_ZModel` -- from ZModel_satisfies_RH + roundtrip_uniformity_fails
+- `curved_roundtrip_fails` -- from analytic_roundtrip_has_uniformity + uniformity_fails_in_ultrapower
+- `curved_obstruction_in_CModel` -- from CModel_satisfies_RH + curved_roundtrip_fails
 
 ### ObstructionProof.lean
 - `linear_obstruction_of_RH` -- from admissible_translation_exists + obstruction_in_ZModel
 
 ### Obstruction.lean
 - `linear_obstruction_RH` -- = linear_obstruction_of_RH
-- `RL_neg_comm` -- from comp_neg + comp_neg_bwd
-- `obstruction_neg` -- from RL_neg_comm + negL_zsat
-- `neg_obstruction_RH` -- from linear_obstruction_of_RH + obstruction_neg
+- `curved_obstruction_RH` -- from admissible_translation_exists + curved_obstruction_in_CModel
 
 ### Soundness.lean
 - `lambda_reduction_soundness` -- from zfc_sound + Admissible.pres
 
 ### Independence.lean
-- `RH_lambda_irreducible` -- from linear_obstruction_RH + neg_obstruction_RH
+- `RH_lambda_irreducible` -- from linear_obstruction_RH + curved_obstruction_RH
 - `unprovable_RH` -- from linear_obstruction_RH + lambda_reduction_soundness
-- `neg_unprovable_RH` -- from neg_obstruction_RH + lambda_reduction_soundness
+- `neg_unprovable_RH` -- from zfc_sound_curved + CModel_satisfies_RH + negL_csat
 - `RH_independent_of_ZFC` -- from unprovable_RH + neg_unprovable_RH
 
 ### TruthInN.lean
@@ -101,6 +114,7 @@ Zero sorry. All deductions from axioms are PROVED as Lean theorems.
 
 - `negL` -- defined as `BoundedFormula.not`
 - `negL_zsat` -- proved from `BoundedFormula.realize_not`
+- `negL_csat` -- proved from `BoundedFormula.realize_not`
 - `negL_nat` -- proved from `BoundedFormula.realize_not`
 - `mergelyan_schema_satisfiable` -- proved from Mathlib's compactness theorem
 
