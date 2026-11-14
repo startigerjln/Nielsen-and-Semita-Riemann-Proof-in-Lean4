@@ -15,21 +15,20 @@ Remark 1.7.15:
 5. Hence `ZFC ⊬ RH_L`; then truth in ℕ by Π₁ witness reflection (§1.17, §1.18).
 
 It contains no `axiom` and no `sorry`. The arithmetic form of RH is an
-abstract Π₁ sentence; no number theory is used.
+abstract Π₁ sentence; no number theory is used. Provability is defined as
+truth in all models of ZFC, so soundness and completeness are not assumptions.
 
 **Proved here:** Uniform Preservation (1.5.6), Λ-Reduction Soundness (1.5.2),
 Round-Trip Adequacy (1.7.13), Independence from Obstruction Models (1.7.14),
-Λ-irreducibility of RH (1.13.1), ZFC-undecidability (1.13.2), truth of RH in
-ℕ (1.18.2, 1.18.3).
+ZFC-undecidability of RH (1.13.2), truth of RH in ℕ (1.18.2, 1.18.3).
 
-Provability is defined as truth in all models of ZFC, so soundness and
-completeness are not assumptions.
+**Assumed** (the structure `Hypotheses`):
+* published: the Π₁ form of RH; Π₁ witness reflection;
+* the paper's own: Λ-soundness of the canonical pair; and the existence of
+  the obstruction model, a model of ZFC in which `RH_L` is true and its
+  canonical round trip is false.
 
-**Assumed** (the structure `Hypotheses`): the Π₁ form of RH, Π₁ witness reflection, Λ-soundness of
-the canonical pair, and the obstruction lemmas, each stated in the branch of
-the case split in which the paper proves it: the linear and curved
-obstructions for RH when RH holds in ℕ, and the curved obstruction for ¬RH
-when RH fails in ℕ. Every theorem below is conditional on these.
+Every theorem below is conditional on these four.
 -/
 
 open FirstOrder
@@ -102,8 +101,6 @@ def TranslationPair.RC (τ : TranslationPair) (φ : Sent) : Sent := τ.toC (τ.t
 structure Setting where
   /-- The arithmetical theorems of ZFC, as a theory in `L`. -/
   T : L.Theory
-  /-- The curved model class `M_C` (Section 1.3). -/
-  Cur : Model → Prop
   /-- The arithmetic formulation `RH_L`. -/
   RH : Sent
   /-- The canonical translation pair (Definition 1.7.11). -/
@@ -123,17 +120,10 @@ variable (S : Setting)
 /-- Λ-sound translation pairs (Definition 1.4.3).
 
 Condition (3) is stated for ZFC-provable sentences, which is how it is used
-in Lemma 1.5.6 and Theorem 1.7.13. Stated for every sentence, it would say
-`M ⊨ S → M ⊨ R_L(S)` in every model of ZFC, and then no Λ-sound pair could
-have the obstruction model of Lemma 1.10.2. -/
+in Lemma 1.5.6 and Theorem 1.7.13. -/
 structure LambdaSound (τ : TranslationPair) : Prop where
   /-- (3) Model invariance. -/
   inv : ∀ φ, S.Prov φ → ∀ M, S.ZFCModel M → M.Sat φ → M.Sat (τ.RL φ)
-  /-- (1),(2) Translations of theorems hold in the curved paradigm. -/
-  toC_sound : ∀ φ, S.Prov φ → ∀ M, S.Cur M → M.Sat (τ.toC φ)
-  /-- (3) Model invariance, curved paradigm. -/
-  inv_cur : ∀ φ, S.Prov φ → ∀ M, S.Cur M →
-    M.Sat (τ.toC φ) → M.Sat (τ.RC (τ.toC φ))
   /-- Boolean structure is preserved (Definition 1.4.1): negation. -/
   comp : ∀ φ, τ.toC (neg φ) = neg (τ.toC φ) ∧ τ.toL (neg φ) = neg (τ.toL φ)
   /-- (4) Π₁-kernel preservation, at the level of truth in ℕ. -/
@@ -144,39 +134,23 @@ structure LambdaSound (τ : TranslationPair) : Prop where
 def LObstructs (τ : TranslationPair) (φ : Sent) : Prop :=
   ∃ M, S.ZFCModel M ∧ ¬ (M.Sat φ ↔ M.Sat (τ.RL φ))
 
-/-- `Λ_C(T_{L→C}(φ)) ≠ 0` for the pair `τ` (Definitions 1.5.3, 1.5.5). -/
-def CObstructs (τ : TranslationPair) (φ : Sent) : Prop :=
-  ∃ M, S.Cur M ∧ ¬ (M.Sat (τ.toC φ) ↔ M.Sat (τ.RC (τ.toC φ)))
-
-/-- Λ-irreducibility (Definition 1.5.5). -/
-def LIrreducible (φ : Sent) : Prop :=
-  ∀ τ, LambdaSound S τ → LObstructs S τ φ ∧ CObstructs S τ φ
-
 /-! ## What is assumed -/
 
-/-- The assumptions of Proof I. -/
+/-- The assumptions of Proof I. The first two are published results. The
+    last two are the paper's own. -/
 structure Hypotheses : Prop where
-  /-- RH has a Π₁ form with Δ₀ kernel (Proposition 1.18.1). -/
+  /-- RH has a Π₁ form with Δ₀ kernel (Proposition 1.18.1;
+      Davis–Matiyasevich–Robinson). -/
   rh_pi1 : IsPi1 S.RH
   /-- Π₁ Witness Reflection (Theorem 1.17.1). -/
   reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
   /-- The canonical pair is Λ-sound (Definition 1.7.11, via Theorem 1.7.5). -/
   can_sound : LambdaSound S S.can
-  /-- Linear Reconstruction Failure (Lemma 1.10.2, Corollary 1.10.6), in the
-      branch where RH holds in ℕ: for every Λ-sound pair there is a model of
-      ZFC with `M ⊨ RH_L` and `M ⊭ R_L(RH_L)`. -/
-  linear_failure : TrueInN S.RH → ∀ τ, LambdaSound S τ →
-    ∃ M, S.ZFCModel M ∧ M.Sat S.RH ∧ ¬ M.Sat (τ.RL S.RH)
-  /-- Analytic Reconstruction Failure (Lemma 1.12.4), in the branch where RH
-      holds in ℕ: a curved model with `M ⊨ RH_C` and `M ⊭ R_C(RH_C)`. -/
-  curved_failure : TrueInN S.RH → ∀ τ, LambdaSound S τ →
-    ∃ M, S.Cur M ∧ M.Sat (τ.toC S.RH) ∧ ¬ M.Sat (τ.RC (τ.toC S.RH))
-  /-- The obstruction for `¬RH`, in the branch where RH fails in ℕ (the
-      symmetric case of Theorem 1.6.1): a curved model with `M ⊨ ¬RH_C` and
-      `M ⊭ R_C(¬RH_C)`. -/
-  curved_failure_neg : ¬ TrueInN S.RH → ∀ τ, LambdaSound S τ →
-    ∃ M, S.Cur M ∧ M.Sat (τ.toC (neg S.RH)) ∧
-      ¬ M.Sat (τ.RC (τ.toC (neg S.RH)))
+  /-- The obstruction model (Lemma 1.10.2, Corollary 1.10.6): there is a
+      model of ZFC in which `RH_L` is true and its canonical round trip is
+      false. This is the mathematical content of Proof I. -/
+  obstruction_model :
+    ∃ M, S.ZFCModel M ∧ M.Sat S.RH ∧ ¬ M.Sat (S.can.RL S.RH)
 
 variable {S}
 
@@ -228,49 +202,36 @@ theorem obstruction_model_iff_not_provable (τ : TranslationPair) (φ : Sent) :
     by_contra h2
     exact hno ⟨M, hM, h1, h2⟩
 
-/-- Uniform Preservation, curved side. -/
-theorem uniform_preservation_cur {τ : TranslationPair}
-    (hτ : LambdaSound S τ) {φ : Sent} (hφ : S.Prov φ) (M : Model) (hM : S.Cur M) :
-    M.Sat (τ.toC φ) ↔ M.Sat (τ.RC (τ.toC φ)) :=
-  ⟨fun h => hτ.inv_cur φ hφ M hM h, fun _ => hτ.toC_sound φ hφ M hM⟩
+/-- `Λ_L(RH) ≠ 0` for the canonical pair (Corollary 1.10.3). -/
+theorem RH_obstructed (H : Hypotheses S) : LObstructs S S.can S.RH := by
+  obtain ⟨M, hM, h1, h2⟩ := H.obstruction_model
+  exact ⟨M, hM, fun hiff => h2 (hiff.mp h1)⟩
 
-/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`.
-
-    By cases. If RH holds in ℕ there is nothing to prove. If RH fails in ℕ,
-    witness reflection gives `ZFC ⊢ ¬RH`; uniform preservation for the
-    canonical pair then makes `¬RH_C` and its round trip agree in every
-    curved model, contradicting the obstruction for `¬RH`. -/
-theorem RH_true_in_N (H : Hypotheses S) : TrueInN S.RH := by
-  by_contra hfalse
-  have hprov : S.Prov (neg S.RH) := H.reflection S.RH H.rh_pi1 hfalse
-  obtain ⟨M, hM, h1, h2⟩ := H.curved_failure_neg hfalse S.can H.can_sound
-  exact h2 ((uniform_preservation_cur H.can_sound hprov M hM).mp h1)
-
-/-- Theorem 1.13.1 (Λ-Irreducibility of RH). -/
-theorem RH_lambda_irreducible (H : Hypotheses S) : LIrreducible S S.RH := by
-  intro τ hτ
-  have htrue := RH_true_in_N H
-  constructor
-  · obtain ⟨M, hM, h1, h2⟩ := H.linear_failure htrue τ hτ
-    exact ⟨M, hM, fun hiff => h2 (hiff.mp h1)⟩
-  · obtain ⟨M, hM, h1, h2⟩ := H.curved_failure htrue τ hτ
-    exact ⟨M, hM, fun hiff => h2 (hiff.mp h1)⟩
-
-/-- Corollary 1.13.2, first half: `ZFC ⊬ RH` (Remark 1.7.15, steps 3–5). -/
+/-- `ZFC ⊬ RH`. Reductio, entirely about ZFC and its models: if ZFC proved
+    RH, the round trip would agree with RH in every model of ZFC; in the
+    obstruction model it does not. -/
 theorem RH_not_provable (H : Hypotheses S) : ¬ S.Prov S.RH :=
-  not_provable_of_obstruction_model H
-    (H.linear_failure (RH_true_in_N H) S.can H.can_sound)
+  not_provable_of_obstruction_model H H.obstruction_model
 
-/-- Corollary 1.13.2, second half: `ZFC ⊬ ¬RH`. The linear obstruction model
-    is a model of ZFC in which `RH_L` holds. -/
+/-- `ZFC ⊬ ¬RH`: the obstruction model is a model of ZFC in which `RH_L`
+    is true. -/
 theorem neg_RH_not_provable (H : Hypotheses S) : ¬ S.Prov (neg S.RH) := by
   intro hneg
-  obtain ⟨M, hM, h1, _⟩ := H.linear_failure (RH_true_in_N H) S.can H.can_sound
+  obtain ⟨M, hM, h1, _⟩ := H.obstruction_model
   exact (M.sat_neg S.RH).mp (hneg M hM) h1
 
 /-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
 theorem RH_independent (H : Hypotheses S) :
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
   ⟨RH_not_provable H, neg_RH_not_provable H⟩
+
+/-- Theorem 1.18.2 (Truth of RH from Independence), for any Π₁ sentence. -/
+theorem truth_from_unrefutability (H : Hypotheses S) {φ : Sent}
+    (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
+  Classical.byContradiction fun hfalse => hnot (H.reflection φ hpi hfalse)
+
+/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
+theorem RH_true_in_N (H : Hypotheses S) : TrueInN S.RH :=
+  truth_from_unrefutability H H.rh_pi1 (neg_RH_not_provable H)
 
 end RH.Paper
