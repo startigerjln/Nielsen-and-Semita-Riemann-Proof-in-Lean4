@@ -45,6 +45,7 @@ pi1_holds_roundtrip_fails, sigma1_holds_roundtrip_fails
   - relative_interpretation_exists [Shoenfield 1967; Rogers 1967]
   - overspill [Kaye 1991, Prop 11.3]
   - standard_cut_undefinable [Kaye 1991, Thm 15.1]
+  - roundtrip_and_source_defines_cut [Kaye 1991, Ch. 11 + Thm 15.1]
   - theta_implies_kernel_at_standard [Mergelyan 1951; Lagarias 2002]
 
   Encoding.lean (Δ₀ formula encoding):

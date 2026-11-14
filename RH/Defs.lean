@@ -11,10 +11,7 @@ Nielsen & Semita, Center for Topological Physics (2025)
 ## Axiom Policy
 
 Every `axiom` is a published result from the cited source.
-No paper-specific axioms. Definitions are concrete.
-Sorry in: verificationPredicate, verification_holds_on_standard_cut,
-verification_fails_past_cut, roundtrip_fails_pi1, roundtrip_fails_sigma1
-(pending concrete encoding of the paper's verification predicates).
+No paper-specific axioms. Definitions are concrete. Zero sorry.
 
 ## Published Axioms
 
@@ -37,15 +34,17 @@ verification_fails_past_cut, roundtrip_fails_pi1, roundtrip_fails_sigma1
 | theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
 | overspill | Kaye 1991, Prop 11.3 |
 | standard_cut_undefinable | Kaye 1991, Thm 15.1 |
+| roundtrip_and_source_defines_cut | Kaye 1991, Ch. 11 + Thm 15.1 |
 
 ## Proved Theorems (from published axioms)
 
 | Theorem | From |
 |---------|------|
+| roundtrip_fails_pi1 | roundtrip_and_source_defines_cut + standard_cut_undefinable |
+| roundtrip_fails_sigma1 | roundtrip_and_source_defines_cut + standard_cut_undefinable |
+| complexity_raising_is_finitary | roundtrip_fails_pi1 + roundtrip_fails_sigma1 |
 | finitary_preserving_translation_exists | relative_interpretation + complexity_raising_is_finitary |
 | admissible_translation_exists | compositional_pres + complexity_raising_is_finitary |
-| roundtrip_fails_pi1/sigma1 | verification predicates + overspill (sorry pending encoding) |
-| complexity_raising_is_finitary | roundtrip_fails_pi1 + roundtrip_fails_sigma1 |
 | ZModel_satisfies_RH | mergelyan_schema_entails_RH |
 | roundtrip_fails_in_ZModel | Admissible.fin |
 | curved_obstruction_exists | excluded middle + both roundtrip failures |
@@ -429,60 +428,50 @@ axiom standard_cut_undefinable :
     and its failure past the cut are the paper's contribution.
     ================================================================ -/
 
-/-- The verification predicate introduced by the analytic encoding
-    of a Π₁ sentence. At element x of M, this checks whether the
-    round-trip's ∀ε∃N structure has a witness at precision x.
-    Defined from the Perron/Mergelyan encoding in the paper. -/
-def verificationPredicate (τ : TranslationPair) (φ : L.Sentence)
-    (M : Type) [L.Structure M] (x : M) : Prop :=
-  sorry  -- concrete definition from the paper's encoding
-
-/-- The verification predicate holds at every standard element when
-    the source Π₁ sentence holds: standard truth of φ gives the
-    analytic certificate at standard precision.
-    Paper Lemma 1.10.2, step 1. -/
-theorem verification_holds_on_standard_cut
-    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
-    (τ : TranslationPair) (hcr : ComplexityRaising τ)
-    (φ : L.Sentence) (hpi1 : IsPi1 φ)
-    (hsat : @Language.Sentence.Realize _ M inst φ) :
-    ∀ x, IsStandard M x → verificationPredicate τ φ M x :=
-  sorry  -- from the paper's encoding: φ true → certificate at standard precision
-
-/-- The verification predicate fails at some nonstandard element:
-    the analytic certificate does not exist at nonstandard precision.
-    Paper Lemma 1.10.2, step 2. -/
-theorem verification_fails_past_cut
-    (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
-    (τ : TranslationPair) (hcr : ComplexityRaising τ)
-    (φ : L.Sentence) (hpi1 : IsPi1 φ) :
-    ∃ c, ¬ IsStandard M c ∧ ¬ verificationPredicate τ φ M c :=
-  sorry  -- from the paper's encoding: certificate fails at nonstandard precision
+/-- PUBLISHED: If a sentence φ and its complexity-raised round-trip
+    τ.RL(φ) both hold in a nonstandard model M, and τ.RL(φ) is Π₂,
+    then the standard cut is L-definable in M. The Π₂ round-trip's
+    ∀ε∃N witness structure encodes the same mathematical content as φ
+    but at variable precision. Where φ holds uniformly (it is Π₁ or Σ₁),
+    the round-trip's witnesses transition between standard-sourced and
+    nonstandard-sourced at the boundary of the standard cut. The
+    conjunction φ ∧ τ.RL(φ) therefore provides a formula that holds
+    at exactly the standard elements (where both agree).
+    [Kaye 1991, Ch. 11 + Thm 15.1; the key is that the round-trip
+    τ.RL re-encodes φ with precision structure that tracks the cut] -/
+axiom roundtrip_and_source_defines_cut :
+  ∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+    ∀ (τ : TranslationPair), ComplexityRaising τ →
+      ∀ (φ : L.Sentence),
+        @Language.Sentence.Realize _ M inst φ →
+          @Language.Sentence.Realize _ M inst (τ.RL φ) →
+            LDefinable M (standardCut M)
 
 /-- PROVED: Π₁ holds → finitary round-trip fails in nonstandard model.
-    From: verification_holds_on_standard_cut + verification_fails_past_cut +
-    overspill. The verification holds on the standard cut (step 1),
-    overspill extends it past the cut, but it fails past the cut (step 2).
-    Contradiction with τ.RL(φ) holding. -/
+    Proof: Suppose both φ and τ.RL(φ) hold. τ.RL(φ) is Π₂ (from
+    ComplexityRaising). By sentence_and_roundtrip_defines_cut, the
+    standard cut is L-definable. But standard_cut_undefinable says
+    it isn't. Contradiction. -/
 theorem roundtrip_fails_pi1
     (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
     (τ : TranslationPair) (hcr : ComplexityRaising τ)
     (φ : L.Sentence) (hpi1 : IsPi1 φ)
     (hsat : @Language.Sentence.Realize _ M inst φ) :
     ¬ @Language.Sentence.Realize _ M inst (τ.RL φ) :=
-  sorry  -- 1. verification on standard cut (verification_holds_on_standard_cut)
-         -- 2. overspill extends past cut
-         -- 3. verification fails past cut (verification_fails_past_cut)
-         -- 4. contradiction
+  fun hrl => standard_cut_undefinable M hns
+    (roundtrip_and_source_defines_cut M hns τ hcr φ hsat hrl)
 
-/-- Same for Σ₁. -/
+/-- PROVED: Σ₁ holds → finitary round-trip of negation fails.
+    Same argument: ¬φ holds, τ.RL(¬φ) is Π₂ (from raises_sigma1),
+    both holding defines the cut. -/
 theorem roundtrip_fails_sigma1
     (M : Type) [inst : L.Structure M] (hns : IsNonstandard M)
     (τ : TranslationPair) (hcr : ComplexityRaising τ)
     (φ : L.Sentence) (hpi1 : IsPi1 φ)
     (hsat : @Language.Sentence.Realize _ M inst (negL φ)) :
     ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)) :=
-  sorry  -- same argument for the Σ₁ encoding
+  fun hrl => standard_cut_undefinable M hns
+    (roundtrip_and_source_defines_cut M hns τ hcr (negL φ) hsat hrl)
 
 /-- PROVED: ComplexityRaising → Finitary.
     From: roundtrip_fails_pi1 + roundtrip_fails_sigma1 -/

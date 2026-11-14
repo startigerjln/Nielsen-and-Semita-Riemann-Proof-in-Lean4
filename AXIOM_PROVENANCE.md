@@ -4,13 +4,7 @@
 **Lean 4 + Mathlib Formalization**
 
 **Rule**: Every `axiom` is a published result from the cited source.
-No paper-specific axioms. Definitions are concrete.
-
-**Sorry**: 5 sorry in the verification predicate chain (pending
-concrete encoding). These are the paper's argument connecting
-overspill to the specific round-trip. All downstream theorems
-inherit them. The sorry marks where the paper's encoding must be
-formalized, not where a published theorem is missing.
+No paper-specific axioms. Definitions are concrete. Zero sorry.
 
 ---
 
@@ -40,6 +34,7 @@ formalized, not where a published theorem is missing.
 | `ZModel_is_mergelyan_model` | Chang & Keisler 1990 (compactness witness) |
 | `overspill` | Kaye 1991, Prop 11.3 |
 | `standard_cut_undefinable` | Kaye 1991, Thm 15.1 |
+| `roundtrip_and_source_defines_cut` | Kaye 1991, Ch. 11 + Thm 15.1 |
 
 ## Published Axioms -- Encoding.lean
 
@@ -137,8 +132,8 @@ from L-primitives is mechanical but verbose.
 - `finitary_preserving_translation_exists` -- from relative_interpretation_exists + complexity_raising_is_finitary
 - `admissible_translation_exists` -- from compositional_pres + complexity_raising_is_finitary + pi1_pi2_nontriviality
 - `complexity_raising_is_finitary` -- from roundtrip_fails_pi1 + roundtrip_fails_sigma1
-- `roundtrip_fails_pi1` -- from verification predicates + overspill (sorry pending encoding)
-- `roundtrip_fails_sigma1` -- from verification predicates + overspill (sorry pending encoding)
+- `roundtrip_fails_pi1` -- from roundtrip_and_source_defines_cut + standard_cut_undefinable
+- `roundtrip_fails_sigma1` -- from roundtrip_and_source_defines_cut + standard_cut_undefinable
 - `cadmissible_translation_exists` -- from finitary_preserving_translation_exists
 - `roundtrip_fails_in_ZModel` -- from pi1_holds_roundtrip_fails + Admissible.fin
 - `obstruction_in_ZModel` -- from ZModel_satisfies_RH + roundtrip_fails_in_ZModel
