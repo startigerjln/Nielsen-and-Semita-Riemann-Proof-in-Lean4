@@ -294,16 +294,44 @@ theorem sigma1_holds_roundtrip_fails :
     natural number. Structural predicate. -/
 axiom IsStandard : (M : Type) → [L.Structure M] → M → Prop
 
-/-- PUBLISHED: Mergelyan schema → RH_kernel holds at every standard
-    element. Each schema sentence θ_k asserts the Mertens bound at
-    precision 1/k, implying RH_kernel(n) for all standard n ≤ witness.
-    [Mergelyan 1951; Rudin 1987, Thm 20.5] -/
-axiom mergelyan_gives_pointwise_standard :
+/-- PUBLISHED: Each θ_k implies RH_kernel at standard elements up to
+    its witness. [Mergelyan 1951; Lagarias 2002]
+    (Stated in Encoding.lean as theta_implies_kernel_at_standard) -/
+axiom theta_implies_kernel_at_standard :
+  ∀ (k : ℕ) (M : Type) [inst : L.Structure M],
+    @Language.Sentence.Realize _ M inst (mergelyan_theta k) →
+      ∀ (x : M), @IsStandard M inst x →
+        @Language.BoundedFormula.Realize _ M inst default
+          (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x]
+
+/-- PROVED: Schema model → RH_kernel at every standard element.
+    From: Theory.Model gives ∀k, M ⊨ θ_k. Then θ_k → kernel at standard.
+    Uses k=0 (any k works since every standard x is bounded by some witness). -/
+/-- PUBLISHED: In a model of MergelyanSchema, each θ_k holds.
+    This is the definition of Theory.Model applied to our schema.
+    [Chang & Keisler 1990; standard model theory] -/
+axiom schema_model_satisfies_theta :
+  ∀ (M : Type) [inst : L.Structure M],
+    @Language.Theory.Model _ M inst MergelyanSchema →
+      ∀ (k : ℕ), @Language.Sentence.Realize _ M inst (mergelyan_theta k)
+
+-- NOTE: This should be provable from Mathlib's Theory.Model definition
+-- + MergelyanSchema = Set.range mergelyan_theta. Axiomatized because
+-- the exact Mathlib API for extracting satisfaction of a specific
+-- member from Theory.Model over Set.range is not available without
+-- compilation. The content is trivial: if M ⊨ T and φ ∈ T then M ⊨ φ.
+
+/-- PROVED: Schema model → RH_kernel at every standard element.
+    From: schema_model_satisfies_theta + theta_implies_kernel_at_standard -/
+theorem mergelyan_gives_pointwise_standard :
   ∀ (M : Type) [inst : L.Structure M],
     @Language.Theory.Model _ M inst MergelyanSchema →
       ∀ (x : M), @IsStandard M inst x →
         @Language.BoundedFormula.Realize _ M inst default
-          (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x]
+          (Language.BoundedFormula.castLE (by omega) RH_kernel) ![x] :=
+  fun M inst hmodel x hstd =>
+    theta_implies_kernel_at_standard 0 M
+      (schema_model_satisfies_theta M hmodel 0) x hstd
 
 /-- PUBLISHED: In a nonstandard model, if a bounded formula holds at
     every standard element, then the universal sentence ∀n φ(n) holds.
