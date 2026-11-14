@@ -67,14 +67,16 @@ standard counterexample for a direct check of the coded function.
 | `approximate_with_prescribed_zeros` | Uses Mergelyan's theorem to prove uniform approximation with exact zeros at a prescribed finite set disjoint from the compact. |
 | `PlantedZero.planted_code_fails` | Proves by exact rational arithmetic that the candidate code for the planted point fails at precision 3, provided the denominator is nonzero there. |
 | `PlantedZero.finite_checks_with_failure` | Combines the failing candidate with any finite list of bounds and local validity checks, given codes that pass the initial validity checks and exceed the cutoff. |
+| `PlantedZero.approximate_polynomial_by_rational_coefficients` | Proves uniform approximation of a complex polynomial on a compact set by Gaussian-rational coefficient lists. |
+| `PlantedZero.finite_zeta_approximations_with_standard_failure` | Uses Mergelyan's theorem to produce a single rational code above the cutoff, satisfying all the specified compact-set approximation tolerances for ζ and failing the direct zero-location check. The common compact must avoid the pole and the planted roots and have connected complement. |
 
 The point code directly names rational coordinates. This implementation
-checks zeros given by those coordinates. It supplies no equivalence with
-the coded Lagarias inequality. The analytic approximation theorem has
-complex coefficients. The remaining bridge is to obtain rational codes
-passing the unified manuscript's specific local validity checks and to
-relate the direct check to the claimed first-order round trip. The finite
-arithmetic theorem uses the local validity property as an explicit premise.
+checks zeros given by those coordinates. The finite approximation
+theorem uses uniform error on specified compact regions. Connecting it
+to the manuscript's validity schema requires showing that these estimates
+imply its Taylor-overlap and Dirichlet checks for the same code. Connecting
+the direct zero-location test to the first-order round trip also requires
+a proof.
 
 ## Perron's formula
 
@@ -85,6 +87,14 @@ in a half-plane. It gives the limit along symmetric vertical contours
 and counts an integer cutoff with half weight. The theorem
 `perron_formula_of_nonintegral_cutoff` deduces the ordinary summatory
 formula away from integer cutoffs.
+
+`perron_formula_of_vertical_agreement` transfers the limit to a function
+that agrees exactly with the Dirichlet series on the integration line.
+`perronIntegral_sub_le_of_integrand_bound` bounds the finite-contour
+error for a replacement function from an estimate on the weighted
+integrand. The manuscript's proof translation still needs to justify
+that its local validity checks are sufficient for the coefficient
+identities invoked in the translation.
 
 The two custom axioms are the published analytic statements
 `mergelyan` and `perron_formula`. Compactness comes from Mathlib.

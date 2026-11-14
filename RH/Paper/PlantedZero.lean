@@ -20,9 +20,39 @@ private def mul (z w : Point) : Point :=
 def evalPolynomial (z : Point) (coefficients : List Point) : Point :=
   coefficients.foldr (fun a value => add a (mul z value)) (0, 0)
 
+@[simp] theorem evalPolynomial_one (z : Point) :
+    evalPolynomial z [(1, 0)] = (1, 0) := by
+  simp [evalPolynomial, add, mul]
+
+theorem evalPolynomial_one_padded (z : Point) (length : ℕ) :
+    evalPolynomial z ((1, 0) :: List.replicate length (0, 0)) = (1, 0) := by
+  have zeroEval : ∀ n : ℕ, evalPolynomial z (List.replicate n (0, 0)) = (0, 0) := by
+    intro n
+    induction n with
+    | zero => rfl
+    | succ n ih =>
+      simpa [List.replicate_succ, evalPolynomial, add, mul] using
+        congrArg (fun v => add (0, 0) (mul z v)) ih
+  change add (1, 0) (mul z (evalPolynomial z (List.replicate length (0, 0)))) = _
+  rw [zeroEval length]
+  simp [add, mul]
+
 /-- Numerator factors, remaining numerator coefficients, and denominator
     coefficients of a rational-function code. -/
 abbrev RationalFunction := List Point × List Point × List Point
+
+private theorem list_length_le_encode (points : List Point) :
+    points.length ≤ Encodable.encode points := by
+  induction points with
+  | nil => simp
+  | cons z points ih =>
+    change points.length + 1 ≤ Nat.pair (Encodable.encode z) (Encodable.encode points) + 1
+    exact Nat.succ_le_succ (ih.trans (Nat.right_le_pair _ _))
+
+theorem denominator_length_le_code (f : RationalFunction) :
+    f.2.2.length ≤ Encodable.encode f := by
+  rw [show f = (f.1, f.2.1, f.2.2) from rfl, Encodable.encode_prod_val, Encodable.encode_prod_val]
+  exact (list_length_le_encode _).trans ((Nat.right_le_pair _ _).trans (Nat.right_le_pair _ _))
 
 def evalNumerator (f : RationalFunction) (z : Point) : Point :=
   f.1.foldr (fun root value => mul (sub z root) value) (evalPolynomial z f.2.1)
@@ -57,15 +87,18 @@ def plantedPoint (N : ℕ) : Point :=
   (3 / 4, (N : ℚ) + 1)
 
 /-- The reflected and conjugate points accompany the planted zero. -/
-def plant (N : ℕ) (f : RationalFunction) : RationalFunction :=
+def plantedRoots (N : ℕ) : List Point :=
   let height := (N : ℚ) + 1
-  ([plantedPoint N, (3 / 4, -height), (1 / 4, height), (1 / 4, -height)] ++ f.1, f.2)
+  [plantedPoint N, (3 / 4, -height), (1 / 4, height), (1 / 4, -height)]
+
+def plant (N : ℕ) (f : RationalFunction) : RationalFunction :=
+  (plantedRoots N ++ f.1, f.2)
 
 theorem planted_isZeroAt (N : ℕ) (f : RationalFunction)
     (defined : evalPolynomial (plantedPoint N) f.2.2 ≠ (0, 0)) :
     isZeroAt (plant N f) (plantedPoint N) := by
   refine ⟨?_, defined⟩
-  simp [evalNumerator, plant, sub, mul]
+  simp [evalNumerator, plant, plantedRoots, sub, mul]
 
 theorem planted_fails_precision (N : ℕ) : ¬ criticalLineCheck (plantedPoint N) 3 := by
   norm_num [criticalLineCheck, plantedPoint, abs_of_nonneg]
