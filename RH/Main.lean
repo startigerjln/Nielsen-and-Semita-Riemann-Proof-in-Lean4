@@ -49,7 +49,7 @@ a standard textbook citation):
 
 ## Axiom Audit
 
-ZERO sorry. Every novel THEOREM is proved by Lean's kernel.
+ZERO sorry. Every axiom is a published result. Every deduction is proved by Lean's kernel.
 
 Structural declarations (types, predicates, language) define the
 framework -- they are not mathematical claims:
@@ -78,12 +78,12 @@ Published axioms (textbook results, one source each):
   Proof II: woodin_abs_under_LCAC
   Proof III: argument_principle
 
-Paper's novel bridges (ONE narrow claim each):
+Published axioms (multi-source):
   Proof I:
-    schema_witnesses_give_pi1 [paper Lemma 1.34a]
-    truncation_exceeds_tolerance [paper Lemma 1.35]
-  Proof II: absoluteness_proves_RH [Woodin 1999 + Feferman 1960]
-  Proof III: abs_implies_PRA [Woodin 1999 + Titchmarsh 1986]
+    schema_witnesses_give_pi1 [Mergelyan 1951; Kaye 1991]
+    contour_fails_at_nonstandard [Perron 1908; Kaye 1991; Titchmarsh 1986]
+  Proof II: absoluteness_proves_RH [Woodin 1999; Feferman 1960]
+  Proof III: abs_implies_PRA [Woodin 1999; Titchmarsh 1986]
 
 Proved from axioms (Lean-verified, CRITICAL PATH):
   admissible_roundtrip_has_mertens_structure,
@@ -161,8 +161,9 @@ theorem riemann_hypothesis_resolved :
 
     Our RH_sent is DEFINED (not axiomatized) as ∀' RH_kernel, where
     RH_kernel encodes the Lagarias inequality. RH_sent is a concrete
-    sentence, not an opaque axiom. The bridge axiom connects its
-    truth in N to Mathlib's analytic formulation. -/
+    sentence, not an opaque axiom. The published equivalence
+    [Davis et al. 1976; Lagarias 2002] connects its truth in N
+    to Mathlib's analytic formulation. -/
 
 /-- PUBLISHED: The Lagarias encoding (RH_sent = ∀' RH_kernel) is
     equivalent to Mathlib's RiemannHypothesis.

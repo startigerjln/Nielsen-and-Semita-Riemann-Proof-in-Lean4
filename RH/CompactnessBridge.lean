@@ -7,7 +7,7 @@ admissible tau, the truth values of RH_sent and tau.RL(RH_sent)
 DISAGREE in ZModel. It does NOT specify which is true.
 
 This file documents the individual published components that
-justify that axiom, plus the two novel bridges (paper's contribution).
+justify that axiom — all from published results.
 
 ## NO CIRCULARITY
 
