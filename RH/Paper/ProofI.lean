@@ -333,6 +333,27 @@ theorem standard_checks_entail_iff_finite_prefix {L' : Language}
   simpa only [Set.union_right_comm] using
     standard_checks_unsatisfiable_iff_finite_prefix (T ∪ {φ.not}) check
 
+/-- If full validity forces the translated check to pass, finite
+    witnesses to its failure rule out deriving full validity from the
+    standard-check schema. Here `valid` and `passes` are sentences in
+    the language with the continuation code named. -/
+theorem standard_checks_not_entail_full_validity_of_finite_failures {L' : Language}
+    (T : L'.Theory) (check : ℕ → L'.Sentence) (valid passes : L'.Sentence)
+    (full : T ⊨ᵇ (valid.imp passes))
+    (finite : ∀ N : ℕ, ((T ∪ check '' Set.Iic N) ∪ {passes.not}).IsSatisfiable) :
+    ¬ ((T ∪ Set.range check) ⊨ᵇ valid) := by
+  intro entails
+  obtain ⟨N, hPrefix⟩ := (standard_checks_entail_iff_finite_prefix T check valid).mp entails
+  obtain ⟨M⟩ := finite N
+  let validModel := M.subtheoryModel (T' := T ∪ check '' Set.Iic N) Set.subset_union_left
+  let baseModel := validModel.subtheoryModel (T' := T) Set.subset_union_left
+  have hv := Language.Theory.models_sentence_iff.mp hPrefix validModel
+  have himp := Language.Theory.models_sentence_iff.mp full baseModel
+  have failed : M.Carrier ⊨ passes.not :=
+    Language.Theory.realize_sentence_of_mem ((T ∪ check '' Set.Iic N) ∪ {passes.not})
+      (Or.inr (Set.mem_singleton _))
+  exact (Language.Sentence.realize_not _).mp failed (Language.BoundedFormula.realize_imp.mp himp hv)
+
 /-! ### The fresh constant in Lemma 1.10.2 -/
 
 /-- The formula `∃ k, ¬check(n,k)` with its index exposed as a free variable. -/
