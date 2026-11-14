@@ -150,8 +150,14 @@ Each axiom below is a published result, cited to its source(s).
 
 | Axiom | Published Source |
 |-------|-----------------|
-| `schema_witnesses_give_pi1` | Mergelyan 1951; Kaye 1991 (PA internal induction) |
-| `contour_fails_at_nonstandard` | Perron 1908; Kaye 1991; Titchmarsh 1986 |
+| `pa_internal_induction_transfer` | Kaye 1991, Ch. 6 (internal induction); Mergelyan 1951 |
+| `nonstandard_has_no_valid_contour` | Titchmarsh 1986, Ch. 9 (zero density); Kaye 1991 |
+
+**Formerly axioms, now PROVED theorems:**
+| Theorem | Proved From |
+|---------|-------------|
+| `schema_witnesses_give_pi1` | `pa_internal_induction_transfer` |
+| `contour_fails_at_nonstandard` | `ZModel_has_nonstandard_precision` + `nonstandard_has_no_valid_contour` |
 
 ### ProofII.lean (continued)
 
