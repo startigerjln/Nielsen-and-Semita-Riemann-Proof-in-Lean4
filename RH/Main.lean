@@ -35,16 +35,18 @@ pi1_holds_roundtrip_fails, sigma1_holds_roundtrip_fails
   - comp_neg, comp_neg_bwd [Enderton 2001]
   - compositional_pres_translation_exists [Shoenfield 1967, 4.6]
   - pi1_pi2_nontriviality [Kaye 1991, Ch. 11]
-  - compositional_pres_translation_exists [Shoenfield 1967, 4.6; Kaye 1991]
   - ZModel_is_nonstandard [Kaye 1991; Chang & Keisler 1990]
   - CModel_is_nonstandard [Chang & Keisler 1990, 4.1]
   - standard_instances_give_universal [Kaye 1991, Prop 11.3 + Ch. 11]
   - mergelyan_finite_satisfiability [Mergelyan 1951; Rudin 1987]
   - ZModel_is_mergelyan_model [Chang & Keisler 1990, compactness witness]
 
-  Defs.lean (Proof I -- curved side):
-  - analytic_encoding_exists [Shoenfield 1967; Rogers 1967; Kaye 1991]
+  Defs.lean (Proof I -- curved side, published):
+  - relative_interpretation_exists [Shoenfield 1967; Rogers 1967]
   - theta_implies_kernel_at_standard [Mergelyan 1951; Lagarias 2002]
+
+  Defs.lean (PAPER axiom):
+  - paper_roundtrip_fails [Lemma 1.10.2/1.12.4]
 
   Encoding.lean (Δ₀ formula encoding):
   - divFormula, remFormula, betaFormula [Gödel 1931; Kaye 1991]
