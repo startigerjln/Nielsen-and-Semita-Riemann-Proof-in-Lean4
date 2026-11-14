@@ -122,10 +122,6 @@ Each axiom below is a published result, cited to its source(s).
 | `pi1_pi2_nontriviality` | Kaye 1991, Ch. 11; Chang & Keisler 1990 |
 | `mertens_perron_encoding` | Mertens 1874; Perron 1908; Titchmarsh 1986, 14.25 |
 | `mergelyan_approximation` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
-| `kaye_internal_induction` | Kaye 1991, Ch. 6 (internal induction transfer) |
-| `mergelyan_witnesses_RH_kernel` | Schema construction (Mergelyan 1951; Mertens 1874; Schoenfeld 1976) |
-| `perron_requires_zero_clearance` | Perron 1908; Titchmarsh 1986, Thm 3.12 |
-| `density_prevents_clearance` | Titchmarsh 1986, Ch. 9 (zero density); Kaye 1991, Ch. 11 |
 | `schema_provides_witnesses` | Mergelyan 1951; Mertens 1874; Schoenfeld 1976 |
 | `mergelyan_schema_finitely_satisfiable` | Mergelyan 1951; Rudin 1987, Thm 20.5 |
 | `ZModel_is_mergelyan_model` | Structural: identifies ZModel with compactness witness |
@@ -153,12 +149,34 @@ Each axiom below is a published result, cited to its source(s).
 
 | Axiom | Published Source |
 |-------|-----------------|
-**Formerly axioms, now PROVED theorems:**
+### Published statements in their own language (separate files)
+
+| Declaration | File | Status | Source |
+|-------------|------|--------|--------|
+| `RH.Published.mergelyan` | PublishedAnalysis | axiom, stated over ℂ | Mergelyan 1951; Rudin 1987, Thm 20.5 |
+| `RH.Published.ingham_zero_density` | PublishedAnalysis | axiom, bound on N(σ,T) for `riemannZeta` | Ingham 1940; Titchmarsh 1986, Ch. 9 |
+| `RH.Published.overspill` | PublishedLogic | **proved in Lean** (no axiom) | Kaye 1991 (overspill lemma) |
+
+These files do not mention `ZModel` or any object of the construction.
+
+### Model-level steps (stated over ZModel; not published statements)
+
+These four axioms are the steps still to be derived as theorems from the
+published statements above. They are not quotations of the cited sources.
+
+| Axiom | Statement | Uses |
+|-------|-----------|------|
+| `mergelyan_gives_standard_RH` | schema holds in ZModel → RH_kernel at every standard n | Mergelyan 1951; Schoenfeld 1976; Mertens 1874 |
+| `kaye_standard_to_universal` | RH_kernel at every standard n → RH_sent in ZModel | Kaye 1991 |
+| `nonstandard_zeros_too_close` | nonstandard k → zeros too close | Titchmarsh 1986, Ch. 9 |
+| `perron_needs_clearance` | valid contour at k → zeros not too close | Perron 1908; Titchmarsh 1986, §3.12 |
+
+**Proved theorems in this part of Defs.lean:**
 | Theorem | Proved From |
 |---------|-------------|
 | `mergelyan_gives_schema` | `ZModel_is_mergelyan_model` (compactness witness) |
-| `schema_models_satisfy_RH` | `kaye_internal_induction` + `mergelyan_witnesses_RH_kernel` |
-| `zero_density_blocks_nonstandard_contour` | `perron_requires_zero_clearance` + `density_prevents_clearance` |
+| `schema_models_satisfy_RH` | model-level steps `mergelyan_gives_standard_RH` + `kaye_standard_to_universal` |
+| `zero_density_blocks_nonstandard_contour` | model-level steps `nonstandard_zeros_too_close` + `perron_needs_clearance` |
 | `pa_internal_induction_transfer` | `schema_models_satisfy_RH` applied to ZModel |
 | `nonstandard_has_no_valid_contour` | `zero_density_blocks_nonstandard_contour` |
 | `schema_witnesses_give_pi1` | `pa_internal_induction_transfer` |
@@ -189,13 +207,13 @@ mergelyan_schema_finitely_satisfiable [Mergelyan 1951, published]
   → ZModel_is_mergelyan_model [structural identification]
   → mergelyan_gives_schema [PROVED theorem]
 
-kaye_internal_induction [Kaye 1991, published]
-  + mergelyan_witnesses_RH_kernel [schema construction]
+mergelyan_gives_standard_RH [model-level step, to be derived]
+  + kaye_standard_to_universal [model-level step, to be derived]
   → schema_models_satisfy_RH [PROVED theorem]
   → ZModel_satisfies_RH [PROVED]
 
-perron_requires_zero_clearance [Perron 1908, published]
-  + density_prevents_clearance [Titchmarsh 1986, published]
+nonstandard_zeros_too_close [model-level step, to be derived]
+  + perron_needs_clearance [model-level step, to be derived]
   → zero_density_blocks_nonstandard_contour [PROVED theorem]
   → contour_fails_at_nonstandard [PROVED]
   + no_contour_no_certificate [published]
@@ -232,8 +250,9 @@ that overspill exploits at nonstandard precision parameters.
 | `ZModel_satisfies_mergelyan_schema` | Defs | ZModel_is_mergelyan_model |
 | `admissible_roundtrip_has_mertens_structure` | Defs | mertens_perron_encoding + Admissible.comp |
 | `mergelyan_gives_schema` | Defs | ZModel_is_mergelyan_model (compactness) |
-| `schema_models_satisfy_RH` | Defs | kaye_internal_induction + mergelyan_witnesses_RH_kernel |
-| `zero_density_blocks_nonstandard_contour` | Defs | perron_requires_zero_clearance + density_prevents_clearance |
+| `schema_models_satisfy_RH` | Defs | mergelyan_gives_standard_RH + kaye_standard_to_universal (model-level steps) |
+| `zero_density_blocks_nonstandard_contour` | Defs | nonstandard_zeros_too_close + perron_needs_clearance (model-level steps) |
+| `RH.Published.overspill` | PublishedLogic | induction scheme (pure Lean proof, no axioms) |
 | `pa_internal_induction_transfer` | Defs | schema_models_satisfy_RH applied to ZModel |
 | `nonstandard_has_no_valid_contour` | Defs | zero_density_blocks_nonstandard_contour |
 | `mergelyan_schema_implies_RH` | Defs | schema_provides_witnesses + schema_witnesses_give_pi1 |
