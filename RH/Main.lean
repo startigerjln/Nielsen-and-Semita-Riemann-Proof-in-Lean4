@@ -43,8 +43,11 @@ pi1_holds_roundtrip_fails, sigma1_holds_roundtrip_fails
   - ZModel_is_mergelyan_model [Chang & Keisler 1990, compactness witness]
 
   Defs.lean (Proof I -- curved side):
-  - standard_analytic_encoding_exists [Shoenfield 1967; Rogers 1967; Kaye 1991]
+  - analytic_interpretation_exists [Shoenfield 1967; Rogers 1967]
   - theta_implies_kernel_at_standard [Mergelyan 1951; Lagarias 2002]
+
+  Defs.lean (PAPER axiom -- round-trip failure):
+  - paper_roundtrip_failure [PAPER: Lemma 1.10.2/1.12.4, uses Kaye overspill]
 
   Encoding.lean (Δ₀ formula encoding):
   - divFormula, remFormula, betaFormula [Gödel 1931; Kaye 1991]

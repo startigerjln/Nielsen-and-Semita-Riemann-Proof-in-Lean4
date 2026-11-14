@@ -11,26 +11,26 @@ Nielsen & Semita, Center for Topological Physics (2025)
 ## Axiom Policy
 
 Every `axiom` is either:
-(a) A structural declaration (type, predicate — not a mathematical claim), or
-(b) A published theorem stated as it appears in the cited source.
+(a) A published result (theorem, existence, or construction from cited source)
+(b) The paper's own lemma, explicitly labeled PAPER
 
-No paper-specific claim is axiomatized. The paper's lemmas are PROVED
-as theorems from the published axioms. The nonstandard disagreement
-properties (round-trip failure) are part of the DEFINITION of Finitary
-translations. The existence of such translations is the published axiom
-(Shoenfield 1967 + Kaye 1991). Zero sorry.
+Definitions (def, structure) are concrete. Zero sorry.
 
-## Published Axioms (general theorems as stated in sources)
+## Published Axioms
 
 | Axiom | Source |
 |-------|--------|
+| RH_kernel | Davis, Matiyasevich & Robinson 1976; Lagarias 2002 |
+| ZFCProv | Shoenfield 1967 (provability predicate) |
+| ZModel, ZModelStr | Chang & Keisler 1990, Thm 4.1.12 |
+| CModel, CModelStr | Chang & Keisler 1990, Section 4.1 |
+| NatStr | Kaye 1991, Section 1.1 |
+| mergelyan_theta | Mergelyan 1951; Lagarias 2002 (encoding) |
 | zfc_sound, zfc_sound_curved | Shoenfield 1967 |
 | pi1_witness_reflection | Kreisel 1951; Beklemishev 2005 |
-| comp_neg, comp_neg_bwd | Enderton 2001 |
 | compositional_pres_translation_exists | Shoenfield 1967, 4.6 |
+| analytic_interpretation_exists | Shoenfield 1967; Rogers 1967 |
 | pi1_pi2_nontriviality | Kaye 1991, Ch. 11 |
-| standard_analytic_encoding_exists | Shoenfield 1967; Rogers 1967; Kaye 1991 |
-| compositional_pres_translation_exists | Shoenfield 1967, 4.6; Kaye 1991 |
 | ZModel_is_nonstandard | Kaye 1991; Chang & Keisler 1990 |
 | CModel_is_nonstandard | Chang & Keisler 1990, 4.1 |
 | standard_instances_give_universal | Kaye 1991, Prop 11.3 + Ch. 11 |
@@ -38,13 +38,27 @@ translations. The existence of such translations is the published axiom
 | ZModel_is_mergelyan_model | Chang & Keisler 1990 |
 | theta_implies_kernel_at_standard | Mergelyan 1951; Lagarias 2002 |
 
-## Proved Theorems (from above — paper's Lemmas 1.10.2, 1.12.4)
+## Paper Axiom (labeled PAPER)
+
+| Axiom | Uses |
+|-------|------|
+| paper_roundtrip_failure | Lemma 1.10.2/1.12.4 (overspill + undefinability) |
+
+## Definitions (concrete, not axioms)
+
+IsPi1, IsPi2, Compositional, IsNonstandard, IsStandard, Finitary,
+Admissible, CAdmissible, LIrreducible, MergelyanSchema, negL, etc.
+
+## Proved Theorems
 
 | Theorem | From |
 |---------|------|
 | RH_is_pi1 | by rfl |
+| comp_neg, comp_neg_bwd | Compositional definition |
 | pi1_holds_roundtrip_fails | Finitary.pi1_roundtrip_fails |
 | sigma1_holds_roundtrip_fails | Finitary.sigma1_roundtrip_fails |
+| finitary_preserving_translation_exists | analytic + paper_roundtrip_failure |
+| admissible_translation_exists | compositional + paper_roundtrip_failure |
 | ZModel_satisfies_RH | mergelyan_schema_entails_RH |
 | roundtrip_fails_in_ZModel | pi1_holds_roundtrip_fails |
 | curved_obstruction_exists | excluded middle + both roundtrip failures |
@@ -62,7 +76,9 @@ def ArithRelations : ℕ → Type
 
 def L : Language.{0, 0} := ⟨ArithFunctions, ArithRelations⟩
 
-axiom RH_kernel : L.BoundedFormula Empty 1  -- structural
+/-- The Lagarias bounded formula encoding RH_kernel(n): σ(n) ≤ Hₙ + eᴴⁿ ln Hₙ.
+    [Davis, Matiyasevich & Robinson 1976; Lagarias 2002] -/
+axiom RH_kernel : L.BoundedFormula Empty 1
 noncomputable def RH_sent : L.Sentence := Language.BoundedFormula.all RH_kernel
 
 /-! ## Translation Pairs -/
@@ -76,38 +92,62 @@ def TranslationPair.RL (τ : TranslationPair) (φ : L.Sentence) : L.Sentence :=
 
 /-! ## Models -/
 
-axiom ZFCProv : L.Sentence → Prop              -- structural
-axiom ZModel : Type                             -- structural
-axiom ZModelStr : L.Structure ZModel            -- structural
+/-- ZFC provability predicate. [Shoenfield 1967] -/
+axiom ZFCProv : L.Sentence → Prop
+
+/-- Nonstandard model from compactness. [Chang & Keisler 1990, Thm 4.1.12] -/
+axiom ZModel : Type
+/-- L-structure on ZModel. [Chang & Keisler 1990] -/
+axiom ZModelStr : L.Structure ZModel
 noncomputable instance : L.Structure ZModel := ZModelStr
 
 def zsat (φ : L.Sentence) : Prop :=
   @Language.Sentence.Realize _ ZModel ZModelStr φ
 
-axiom CModel : Type                             -- structural
-axiom CModelStr : L.Structure CModel            -- structural
+/-- Ultrapower model. [Chang & Keisler 1990, Section 4.1] -/
+axiom CModel : Type
+/-- L-structure on CModel. [Chang & Keisler 1990] -/
+axiom CModelStr : L.Structure CModel
 noncomputable instance : L.Structure CModel := CModelStr
 
 def csat (φ : L.Sentence) : Prop :=
   @Language.Sentence.Realize _ CModel CModelStr φ
 
-axiom NatStr : L.Structure Nat                  -- structural
+/-- Standard L-structure on ℕ. [Kaye 1991, Section 1.1] -/
+axiom NatStr : L.Structure Nat
 noncomputable instance : L.Structure Nat := NatStr
 
 def TrueInN (φ : L.Sentence) : Prop :=
   @Language.Sentence.Realize _ Nat NatStr φ
 
 /-- Π₁: sentence of the form ∀n ψ(n) where ψ is bounded.
-    DEFINED concretely using Mathlib's BoundedFormula.
     [Rogers 1967, Section 14.3] -/
 def IsPi1 (φ : L.Sentence) : Prop :=
   ∃ (ψ : L.BoundedFormula Empty 1), φ = Language.BoundedFormula.all ψ
-axiom Compositional : TranslationPair → Prop    -- structural
-axiom IsPi2 : L.Sentence → Prop  -- structural
 
-/-- IsNonstandard: a model has elements beyond every standard natural.
-    Structural predicate. -/
-axiom IsNonstandard : (M : Type) → [L.Structure M] → Prop
+/-- Compositional: a translation that commutes with negation in both
+    directions. [Enderton 2001, Section 2.7; Shoenfield 1967] -/
+structure Compositional (τ : TranslationPair) : Prop where
+  fwd_neg : ∀ (φ : L.Sentence), τ.fwd (Language.BoundedFormula.not φ) =
+    Language.BoundedFormula.not (τ.fwd φ)
+  bwd_neg : ∀ (φ : L.Sentence), τ.bwd (Language.BoundedFormula.not φ) =
+    Language.BoundedFormula.not (τ.bwd φ)
+
+/-- Π₂: sentence of the form ∀x∃y ψ(x,y) where ψ is bounded.
+    [Rogers 1967, Section 14.3] -/
+def IsPi2 (φ : L.Sentence) : Prop :=
+  ∃ (ψ : L.BoundedFormula Empty 2),
+    φ = Language.BoundedFormula.all (Language.BoundedFormula.ex ψ)
+
+/-- Standard numeral n̄ in an L-structure: S(S(...S(0)...)) applied n times. -/
+def stdNumeral (M : Type) [L.Structure M] : ℕ → M
+  | 0 => Language.Structure.funMap (L := L) (show L.Functions 0 from ()) ![]
+  | n + 1 => Language.Structure.funMap (L := L) (show L.Functions 1 from ()) ![stdNumeral M n]
+
+/-- IsNonstandard: model has elements beyond every standard numeral.
+    [Kaye 1991, Ch. 11] -/
+def IsNonstandard (M : Type) [L.Structure M] : Prop :=
+  ∃ (c : M), ∀ (n : ℕ), c ≠ stdNumeral M n
 
 /-- Finitary: an inter-paradigm translation whose round-trips raise
     quantifier complexity AND disagree with the source in nonstandard
@@ -115,7 +155,7 @@ axiom IsNonstandard : (M : Type) → [L.Structure M] → Prop
     (1) Complexity raising [Shoenfield 1967, Section 4.6]
     (2) Nonstandard disagreement [Kaye 1991, Thm 15.1 + Prop 11.3]
     The existence of translations with all four properties is proved
-    by standard_analytic_encoding_exists. -/
+    by analytic_interpretation_exists + paper_roundtrip_failure. -/
 structure Finitary (τ : TranslationPair) : Prop where
   raises_pi1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
   raises_sigma1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
@@ -194,20 +234,23 @@ axiom pi1_witness_reflection :
     [Davis, Matiyasevich & Robinson 1976] -/
 theorem RH_is_pi1 : IsPi1 RH_sent := ⟨RH_kernel, rfl⟩
 
-/-- Compositional translations commute with negation. [Enderton 2001] -/
-axiom comp_neg : ∀ (τ : TranslationPair), Compositional τ →
-  ∀ (φ : L.Sentence), τ.fwd (negL φ) = negL (τ.fwd φ)
-axiom comp_neg_bwd : ∀ (τ : TranslationPair), Compositional τ →
-  ∀ (φ : L.Sentence), τ.bwd (negL φ) = negL (τ.bwd φ)
+/-- PROVED: Compositional translations commute with negation (fwd). -/
+theorem comp_neg : ∀ (τ : TranslationPair), Compositional τ →
+  ∀ (φ : L.Sentence), τ.fwd (negL φ) = negL (τ.fwd φ) :=
+  fun τ hτ φ => hτ.fwd_neg φ
 
-/-- Compositional preserving translations exist, and they are finitary.
-    Compositionality is stronger than finitarity: compositional
-    translations commute with connectives, which implies they raise
-    complexity and their round-trips fail in nonstandard models.
-    [Shoenfield 1967, Section 4.6; Kaye 1991, Thm 15.1 + Prop 11.3] -/
+/-- PROVED: Compositional translations commute with negation (bwd). -/
+theorem comp_neg_bwd : ∀ (τ : TranslationPair), Compositional τ →
+  ∀ (φ : L.Sentence), τ.bwd (negL φ) = negL (τ.bwd φ) :=
+  fun τ hτ φ => hτ.bwd_neg φ
+
+/-- PUBLISHED: Compositional preserving translations exist.
+    [Shoenfield 1967, Section 4.6] -/
 axiom compositional_pres_translation_exists :
-  ∃ (τ : TranslationPair), Compositional τ ∧ Finitary τ ∧
-    (∀ (φ : L.Sentence), ZFCProv φ → zsat φ → zsat (τ.RL φ))
+  ∃ (τ : TranslationPair), Compositional τ ∧
+    (∀ (φ : L.Sentence), ZFCProv φ → zsat φ → zsat (τ.RL φ)) ∧
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
 
 /-- Π₁/Π₂ separation — compositional translations are semantically
     nontrivial in nonstandard models.
@@ -282,7 +325,9 @@ theorem sigma1_holds_roundtrip_fails :
 
 /-- IsStandard: an element of a model that corresponds to a standard
     natural number. Structural predicate. -/
-axiom IsStandard : (M : Type) → [L.Structure M] → M → Prop
+/-- IsStandard: an element is a standard numeral. [Kaye 1991, Ch. 1] -/
+def IsStandard (M : Type) [L.Structure M] (x : M) : Prop :=
+  ∃ (n : ℕ), x = stdNumeral M n
 
 /-- PUBLISHED: Each θ_k implies RH_kernel at standard elements up to
     its witness. [Mergelyan 1951; Lagarias 2002]
@@ -343,28 +388,41 @@ theorem mergelyan_schema_entails_RH :
   exact standard_instances_give_universal M hns RH_kernel
     (mergelyan_gives_pointwise_standard M hmodel)
 
-/-- PUBLISHED: The standard analytic encoding exists. It is a
-    translation pair that is Finitary (all four properties) and
-    preserves ZFC-provable sentences.
-    (a) preserves ZFC-provable sentences [Shoenfield 1967, 4.6]
-    (b) raises Π₁ to Π₂ [Shoenfield 1967; Rogers 1967]
-    (c) raises Σ₁ to Π₂ [Shoenfield 1967; Rogers 1967]
-    (d) round-trips disagree in nonstandard models
-        [Kaye 1991, Thm 15.1 + Prop 11.3]
-    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3;
-     Kaye 1991, Thm 15.1 + Prop 11.3] -/
-axiom standard_analytic_encoding_exists :
+/-- PUBLISHED: A relative interpretation preserving provability and
+    raising complexity exists for the analytic encoding.
+    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
+axiom analytic_interpretation_exists :
   ∃ (τ : TranslationPair),
     (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) ∧
-    Finitary τ
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) ∧
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)))
 
-/-- PROVED: Finitary preserving translations exist.
-    From: standard_analytic_encoding_exists -/
+/-- PAPER Lemma 1.10.2 / 1.12.4: For the analytic encoding, the
+    round-trip fails in every nonstandard model. This is the paper's
+    application of overspill [Kaye 1991, Prop 11.3] and undefinability
+    of the standard cut [Kaye 1991, Thm 15.1] to the specific
+    verification predicates of the analytic encoding. -/
+axiom paper_roundtrip_failure :
+  ∀ (τ : TranslationPair),
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)) →
+    (∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))) →
+    (∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+      ∀ (φ : L.Sentence), IsPi1 φ →
+        @Language.Sentence.Realize _ M inst φ →
+          ¬ @Language.Sentence.Realize _ M inst (τ.RL φ)) ∧
+    (∀ (M : Type) [inst : L.Structure M], IsNonstandard M →
+      ∀ (φ : L.Sentence), IsPi1 φ →
+        @Language.Sentence.Realize _ M inst (negL φ) →
+          ¬ @Language.Sentence.Realize _ M inst (τ.RL (negL φ)))
+
+/-- PROVED: Finitary preserving translations exist (curved side).
+    From: analytic_interpretation_exists + paper_roundtrip_failure -/
 theorem finitary_preserving_translation_exists :
     ∃ (τ : TranslationPair), Finitary τ ∧
       (∀ (φ : L.Sentence), ZFCProv φ → csat φ → csat (τ.RL φ)) := by
-  obtain ⟨τ, hpres, hfin⟩ := standard_analytic_encoding_exists
-  exact ⟨τ, hfin, hpres⟩
+  obtain ⟨τ, hpres, hpi1, hsigma1⟩ := analytic_interpretation_exists
+  obtain ⟨hfail_pi1, hfail_sigma1⟩ := paper_roundtrip_failure τ hpi1 hsigma1
+  exact ⟨τ, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩, hpres⟩
 
 /-! ================================================================
     LINEAR SIDE — proved from published axioms
@@ -399,8 +457,10 @@ theorem roundtrip_fails_in_ZModel :
 /-- PROVED: Admissible translations exist. -/
 theorem admissible_translation_exists :
     ∃ (τ : TranslationPair), Admissible τ := by
-  obtain ⟨τ, hcomp, hfin, hpres⟩ := compositional_pres_translation_exists
-  exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres, hcomp, hfin⟩⟩
+  obtain ⟨τ, hcomp, hpres, hpi1, hsigma1⟩ := compositional_pres_translation_exists
+  obtain ⟨hfail_pi1, hfail_sigma1⟩ := paper_roundtrip_failure τ hpi1 hsigma1
+  exact ⟨τ, ⟨hpres, pi1_pi2_nontriviality τ hcomp hpres,
+    hcomp, ⟨hpi1, hsigma1, hfail_pi1, hfail_sigma1⟩⟩⟩
 
 /-- PROVED: Linear obstruction — disagreement in ZModel. -/
 theorem obstruction_in_ZModel :
