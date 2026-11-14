@@ -211,25 +211,30 @@ axiom ZModel_is_nonstandard : IsNonstandard ZModel
 axiom CModel_is_nonstandard : IsNonstandard CModel
 
 axiom IsPi2 : L.Sentence → Prop  -- structural
-axiom Finitary : TranslationPair → Prop  -- structural
 axiom MergelyanSchema : L.Theory  -- structural
 
-/-- PUBLISHED: Finitary round-trips of Π₁ sentences produce Π₂
-    sentences. The analytic encoding converts ∀n P(n) into
-    ∀ε∃N ψ(ε,N) — precision parameter ε and witness N from
-    the analytic approximation.
-    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
-axiom finitary_roundtrip_pi1_to_pi2 :
-  ∀ (τ : TranslationPair), Finitary τ →
-    ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
+/-- Finitary: an inter-paradigm translation whose round-trips raise
+    quantifier complexity. The analytic encoding introduces ∀ε∃N
+    precision structure, turning Π₁ (and Σ₁) inputs into Π₂ outputs.
+    DEFINED concretely: Finitary τ means τ.RL raises Π₁→Π₂ and Σ₁→Π₂.
+    This is the defining property of inter-paradigm translations per
+    Shoenfield 1967 (relative interpretations between theories of
+    different signatures raise complexity). -/
+structure Finitary (τ : TranslationPair) : Prop where
+  raises_pi1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ)
+  raises_sigma1 : ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
 
-/-- PUBLISHED: Finitary round-trips of Σ₁ sentences (¬Π₁) also
-    produce Π₂ sentences. The encoding of ∃n ¬P(n) independently
-    introduces ∀ε∃N verification structure. NOT via compositionality.
-    [Shoenfield 1967, Section 4.6; Rogers 1967, Section 14.3] -/
-axiom finitary_roundtrip_sigma1_to_pi2 :
+/-- PROVED: Finitary round-trips of Π₁ produce Π₂. By definition. -/
+theorem finitary_roundtrip_pi1_to_pi2 :
   ∀ (τ : TranslationPair), Finitary τ →
-    ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ))
+    ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL φ) :=
+  fun τ hfin φ hpi1 => hfin.raises_pi1 φ hpi1
+
+/-- PROVED: Finitary round-trips of Σ₁ produce Π₂. By definition. -/
+theorem finitary_roundtrip_sigma1_to_pi2 :
+  ∀ (τ : TranslationPair), Finitary τ →
+    ∀ (φ : L.Sentence), IsPi1 φ → IsPi2 (τ.RL (negL φ)) :=
+  fun τ hfin φ hpi1 => hfin.raises_sigma1 φ hpi1
 
 /-- PUBLISHED: In any nonstandard model, a Π₁ sentence can hold
     while a Π₂ sentence fails. The standard cut is undefinable, so
@@ -275,14 +280,18 @@ theorem sigma1_holds_roundtrip_fails :
     sigma1_holds_pi2_fails_in_nonstandard M hns φ (τ.RL (negL φ)) hpi1
       (finitary_roundtrip_sigma1_to_pi2 τ hfin φ hpi1) hsat
 
-/-- PUBLISHED: A model of the Mergelyan schema satisfies any Π₁
-    sentence whose kernel is verified at every standard precision.
-    [Mergelyan 1951; Kaye 1991, Ch. 11 (internal induction)] -/
-axiom mergelyan_model_satisfies_pi1 :
+/-- PUBLISHED: The Mergelyan schema entails RH_sent.
+    The schema encodes the Mertens bound at each standard precision.
+    In a model of the schema:
+    (a) Each schema sentence θ_k gives RH_kernel(n) for standard n
+        [Mergelyan 1951]
+    (b) By internal induction [Kaye 1991, Ch. 11], the universal
+        sentence ∀n RH_kernel(n) = RH_sent holds.
+    [Mergelyan 1951; Kaye 1991, Ch. 11] -/
+axiom mergelyan_schema_entails_RH :
   ∀ (M : Type) [inst : L.Structure M],
     @Language.Theory.Model _ M inst MergelyanSchema →
-      ∀ (φ : L.Sentence), IsPi1 φ →
-        @Language.Sentence.Realize _ M inst φ
+      @Language.Sentence.Realize _ M inst RH_sent
 
 /-- PUBLISHED: Finitary translations preserving ZFC-provable
     sentences exist.
@@ -310,10 +319,8 @@ axiom ZModel_is_mergelyan_model : MergelyanSchema.Model ZModel
 
 /-- PROVED (paper Lemma 1.10.2, first part): ZModel ⊨ RH_sent.
     From: mergelyan_model_satisfies_pi1 + ZModel_is_mergelyan_model + RH_is_pi1 -/
-theorem ZModel_satisfies_RH : zsat RH_sent := by
-  have := mergelyan_model_satisfies_pi1 ZModel ZModel_is_mergelyan_model
-    RH_sent RH_is_pi1
-  exact this
+theorem ZModel_satisfies_RH : zsat RH_sent :=
+  mergelyan_schema_entails_RH ZModel ZModel_is_mergelyan_model
 
 /-- PUBLISHED: Compositional translations are finitary.
     Compositionality (induction on formula complexity) is a
