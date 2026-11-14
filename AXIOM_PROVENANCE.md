@@ -17,9 +17,14 @@ language. This is standard practice in Lean formalization projects:
 axiomatize known results, cite them, and replace axioms with formal
 proofs as the library grows.
 
-The MathLib-Contributions repository (github.com/startigerjln/MathLib-Contributions-)
-is an active effort to formalize Perron's formula and Mergelyan's theorem,
-which would convert several axioms into proved Mathlib theorems.
+**Perron's formula** has been formalized in Lean 4 + Mathlib and is included
+in this repository (RH/Perron.lean). The formalization proves kernel estimates
+from Mathlib's API and the limiting Perron formula from published axioms.
+Zero sorry. CI-verified. A Mathlib PR is in progress to contribute the
+Perron formalization to the Mathlib library.
+
+Repository: github.com/startigerjln/MathLib-Contributions-
+Mathlib PR: github.com/startigerjln/mathlib4 (pending)
 
 ## What `#print axioms` shows
 
@@ -246,7 +251,7 @@ Lean 4.16.0-rc1 | Mathlib commit 0f18102487
 
 ---
 
-## VI. References (27 sources)
+## VI. References (28 sources)
 
 1. Ahlfors (1979). *Complex Analysis*. McGraw-Hill.
 2. Beklemishev (2005). *Russian Math. Surveys* 60(2).
@@ -262,7 +267,8 @@ Lean 4.16.0-rc1 | Mathlib commit 0f18102487
 12. Lagarias (2002). *Amer. Math. Monthly* 109(6).
 13. Larson (2004). *The Stationary Tower*. AMS.
 14. Mathlib Contributors (2024-2026). *Mathlib4*. github.com/leanprover-community/mathlib4.
-15. Mergelyan (1951). *Doklady* 78.
+15. J. L. Nielsen (2026). *Perron's Formula: Lean 4 + Mathlib Formalization*. github.com/startigerjln/MathLib-Contributions-.
+16. Mergelyan (1951). *Doklady* 78.
 16. Mertens (1874). *J. reine angew. Math.* 78.
 17. Mostowski (1952). *Fund. Math.* 39.
 18. Perron (1908). *J. reine angew. Math.* 134.
