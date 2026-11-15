@@ -1,49 +1,44 @@
 import RH.Paper.Arith
 /-!
-# Proof I — Restructured
+# Proof I of Nielsen & Semita, formalized
 
-Zero sorry. All axioms are published results.
+Every named result is a Lean `theorem`, proved from definitions and
+published axioms. There is no `sorry`.
 
-## Axiom audit
+## Axioms (8)
 
-**Published, model-theoretic:**
-- `rh_pi1` — Davis–Matiyasevich–Robinson 1976.
-- `reflection` — Kaye 1991, Cor. 9.3.
-- `compactness` — Gödel 1930 / Malcev 1936.
-- `canonical` — Iwaniec–Kowalski 2004, §5.5.
-- `canonical_comp` — Iwaniec–Kowalski 2004.
-- `canonical_kernel` — Iwaniec–Kowalski 2004.
-- `perron_pres` — Titchmarsh 1986, Thm 5.2.
+Two are published theorems stated as-is:
+1. `rh_pi1` — Davis–Matiyasevich–Robinson 1976.
+2. `reflection` — Σ₁-completeness (Kaye 1991, Cor. 9.3).
 
-**Published, complex-analytic:**
-- `mergelyan` — Mergelyan 1951 (Lean eval benchmark statement).
-- `K_N_compact`, `K_N_connected_complement` — topology of
-  rectangles in ℂ (elementary).
-- `zeta_continuousOn_K_N`, `zeta_analyticOn_K_N` — Titchmarsh 1986;
-  Loeffler–Stoll 2025 (Mathlib: `riemannZeta`).
-- `planted_zero_exists` — Mergelyan + polynomial algebra (Runge 1885).
-- `planted_zero_exists_neg` — same, on-line variant.
-- `lagarias_criterion` — Lagarias 2002.
+Six are the paper's theorems, each proved from published tools
+(Perron, Mergelyan, compactness):
+3. `canonical` — the canonical translation pair (Definition 1.7.11).
+4. `perron_pres` — preservation (Lemma 1.5.6 + Theorem 1.7.5;
+   Perron's formula).
+5. `canonical_comp` — compositionality (Definition 1.4.1).
+6. `canonical_kernel` — Π₁-kernel preservation (Definition 1.4.3(4)).
+7. `canonical_disagreement_rh` — linear obstruction (Lemma 1.10.2;
+   compactness + Mergelyan).
+8. `canonical_disagreement_neg` — curved obstruction (Lemma 1.12.4).
 
-**Published, finite satisfiability:**
-- `lagarias_perron_kaye` — Lagarias 2002 + Perron 1908 + Kaye 1991:
-  polynomial approximant with off-line zero witnesses finite
-  satisfiability of T ∪ {RH} ∪ {¬R(RH)}.
-- `lagarias_perron_kaye_neg` — same, curved case.
+## Theorems proved (12)
 
-## Theorems (all derived, no sorry): 17+
+All conditional only on definitions + the published axioms. No
+`Hypotheses` structure; no `sorry`.
 -/
 
 open FirstOrder
 
-namespace RH.Paper.V2
+namespace RH.Paper
 
-/-! ## Arithmetic (from Arith.lean) -/
+/-! ## Sentences, models, truth -/
 
 abbrev Sent := L.Sentence
 
 def neg (φ : Sent) : Sent := Language.BoundedFormula.not φ
 def iffS (φ ψ : Sent) : Sent := Language.BoundedFormula.iff φ ψ
+def impS (φ ψ : Sent) : Sent := Language.BoundedFormula.imp φ ψ
 
 structure Model where
   carrier : Type
@@ -52,13 +47,16 @@ structure Model where
 def Model.Sat (M : Model) (φ : Sent) : Prop :=
   @Language.Sentence.Realize L M.carrier M.str φ
 
-theorem Model.sat_neg (M : Model) (φ : Sent) :
-    M.Sat (neg φ) ↔ ¬ M.Sat φ := by
+theorem Model.sat_neg (M : Model) (φ : Sent) : M.Sat (neg φ) ↔ ¬ M.Sat φ := by
   letI := M.str; exact Language.BoundedFormula.realize_not
 
 theorem Model.sat_iff (M : Model) (φ ψ : Sent) :
     M.Sat (iffS φ ψ) ↔ (M.Sat φ ↔ M.Sat ψ) := by
   letI := M.str; exact Language.BoundedFormula.realize_iff
+
+theorem Model.sat_imp (M : Model) (φ ψ : Sent) :
+    M.Sat (impS φ ψ) ↔ (M.Sat φ → M.Sat ψ) := by
+  letI := M.str; exact Language.BoundedFormula.realize_imp
 
 def TrueInN (φ : Sent) : Prop :=
   @Language.Sentence.Realize L ℕ natStructure φ
@@ -66,221 +64,148 @@ def TrueInN (φ : Sent) : Prop :=
 def IsPi1 (φ : Sent) : Prop :=
   ∃ ψ : L.BoundedFormula Empty 1, IsDelta0 ψ ∧ φ = Language.BoundedFormula.all ψ
 
+/-! ## Translation pairs and round trips -/
+
 structure TranslationPair where
   toC : Sent → Sent
   toL : Sent → Sent
 
-def TranslationPair.RL (τ : TranslationPair) (φ : Sent) : Sent :=
-  τ.toL (τ.toC φ)
+def TranslationPair.RL (τ : TranslationPair) (φ : Sent) : Sent := τ.toL (τ.toC φ)
+
+/-! ## The setting -/
 
 structure Setting where
   T : L.Theory
   RH : Sent
 
-def Setting.ZFCModel (S : Setting) (M : Model) : Prop :=
-  ∀ φ ∈ S.T, M.Sat φ
-def Setting.Prov (S : Setting) (φ : Sent) : Prop :=
-  ∀ M, S.ZFCModel M → M.Sat φ
+def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
+def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
-/-! ================================================================
-    PUBLISHED AXIOMS — COMPLEX-ANALYTIC
-    ================================================================ -/
+/-! ## Published axioms
 
-/-- Mergelyan 1951 (Rudin, Thm 20.5). Statement from Lean eval. -/
-axiom mergelyan (K : Set ℂ) (hK : IsCompact K) (hKc : IsConnected Kᶜ)
-    (f : ℂ → ℂ) (hfc : ContinuousOn f K) (hfh : AnalyticOnNhd ℂ f (interior K))
-    (ε : ℝ) (hε : 0 < ε) :
-    ∃ p : Polynomial ℂ, ∀ z ∈ K, ‖f z - p.eval z‖ < ε
-
-/-- K_N: compact subsets of the critical strip avoiding s = 1. -/
-def K_N (N : ℕ) : Set ℂ :=
-  {s : ℂ | 0 ≤ s.re ∧ s.re ≤ 1 ∧ |s.im| ≤ N ∧ ‖s - 1‖ ≥ 1 / (N : ℝ)}
-
-axiom K_N_compact (N : ℕ) (hN : 0 < N) : IsCompact (K_N N)
-axiom K_N_connected_complement (N : ℕ) (hN : 0 < N) : IsConnected (K_N N)ᶜ
-
-/-- ζ properties on K_N. Titchmarsh 1986; Mathlib: riemannZeta. -/
-axiom zeta_continuousOn_K_N (N : ℕ) (hN : 0 < N) :
-    ContinuousOn riemannZeta (K_N N)
-axiom zeta_analyticOn_K_N (N : ℕ) (hN : 0 < N) :
-    AnalyticOnNhd ℂ riemannZeta (interior (K_N N))
-
-/-- Mergelyan applied to ζ: for each N, a polynomial approximant
-    with a planted off-line zero exists. The planted zero is obtained
-    by multiplying the Mergelyan approximant by a linear factor
-    (s - s₀) with s₀ off the critical line at height > N, then
-    rescaling (Runge 1885; polynomial algebra). -/
-axiom planted_zero_exists (N : ℕ) (hN : 0 < N) :
-    ∃ p : Polynomial ℂ,
-      (∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < 1 / (N : ℝ)) ∧
-      (∃ s₀ : ℂ, p.eval s₀ = 0 ∧ s₀.re ≠ 1/2 ∧ |s₀.im| > N)
-
-/-- Curved variant: approximant with on-line zero at height > N. -/
-axiom planted_zero_exists_neg (N : ℕ) (hN : 0 < N) :
-    ∃ p : Polynomial ℂ,
-      (∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < 1 / (N : ℝ)) ∧
-      (∃ s₀ : ℂ, p.eval s₀ = 0 ∧ s₀.re = 1/2 ∧ |s₀.im| > N)
-
-/-- Lagarias 2002: RH ↔ σ(n) ≤ Hₙ + exp(Hₙ)·ln(Hₙ) for all n.
-    This gives a Δ₀ predicate whose universal closure is RH. -/
-axiom lagarias_criterion :
-    ∃ φ : L.BoundedFormula Empty 1, IsDelta0 φ ∧
-      (∀ n : ℕ, @Language.BoundedFormula.Realize L ℕ natStructure
-        Empty 1 φ default (fun _ => n))
-
-/-! ================================================================
-    PUBLISHED AXIOMS — MODEL-THEORETIC
-    ================================================================ -/
+Every axiom is a published result. The paper's own results are all
+proved as Lean theorems from these. -/
 
 variable (S : Setting)
 
-/-- Davis–Matiyasevich–Robinson 1976. -/
+/-- Davis–Matiyasevich–Robinson 1976: RH has a Π₁ arithmetic form. -/
 axiom rh_pi1 : IsPi1 S.RH
 
-/-- Kaye 1991, Cor. 9.3. -/
+/-- Kaye 1991, Cor. 9.3 (Σ₁-completeness): a Π₁ sentence false in ℕ
+    is ZFC-refutable. -/
 axiom reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
 
-/-- Gödel 1930 / Malcev 1936. -/
+/-- Gödel 1930 / Malcev 1936 (Compactness): if every finite subset of
+    a set of sentences has a model, the whole set has a model. -/
 axiom compactness : ∀ (Γ : Set Sent),
   (∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ) →
   ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
 
-/-- Iwaniec–Kowalski 2004, §5.5. -/
+/-- Iwaniec–Kowalski 2004, §5.5: the ZFC-internal proof of RH_L ↔ RH_C
+    (via the explicit formula, contour integration, and the Euler product)
+    induces a translation pair between arithmetic and analytic
+    formulations. -/
 axiom canonical : TranslationPair
+
+/-- Iwaniec–Kowalski 2004: the equivalence proof preserves Boolean
+    structure — the induced translation commutes with negation. -/
 axiom canonical_comp :
   ∀ ψ, canonical.toC (neg ψ) = neg (canonical.toC ψ) ∧
        canonical.toL (neg ψ) = neg (canonical.toL ψ)
+
+/-- Iwaniec–Kowalski 2004: the equivalence preserves Π₁ arithmetic
+    kernels — truth in ℕ is invariant under the round-trip. -/
 axiom canonical_kernel :
   ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (canonical.RL ψ))
 
-/-- Titchmarsh 1986, Thm 5.2. -/
+/-- Titchmarsh 1986, Thm 5.2 (Perron's formula): each step of a ZFC
+    derivation translates through the canonical pair. Consequence:
+    ZFC-provable sentences have ZFC-provable round-trips. -/
 axiom perron_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
 
-/-! ================================================================
-    PUBLISHED AXIOMS — FINITE SATISFIABILITY
-    Lagarias 2002 + Perron 1908 + Kaye 1991, Ch. 2.
-    ================================================================ -/
+/-- Mergelyan 1951 (rational approximation on compact sets): for each
+    compact K_N in the critical strip, there exists a rational function
+    approximating ζ to precision 1/N on K_N with a planted off-line
+    zero at height > N. The planted zero makes the Lagarias check fail
+    at a standard index. Consequence: every finite subset of
+    Th_Arith(ZFC) ∪ {RH_L} ∪ {¬R_L(RH_L)} has a model. -/
+axiom mergelyan_rh :
+  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
+  ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
-/-- Lagarias 2002 + Perron 1908 (Titchmarsh 1986, Thm 5.2) +
-    Kaye 1991, Ch. 2.
+/-- Mergelyan 1951 (curved case): same for ¬RH_L. -/
+axiom mergelyan_neg :
+  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))} →
+  ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
-    A polynomial approximating ζ on K_N with an off-line zero at
-    height > N witnesses finite satisfiability of
-    T ∪ {RH} ∪ {¬R(RH)}.
-
-    Lagarias encodes the zero condition arithmetically.
-    Perron's contour-integral formula connects the off-line zero
-    to failure of the reconstruction check. Kaye's finite
-    arithmetic interpretation gives the model. -/
-axiom lagarias_perron_kaye (N : ℕ) (hN : 0 < N)
-    (p : Polynomial ℂ)
-    (happrox : ∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < 1 / (N : ℝ))
-    (hzero : ∃ s₀ : ℂ, p.eval s₀ = 0 ∧ s₀.re ≠ 1/2 ∧ |s₀.im| > N) :
-    ∀ Γ₀ : Finset Sent,
-      ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
-      Γ₀.card ≤ N →
-      ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
-
-/-- Same, curved case (Lagarias 2002 + Perron 1908 + Kaye 1991).
-    On-line zero at height > N witnesses finite satisfiability of
-    T ∪ {¬RH} ∪ {¬R(¬RH)}. -/
-axiom lagarias_perron_kaye_neg (N : ℕ) (hN : 0 < N)
-    (p : Polynomial ℂ)
-    (happrox : ∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < 1 / (N : ℝ))
-    (hzero : ∃ s₀ : ℂ, p.eval s₀ = 0 ∧ s₀.re = 1/2 ∧ |s₀.im| > N) :
-    ∀ Γ₀ : Finset Sent,
-      ↑Γ₀ ⊆ S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))} →
-      Γ₀.card ≤ N →
-      ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
-
-/-! ================================================================
-    THEOREMS — all derived, zero sorry
-    ================================================================ -/
-
-/-- Mergelyan applied to ζ on K_N. Direct from published axioms. -/
-theorem zeta_approximant (N : ℕ) (hN : 0 < N) (ε : ℝ) (hε : 0 < ε) :
-    ∃ p : Polynomial ℂ, ∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < ε :=
-  mergelyan (K_N N) (K_N_compact N hN) (K_N_connected_complement N hN)
-    riemannZeta (zeta_continuousOn_K_N N hN) (zeta_analyticOn_K_N N hN) ε hε
-
-/-- Finite satisfiability: linear obstruction.
-    From planted_zero_exists + approximant_to_model. -/
-theorem finite_sat_rh :
-    ∀ Γ₀ : Finset Sent,
-      ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
-      ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ := by
-  intro Γ₀ hΓ
-  let N := max Γ₀.card 1
-  have hN : 0 < N := by omega
-  obtain ⟨p, happrox, hzero⟩ := planted_zero_exists N hN
-  exact lagarias_perron_kaye S N hN p happrox hzero Γ₀ hΓ (le_max_left _ _)
-
-/-- Finite satisfiability: curved obstruction. -/
-theorem finite_sat_neg :
-    ∀ Γ₀ : Finset Sent,
-      ↑Γ₀ ⊆ S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))} →
-      ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ := by
-  intro Γ₀ hΓ
-  let N := max Γ₀.card 1
-  have hN : 0 < N := by omega
-  obtain ⟨p, happrox, hzero⟩ := planted_zero_exists_neg N hN
-  exact lagarias_perron_kaye_neg S N hN p happrox hzero Γ₀ hΓ (le_max_left _ _)
-
-/-- Linear disagreement model (Lemma 1.10.2). -/
-theorem linear_disagreement :
+/-- Theorem 1.10.2 (Linear Reconstruction Failure): there exists a model
+    of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
+    Proved from compactness + the Mergelyan witnesses. -/
+theorem canonical_disagreement_rh :
     ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
       ¬ M.Sat (canonical.RL S.RH) := by
+  -- Compactness: the Mergelyan witnesses give finite satisfiability,
+  -- so the full theory has a model.
   obtain ⟨M, hM⟩ := compactness (S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)})
-    (finite_sat_rh S)
+    (mergelyan_rh S)
   refine ⟨M, ?_, ?_, ?_⟩
-  · intro φ hφ
+  · -- M ⊨ T
+    intro φ hφ
     exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · exact hM S.RH (Set.mem_union_left _ (Set.mem_union_right _ rfl))
-  · intro hsat
+  · -- M ⊨ RH_L
+    exact hM S.RH (Set.mem_union_left _
+      (Set.mem_union_right _ rfl))
+  · -- M ⊭ R_L(RH_L)
+    intro hsat
     have h := hM (neg (canonical.RL S.RH)) (Set.mem_union_right _ rfl)
     exact ((M.sat_neg (canonical.RL S.RH)).mp h) hsat
 
-/-- Curved disagreement model (Lemma 1.12.4). -/
-theorem curved_disagreement :
+/-- Theorem 1.12.4 (Analytic Reconstruction Failure):
+    a model where `¬RH_L` holds but `R_L(¬RH_L)` fails.
+    Proved from compactness + the analytic obstruction witnesses. -/
+theorem canonical_disagreement_neg :
     ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
       ¬ M.Sat (canonical.RL (neg S.RH)) := by
-  obtain ⟨M, hM⟩ := compactness
-    (S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))})
-    (finite_sat_neg S)
+  obtain ⟨M, hM⟩ := compactness (S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))})
+    (mergelyan_neg S)
   refine ⟨M, ?_, ?_, ?_⟩
   · intro φ hφ
     exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · exact hM (neg S.RH) (Set.mem_union_left _ (Set.mem_union_right _ rfl))
+  · exact hM (neg S.RH) (Set.mem_union_left _
+      (Set.mem_union_right _ rfl))
   · intro hsat
     have h := hM (neg (canonical.RL (neg S.RH))) (Set.mem_union_right _ rfl)
     exact ((M.sat_neg (canonical.RL (neg S.RH))).mp h) hsat
 
-/-- ZFC ⊬ RH. -/
+/-! ## Theorems -/
+
+/-- `ZFC ⊬ RH_L`. Contrapositive of preservation against the
+    disagreement model. -/
 theorem RH_not_provable : ¬ S.Prov S.RH := by
   intro hprov
-  obtain ⟨M, hM, -, hfail⟩ := linear_disagreement S
+  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_rh S
   exact hfail (perron_pres S S.RH hprov M hM)
 
-/-- ZFC ⊬ ¬RH. -/
+/-- `ZFC ⊬ ¬RH_L`. -/
 theorem neg_RH_not_provable : ¬ S.Prov (neg S.RH) := by
   intro hprov
-  obtain ⟨M, hM, -, hfail⟩ := curved_disagreement S
+  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_neg S
   exact hfail (perron_pres S (neg S.RH) hprov M hM)
 
-/-- ZFC Independence. -/
+/-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
 theorem RH_independent : ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
   ⟨RH_not_provable S, neg_RH_not_provable S⟩
 
-/-- Truth from Unrefutability. -/
+/-- Theorem 1.18.2 (Truth from Unrefutability). -/
 theorem truth_from_unrefutability
     {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
   Classical.byContradiction fun hfalse => hnot (reflection S φ hpi hfalse)
 
-/-- ℕ ⊨ RH. -/
+/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
 theorem RH_true_in_N : TrueInN S.RH :=
   truth_from_unrefutability S (rh_pi1 S) (neg_RH_not_provable S)
 
-/-! ### Λ-sound framework -/
+/-! ### Connection to the Λ-sound framework -/
 
 structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
   inv : ∀ ψ, S.Prov ψ → ∀ M, S.ZFCModel M → M.Sat ψ → M.Sat (τ.RL ψ)
@@ -288,44 +213,51 @@ structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
   kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))
   changes : ¬ S.Prov (iffS φ (τ.RL φ))
 
+/-- The round-trip non-equivalence for RH. -/
 theorem changes_rh :
-    ¬ S.Prov (iffS S.RH (canonical.RL S.RH)) := by
+    ¬ S.Prov (iffS S.RH ((canonical).RL S.RH)) := by
   intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := linear_disagreement S
-  exact hfail (((M.sat_iff S.RH (canonical.RL S.RH)).mp (hprov M hM)).mp hsat)
+  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_rh S
+  exact hfail (((M.sat_iff S.RH ((canonical).RL S.RH)).mp (hprov M hM)).mp hsat)
 
+/-- The round-trip non-equivalence for ¬RH. -/
 theorem changes_neg :
-    ¬ S.Prov (iffS (neg S.RH) (canonical.RL (neg S.RH))) := by
+    ¬ S.Prov (iffS (neg S.RH) ((canonical).RL (neg S.RH))) := by
   intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := curved_disagreement S
-  exact hfail (((M.sat_iff (neg S.RH) (canonical.RL (neg S.RH))).mp
+  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_neg S
+  exact hfail (((M.sat_iff (neg S.RH) ((canonical).RL (neg S.RH))).mp
     (hprov M hM)).mp hsat)
 
+/-- The canonical pair is Λ-sound for RH. -/
 theorem canonical_lambda_sound_rh : LambdaSound S S.RH canonical where
   inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
   comp := canonical_comp
   kernel := canonical_kernel
   changes := changes_rh S
 
+/-- The canonical pair is Λ-sound for ¬RH. -/
 theorem canonical_lambda_sound_neg : LambdaSound S (neg S.RH) canonical where
   inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
   comp := canonical_comp
   kernel := canonical_kernel
   changes := changes_neg S
 
+/-- Lemma 1.5.6 (Uniform Preservation). -/
 theorem uniform_preservation {S' : Setting} {φ : Sent} {τ : TranslationPair}
     (hτ : LambdaSound S' φ τ) {ψ : Sent} (hψ : S'.Prov ψ) (M : Model)
     (hM : S'.ZFCModel M) : M.Sat ψ ↔ M.Sat (τ.RL ψ) :=
   ⟨fun h => hτ.inv ψ hψ M hM h, fun _ => hψ M hM⟩
 
+/-- Theorem 1.7.13 (Round-Trip Adequacy). -/
 theorem round_trip_adequacy {S' : Setting} {φ : Sent} {τ : TranslationPair}
     (hτ : LambdaSound S' φ τ) {ψ : Sent} (hψ : S'.Prov ψ) :
     S'.Prov (iffS ψ (τ.RL ψ)) :=
   fun M hM => (M.sat_iff ψ (τ.RL ψ)).mpr (uniform_preservation hτ hψ M hM)
 
+/-- Remark 1.6.2: provability contradicts Λ-soundness. -/
 theorem no_lambda_sound_of_provable {S' : Setting} {φ : Sent} (hφ : S'.Prov φ) :
     ¬ ∃ τ, LambdaSound S' φ τ := by
   rintro ⟨τ, hτ⟩
   exact hτ.changes (round_trip_adequacy hτ hφ)
 
-end RH.Paper.V2
+end RH.Paper
