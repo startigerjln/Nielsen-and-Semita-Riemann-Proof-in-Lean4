@@ -1,31 +1,17 @@
 import RH.Paper.Arith
 /-!
-# Proof I of Nielsen & Semita, formalized
+# Proof I: deductive structure of Nielsen & Semita
 
-Every named result is a Lean `theorem`, proved from definitions and
-published axioms. There is no `sorry`.
+The manuscript uses nonstandard arithmetic, overspill and compactness,
+not rational approximation with planted zeros. This module separates
+the formal deductions from the outstanding RH-specific consistency
+argument. No project axioms or sorry declarations are introduced.
 
-## Axioms (8)
-
-Two are published theorems stated as-is:
-1. `rh_pi1` — Davis–Matiyasevich–Robinson 1976.
-2. `reflection` — Σ₁-completeness (Kaye 1991, Cor. 9.3).
-
-Six are the paper's theorems, each proved from published tools
-(Perron, Mergelyan, compactness):
-3. `canonical` — the canonical translation pair (Definition 1.7.11).
-4. `perron_pres` — preservation (Lemma 1.5.6 + Theorem 1.7.5;
-   Perron's formula).
-5. `canonical_comp` — compositionality (Definition 1.4.1).
-6. `canonical_kernel` — Π₁-kernel preservation (Definition 1.4.3(4)).
-7. `canonical_disagreement_rh` — linear obstruction (Lemma 1.10.2;
-   compactness + Mergelyan).
-8. `canonical_disagreement_neg` — curved obstruction (Lemma 1.12.4).
-
-## Theorems proved (12)
-
-All conditional only on definitions + the published axioms. No
-`Hypotheses` structure; no `sorry`.
+Setting.T and Setting.RH are parameters; their intended instantiation
+as the arithmetic consequences of ZFC and a concrete arithmetic RH,
+and the bridge to Mathlib's RiemannHypothesis, remain to be supplied.
+The translation maps below are arithmetic syntax placeholders for
+the manuscript's two-language construction.
 -/
 
 open FirstOrder
@@ -83,130 +69,142 @@ structure Setting where
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
-/-! ## Published axioms
+/-! ## Explicit proof obligations -/
 
-Every axiom is a published result. The paper's own results are all
-proved as Lean theorems from these. -/
+/-- Semantic finite satisfiability, in the same language as the manuscript's
+    arithmetic reduct. -/
+def FiniteSatisfiable (Γ : Set Sent) : Prop :=
+  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
-variable (S : Setting)
+/-- First-order compactness, stated as an explicit input until the
+    corresponding Mathlib theorem is connected to Model.Sat. -/
+def Compactness : Prop :=
+  ∀ Γ : Set Sent, FiniteSatisfiable Γ → ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
 
-/-- Davis–Matiyasevich–Robinson 1976: RH has a Π₁ arithmetic form. -/
-axiom rh_pi1 : IsPi1 S.RH
+/-- The arithmetic theory used in the manuscript's ZFC-level
+    disagreement construction. For the initial linear obstruction the
+    intended base is IΣ₁; for independence the intended base is the
+    arithmetic consequences of ZFC. These are not interchangeable. -/
+def disagreementTheory (S : Setting) (τ : TranslationPair) : Set Sent :=
+  S.T ∪ {S.RH} ∪ {neg (τ.RL S.RH)}
 
-/-- Kaye 1991, Cor. 9.3 (Σ₁-completeness): a Π₁ sentence false in ℕ
-    is ZFC-refutable. -/
-axiom reflection : ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
+/-- The manuscript's unresolved overspill/compactness input:
+    finite fragments must be satisfiable even when they contain both
+    RH and the negation of its round trip. Overspill alone does not
+    establish this. It is a hypothesis for the specific setting and
+    pair, not a theorem quantified over arbitrary settings. -/
+def OverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
+  FiniteSatisfiable (disagreementTheory S τ)
 
-/-- Gödel 1930 / Malcev 1936 (Compactness): if every finite subset of
-    a set of sentences has a model, the whole set has a model. -/
-axiom compactness : ∀ (Γ : Set Sent),
-  (∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ) →
-  ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
+/-- Σ₁ witness reflection, an explicit input for the intended
+    arithmetic theory of ZFC. -/
+def WitnessReflection (S : Setting) : Prop :=
+  ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
 
-/-- Iwaniec–Kowalski 2004, §5.5: the ZFC-internal proof of RH_L ↔ RH_C
-    (via the explicit formula, contour integration, and the Euler product)
-    induces a translation pair between arithmetic and analytic
-    formulations. -/
-axiom canonical : TranslationPair
+/-- Provability preservation for the specified round trip, a separate
+    manuscript obligation (Uniform Preservation / Round-Trip Adequacy). -/
+def RoundTripPreserves (S : Setting) (τ : TranslationPair) : Prop :=
+  ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ)
 
-/-- Iwaniec–Kowalski 2004: the equivalence proof preserves Boolean
-    structure — the induced translation commutes with negation. -/
-axiom canonical_comp :
-  ∀ ψ, canonical.toC (neg ψ) = neg (canonical.toC ψ) ∧
-       canonical.toL (neg ψ) = neg (canonical.toL ψ)
+/-! ## Deductions from the stated inputs -/
 
-/-- Iwaniec–Kowalski 2004: the equivalence preserves Π₁ arithmetic
-    kernels — truth in ℕ is invariant under the round-trip. -/
-axiom canonical_kernel :
-  ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (canonical.RL ψ))
-
-/-- Titchmarsh 1986, Thm 5.2 (Perron's formula): each step of a ZFC
-    derivation translates through the canonical pair. Consequence:
-    ZFC-provable sentences have ZFC-provable round-trips. -/
-axiom perron_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
-
-/-- Mergelyan 1951 (rational approximation on compact sets): for each
-    compact K_N in the critical strip, there exists a rational function
-    approximating ζ to precision 1/N on K_N with a planted off-line
-    zero at height > N. The planted zero makes the Lagarias check fail
-    at a standard index. Consequence: every finite subset of
-    Th_Arith(ZFC) ∪ {RH_L} ∪ {¬R_L(RH_L)} has a model. -/
-axiom mergelyan_rh :
-  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
-  ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
-
-/-- Theorem 1.10.2 (Linear Reconstruction Failure): there exists a model
-    of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
-    Proved from compactness + the Mergelyan witnesses. -/
-theorem canonical_disagreement_rh :
+/-- Compactness converts the RH-specific finite-satisfiability input
+    into the ZFC-level disagreement model, when S.T is the arithmetic
+    theory of ZFC. -/
+theorem canonical_disagreement_rh (S : Setting) (τ : TranslationPair)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ) :
     ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
-      ¬ M.Sat (canonical.RL S.RH) := by
-  -- Compactness: the Mergelyan witnesses give finite satisfiability,
-  -- so the full theory has a model.
-  obtain ⟨M, hM⟩ := compactness (S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)})
-    (mergelyan_rh S)
+      ¬ M.Sat (τ.RL S.RH) := by
+  obtain ⟨M, hM⟩ := hc (disagreementTheory S τ) hf
   refine ⟨M, ?_, ?_, ?_⟩
-  · -- M ⊨ T
-    intro φ hφ
+  · intro φ hφ
     exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · -- M ⊨ RH_L
-    exact hM S.RH (Set.mem_union_left _
+  · exact hM S.RH (Set.mem_union_left _
       (Set.mem_union_right _ rfl))
-  · -- M ⊭ R_L(RH_L)
-    intro hsat
-    have h := hM (neg (canonical.RL S.RH)) (Set.mem_union_right _ rfl)
-    exact ((M.sat_neg (canonical.RL S.RH)).mp h) hsat
+  · intro hsat
+    have h := hM (neg (τ.RL S.RH)) (Set.mem_union_right _ rfl)
+    exact ((M.sat_neg (τ.RL S.RH)).mp h) hsat
 
-/-! ## Theorems -/
-
-/-- `ZFC ⊬ RH_L`. Contrapositive of preservation against the
+/-- Non-provability follows from round-trip preservation and the
     disagreement model. -/
-theorem RH_not_provable : ¬ S.Prov S.RH := by
+theorem RH_not_provable (S : Setting) (τ : TranslationPair)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ)
+    (hp : RoundTripPreserves S τ) : ¬ S.Prov S.RH := by
   intro hprov
-  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_rh S
-  exact hfail (perron_pres S S.RH hprov M hM)
+  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_rh S τ hc hf
+  exact hfail (hp S.RH hprov M hM)
 
-/-- `ZFC ⊬ ¬RH_L`. The positive disagreement model satisfies RH_L,
-    so ZFC cannot prove ¬RH_L either. -/
-theorem neg_RH_not_provable : ¬ S.Prov (neg S.RH) := by
+/-- Non-refutability requires only a model of the base theory and RH;
+    neither a round trip nor an analytic obstruction is needed here. -/
+theorem neg_RH_not_provable_of_model (S : Setting)
+    (hmodel : ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH) :
+    ¬ S.Prov (neg S.RH) := by
   intro hprov
-  obtain ⟨M, hM, hsat, -⟩ := canonical_disagreement_rh S
+  obtain ⟨M, hM, hsat⟩ := hmodel
   exact ((M.sat_neg S.RH).mp (hprov M hM)) hsat
 
-/-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
-theorem RH_independent : ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
-  ⟨RH_not_provable S, neg_RH_not_provable S⟩
+theorem neg_RH_not_provable (S : Setting) (τ : TranslationPair)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ) :
+    ¬ S.Prov (neg S.RH) := by
+  obtain ⟨M, hM, hsat, _⟩ := canonical_disagreement_rh S τ hc hf
+  exact neg_RH_not_provable_of_model S ⟨M, hM, hsat⟩
 
-/-- Theorem 1.18.2 (Truth from Unrefutability). -/
-theorem truth_from_unrefutability
-    {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
-  Classical.byContradiction fun hfalse => hnot (reflection S φ hpi hfalse)
+theorem RH_independent (S : Setting) (τ : TranslationPair)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ)
+    (hp : RoundTripPreserves S τ) :
+    ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
+  ⟨RH_not_provable S τ hc hf hp, neg_RH_not_provable S τ hc hf⟩
 
-/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
-theorem RH_true_in_N : TrueInN S.RH :=
-  truth_from_unrefutability S (rh_pi1 S) (neg_RH_not_provable S)
+/-- Theorem 1.18.2: truth from non-refutability. -/
+theorem truth_from_unrefutability (S : Setting)
+    (hr : WitnessReflection S) {φ : Sent}
+    (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
+  Classical.byContradiction fun hfalse => hnot (hr φ hpi hfalse)
 
-/-! ### Connection to the Λ-sound framework -/
+/-- Theorem 1.18.3, minimal metamathematical route. -/
+theorem RH_true_from_model (S : Setting)
+    (hpi : IsPi1 S.RH) (hr : WitnessReflection S)
+    (hmodel : ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH) :
+    TrueInN S.RH :=
+  truth_from_unrefutability S hr hpi (neg_RH_not_provable_of_model S hmodel)
 
-structure LambdaSound (φ : Sent) (τ : TranslationPair) : Prop where
+/-- Conditional RH truth via the manuscript's compactness route.
+    The RH-specific finite-satisfiability input is not proved here. -/
+theorem RH_true_in_N (S : Setting) (τ : TranslationPair)
+    (hpi : IsPi1 S.RH) (hr : WitnessReflection S)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ) :
+    TrueInN S.RH :=
+  truth_from_unrefutability S hr hpi (neg_RH_not_provable S τ hc hf)
+
+/-! ## Provable-fragment preservation framework
+
+This structure captures the conditions used in the deductive reductio,
+not the entire two-language Definition 1.4.3 of the manuscript.
+-/
+
+structure LambdaSound (S : Setting) (φ : Sent) (τ : TranslationPair) : Prop where
   inv : ∀ ψ, S.Prov ψ → ∀ M, S.ZFCModel M → M.Sat ψ → M.Sat (τ.RL ψ)
   comp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ)
   kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))
   changes : ¬ S.Prov (iffS φ (τ.RL φ))
 
-/-- The round-trip non-equivalence for RH. -/
-theorem changes_rh :
-    ¬ S.Prov (iffS S.RH ((canonical).RL S.RH)) := by
+theorem changes_rh (S : Setting) (τ : TranslationPair)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ) :
+    ¬ S.Prov (iffS S.RH (τ.RL S.RH)) := by
   intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_rh S
-  exact hfail (((M.sat_iff S.RH ((canonical).RL S.RH)).mp (hprov M hM)).mp hsat)
+  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_rh S τ hc hf
+  exact hfail (((M.sat_iff S.RH (τ.RL S.RH)).mp (hprov M hM)).mp hsat)
 
-/-- The canonical pair is Λ-sound for RH. -/
-theorem canonical_lambda_sound_rh : LambdaSound S S.RH canonical where
-  inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
-  comp := canonical_comp
-  kernel := canonical_kernel
-  changes := changes_rh S
+theorem canonical_lambda_sound_rh (S : Setting) (τ : TranslationPair)
+    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ)
+    (hp : RoundTripPreserves S τ)
+    (hcomp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ))
+    (hk : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))) :
+    LambdaSound S S.RH τ where
+  inv ψ hψ M hM _ := hp ψ hψ M hM
+  comp := hcomp
+  kernel := hk
+  changes := changes_rh S τ hc hf
 
 /-- Lemma 1.5.6 (Uniform Preservation). -/
 theorem uniform_preservation {S' : Setting} {φ : Sent} {τ : TranslationPair}
@@ -227,3 +225,6 @@ theorem no_lambda_sound_of_provable {S' : Setting} {φ : Sent} (hφ : S'.Prov φ
   exact hτ.changes (round_trip_adequacy hτ hφ)
 
 end RH.Paper
+
+#print axioms RH.Paper.RH_true_in_N
+#print axioms RH.Paper.RH_independent

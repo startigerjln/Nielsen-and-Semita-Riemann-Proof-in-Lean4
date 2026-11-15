@@ -1,84 +1,42 @@
 # Provenance of the Lean formalization
 
-Files: `RH/Paper/Arith.lean`, `RH/Paper/ProofI.lean`. Lean 4.16.0, Mathlib
-(`Mathlib.ModelTheory.Semantics`). Paper: PhilArchive NIEPOT-5v52
-(May 16, 2026).
+Files: `RH/Paper/Arith.lean`, `RH/Paper/ProofI.lean`.
+Lean 4.16.0 and pinned Mathlib.
 
-## Structure
+## Explicit inputs, not project axioms
 
-Every named result is a Lean `theorem`, proved from definitions and
-axioms. There is no `sorry` and no `Hypotheses` structure.
-
-## Axioms (8)
-
-Two are published theorems stated as-is:
-
-| Axiom | Statement | Citation |
+| Input | Role | Status |
 |---|---|---|
-| `rh_pi1` | RH_L is Π₁ with Δ₀ kernel | Davis–Matiyasevich–Robinson 1976 |
-| `reflection` | A Π₁ sentence false in ℕ is ZFC-refutable | Σ₁-completeness; Kaye 1991, Cor. 9.3 |
+| `IsPi1 S.RH` | RH-specific arithmetic representation | Published representability result; actual formula and zeta equivalence not formalized |
+| `WitnessReflection S` | True Σ₁ witnesses are provable in the intended arithmetic theory of ZFC | Standard result, not proved in this Lean module |
+| `Compactness` | First-order compactness | Standard theorem, not yet connected to this custom model interface |
+| `OverspillFiniteSatisfiability S τ` | Manuscript Linear Reconstruction Failure and ZFC-Level Realization | Outstanding RH-specific proof obligation |
+| `RoundTripPreserves S τ` | Preservation for provable sentences | Manuscript application, explicit hypothesis |
+| Compositionality and kernel agreement | Inputs to the provable-fragment LambdaSound structure | Explicit hypotheses, not a verification of the full manuscript definition |
 
-Six are the paper's theorems, each proved from published tools.
-The tools are published; their application to RH and the canonical
-pair is the paper's contribution.
+## Overspill and compactness
 
-| Axiom | Paper reference | Published tools used |
-|---|---|---|
-| `canonical` | Definition 1.7.11 | Perron's formula (Titchmarsh 1986, Thm 5.2); contour integration (Iwaniec–Kowalski 2004, §5.5) |
-| `canonical_pres` | Lemma 1.5.6 + Theorem 1.7.5 | Step-by-step derivation translation via Perron's formula |
-| `canonical_comp` | Definition 1.4.1 | Boolean structure of the ZFC-internal equivalence |
-| `canonical_kernel` | Definition 1.4.3(4) | Π₁-kernel preservation |
-| `canonical_disagreement_rh` | Lemma 1.10.2 (Linear Reconstruction Failure) | Compactness (Gödel 1930 / Malcev 1936) + Mergelyan 1951 |
-| `canonical_disagreement_neg` | Lemma 1.12.4 (Analytic Reconstruction Failure) | Compactness + analytic obstruction |
+The manuscript's Linear Reconstruction Failure introduces a nonstandard zero index and nonstandard precision. The input needed by the Lean compactness deduction is finite satisfiability of
 
-## Theorems proved in Lean (12)
+    S.T ∪ {S.RH} ∪ {neg (τ.RL S.RH)}.
 
-| Theorem | Paper | Axioms used |
-|---|---|---|
-| `RH_not_provable` | §1.6/1.13 | `canonical`, `canonical_pres`, `canonical_disagreement_rh` |
-| `neg_RH_not_provable` | §1.6/1.13 | `canonical`, `canonical_pres`, `canonical_disagreement_neg` |
-| `RH_independent` | Corollary 1.13.2 | both of the above |
-| `truth_from_unrefutability` | Theorem 1.18.2 | `reflection` |
-| `RH_true_in_N` | Theorem 1.18.3 | `rh_pi1`, `reflection`, `canonical`, `canonical_pres`, `canonical_disagreement_neg` |
-| `changes_rh` | Lemma 1.7.12 | `canonical`, `canonical_disagreement_rh` |
-| `changes_neg` | Lemma 1.7.12 | `canonical`, `canonical_disagreement_neg` |
-| `canonical_lambda_sound_rh` | — | `canonical`, `canonical_pres`, `canonical_comp`, `canonical_kernel`, `canonical_disagreement_rh` |
-| `canonical_lambda_sound_neg` | — | `canonical`, `canonical_pres`, `canonical_comp`, `canonical_kernel`, `canonical_disagreement_neg` |
-| `uniform_preservation` | Lemma 1.5.6 | none (definitions only) |
-| `round_trip_adequacy` | Theorem 1.7.13 | none (definitions only) |
-| `no_lambda_sound_of_provable` | Remark 1.6.2 | none (definitions only) |
+Here the intended S.T for the final independence argument is the arithmetic consequences of ZFC, not merely IΣ₁ or PA. In particular a finite fragment can include both RH and the negation of its round trip. Overspill gives nonstandard indices satisfying suitable definable properties, but does not by itself give a failing nonstandard precision check. The RH-specific finite satisfiability and the lift to the intended ZFC theory still need proof. No planted-zero or Mergelyan assumption is used.
 
-## How the proof works
+The input is restricted to the setting and pair supplied by the caller; there is no assertion of finite satisfiability for all arbitrary sentences and theories.
 
-**`RH_not_provable`** (3 lines):
+## Conditional deductions
 
-1. Unpack the existential from `canonical_disagreement_rh`: get `M` with
-   `M ⊨ T` and `M ⊭ R_L(RH_L)`.
-2. Assume for contradiction `T ⊢ RH_L`.
-3. `canonical_pres` gives `T ⊢ R_L(RH_L)`, so `M ⊨ R_L(RH_L)`. Contradiction.
+- `canonical_disagreement_rh`: compactness + RH-specific finite satisfiability yield a disagreement model.
+- `RH_not_provable`: disagreement + provability preservation yield non-provability.
+- `neg_RH_not_provable_of_model`: a model of T + RH suffices for non-refutability.
+- `neg_RH_not_provable`, `RH_independent`: consequences of the preceding steps.
+- `truth_from_unrefutability`: witness reflection and Π₁ form give standard truth.
+- `RH_true_from_model`: minimal route, directly from a model of T + RH.
+- `RH_true_in_N`: compactness route to standard truth, conditional on the explicit inputs.
+- `changes_rh`, `canonical_lambda_sound_rh`, `uniform_preservation`, `round_trip_adequacy`, `no_lambda_sound_of_provable`: deductive preservation framework, with the stated hypotheses.
 
-The proof makes no claim about ℕ. It does not need to know how `M`
-was constructed — any model witnessing the existential suffices.
+## Definitions and remaining formalization
 
-**`neg_RH_not_provable`** is symmetric, using `canonical_disagreement_neg`.
+`Setting.T` is an arbitrary arithmetic theory and `Setting.RH` an arbitrary sentence, not yet instantiated as ZFC's arithmetic consequences and actual arithmetic RH. `Setting.Prov` is semantic consequence; identifying it with syntactic derivability uses first-order completeness and the intended theory. The translation pair uses arithmetic syntax for both maps as a placeholder for the manuscript's distinct languages. The `LambdaSound` structure captures the provable-fragment reductio, not the full manuscript definition.
 
-**`RH_true_in_N`** combines `neg_RH_not_provable` with `rh_pi1` and
-`reflection`.
-
-## Definitions
-
-| Lean | Meaning | Source |
-|---|---|---|
-| `L` | language of arithmetic ⟨0, S, +, ×; ≤⟩ | Kaye 1991, §1.1 |
-| `natStructure` | the standard model ℕ | Kaye 1991, §1.1 |
-| `IsDelta0` | formulas with bounded quantifiers only | Kaye 1991, Ch. 2 |
-| `IsPi1` | `∀ n, ψ(n)` with `ψ` Δ₀ | paper §1.17 |
-| `Setting` | arithmetic theory T + sentence RH_L | paper §1.3, §1.18 |
-| `Setting.Prov` | truth in every model of T | = derivability by Gödel's Completeness Theorem |
-| `TranslationPair`, `RL` | Definitions 1.4.1, 1.4.2 | paper |
-| `LambdaSound` | Definition 1.4.3 + Lemma 1.7.12 | paper |
-
-## Not formalized
-
-Proofs II and III. The connection between the abstract sentence `RH_L`
-and Mathlib's `RiemannHypothesis`.
+The link to Mathlib's `RiemannHypothesis` is outstanding. The module prints kernel axiom dependencies for the principal conditional theorems; this does not discharge their explicit inputs. No Proof II or III formalization is included.
