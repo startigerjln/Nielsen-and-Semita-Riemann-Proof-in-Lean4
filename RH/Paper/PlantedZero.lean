@@ -139,4 +139,54 @@ theorem finite_checks_with_failure (validAt : ℕ → ℕ → Prop)
   · intro k hk
     exact valid k (Finset.le_sup (f := id) (Finset.mem_union_right _ hk))
 
+/-- A single-root rational-function code passes every candidate point check
+    through precision `K`, and fails at precision `K + 2`. The size
+    bound allows any finite lower bounds on the named continuation code. -/
+theorem exists_code_passing_precision_prefix_and_failing (K bound : ℕ) :
+    ∃ m n : ℕ, bound < m ∧ (∀ j k : ℕ, k ≤ K → passes m j k) ∧
+      ¬ passes m n (K + 2) := by
+  let distance := (1 / 2 : ℚ) ^ (K + 2)
+  let root : Point := (1 / 2 + distance, (bound : ℚ) + 1)
+  let f : RationalFunction := ([root], [(1, 0)], (1, 0) :: List.replicate bound (0, 0))
+  have zero_iff (z : Point) : isZeroAt f z ↔ z = root := by
+    rcases z with ⟨x, y⟩
+    change (evalNumerator f (x, y) = (0, 0) ∧
+      evalPolynomial (x, y) ((1, 0) :: List.replicate bound (0, 0)) ≠ (0, 0)) ↔
+        (x, y) = root
+    rw [evalPolynomial_one_padded]
+    simp [f, evalNumerator, evalPolynomial_one, mul, sub, Prod.mk.injEq, sub_eq_zero, root]
+  have dist (k : ℕ) : criticalLineCheck root k ↔ distance < (1 / 2 : ℚ) ^ k := by
+    simp only [criticalLineCheck, root, add_sub_cancel_left]
+    rw [abs_of_nonneg (by dsimp [distance]; positivity)]
+  refine ⟨Encodable.encode f, Encodable.encode root, ?_, ?_, ?_⟩
+  · exact lt_of_lt_of_le (by simp [f]) (denominator_length_le_code f)
+  · intro j k bounded
+    simp only [passes, Encodable.encodek]
+    cases Encodable.decode (α := Point) j with
+    | none => trivial
+    | some z =>
+      intro hz
+      rw [(zero_iff z).mp hz, dist]
+      exact pow_lt_pow_right_of_lt_one₀ (by norm_num) (by norm_num) (by omega)
+  · simp only [passes, Encodable.encodek, (zero_iff root).mpr rfl, true_implies, dist]
+    exact lt_irrefl distance
+
+/-- No fixed ceiling gives the full direct zero-location check on all
+    rational continuation codes. -/
+theorem no_fixed_precision_ceiling (K : ℕ) :
+    ¬ ∀ m : ℕ, (∀ j k : ℕ, k ≤ K → passes m j k) ↔ (∀ j k : ℕ, passes m j k) := by
+  obtain ⟨m, n, _, pass, fail⟩ := exists_code_passing_precision_prefix_and_failing K 0
+  exact fun equivalent => fail ((equivalent m).mp pass n (K + 2))
+
+/-- A finite list of the standard precision checks can hold in ordinary
+    arithmetic together with the assertion that some check fails. -/
+theorem finite_standard_checks_with_failure (bounds : Finset ℕ)
+    (checks : Finset (ℕ × ℕ)) :
+    ∃ m : ℕ, (∀ b ∈ bounds, b < m) ∧ (∀ p ∈ checks, passes m p.1 p.2) ∧
+      ∃ n k : ℕ, ¬ passes m n k := by
+  obtain ⟨m, n, large, pass, fail⟩ :=
+    exists_code_passing_precision_prefix_and_failing (checks.sup Prod.snd) (bounds.sup id)
+  exact ⟨m, fun b hb => (Finset.le_sup (f := id) hb).trans_lt large,
+    fun p hp => pass p.1 p.2 (Finset.le_sup (f := Prod.snd) hp), _, _, fail⟩
+
 end RH.Paper.PlantedZero
