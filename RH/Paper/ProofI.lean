@@ -496,13 +496,52 @@ theorem finite_witness_reflection
   obtain ⟨m, hm⟩ := Language.BoundedFormula.realize_ex.mp existsFailure
   exact (Language.BoundedFormula.realize_not.mp hm) (allChecks m)
 
-/-- Theorem 1.18.2: the metatheoretic right-hand branch of Figure 1.
-Unrefutability rules out the standard witness extracted above. -/
+/-- A standard finite counterexample to a Π₁ sentence. The number is an
+ordinary natural number in the metatheory. -/
+def StandardCounterexample (φ : Sent) : Prop :=
+  ∃ ψ : L.BoundedFormula Empty 1, IsDelta0 ψ ∧ φ = ψ.all ∧
+    ∃ n : ℕ, ¬ ψ.Realize (default : Empty → ℕ)
+      (Fin.snoc (default : Fin 0 → ℕ) n)
+
+/-- A hypothetical standard counterexample yields a refutation in the
+target arithmetic theory, by finite-witness reflection. -/
+theorem refutation_of_standard_counterexample
+    (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
+    {φ : Sent} (counterexample : StandardCounterexample φ) : S.Prov (neg φ) := by
+  obtain ⟨ψ, hψ, rfl, n, hn⟩ := counterexample
+  apply finite_witness_reflection S arithmetic ⟨ψ, hψ, rfl⟩
+  intro allChecks
+  unfold TrueInN Language.Sentence.Realize Language.Formula.Realize at allChecks
+  have atWitness := (Language.BoundedFormula.realize_all.mp allChecks) n
+  apply hn
+  exact (iff_of_eq (congrArg₂
+    (fun (v : Empty → ℕ) (xs : Fin 0 → ℕ) => ψ.Realize v (Fin.snoc xs n))
+    (Subsingleton.elim _ _) (Subsingleton.elim _ _))).mp atWitness
+
+/-- Figure 1, right branch: the previously obtained unrefutability blocks
+the hypothetical standard counterexample. Reflection produces the forbidden
+refutation; the counterexample, rather than reflection, is ruled out. -/
+theorem standard_counterexample_blocked
+    (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
+    {φ : Sent} (unrefutable : ¬ S.Prov (neg φ)) :
+    ¬ StandardCounterexample φ := by
+  intro counterexample
+  exact unrefutable (refutation_of_standard_counterexample S arithmetic counterexample)
+
+/-- Once the standard counterexample route is blocked, the Π₁ sentence
+holds in ℕ. This last step is entirely in the metatheory. -/
+theorem truth_of_standard_counterexample_blocked
+    {φ : Sent} (hpi : IsPi1 φ) (blocked : ¬ StandardCounterexample φ) : TrueInN φ := by
+  by_contra hfalse
+  exact blocked (standard_counterexample_of_not_true hpi hfalse)
+
+/-- Theorem 1.18.2: first block the counterexample using unrefutability,
+then conclude standard truth, in the order shown in Figure 1. -/
 theorem truth_from_unrefutability
     (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
     {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
-  Classical.byContradiction fun hfalse =>
-    hnot (finite_witness_reflection S arithmetic hpi hfalse)
+  truth_of_standard_counterexample_blocked hpi
+    (standard_counterexample_blocked S arithmetic hnot)
 
 /-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`.
 Following Jenny Lorraine Nielsen's Figure 1, this takes the previously
