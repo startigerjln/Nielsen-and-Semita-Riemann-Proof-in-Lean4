@@ -153,3 +153,27 @@ No axiom was added. The obstruction and translation declarations are unchanged.
 These remain generic deductions with the existing explicit inputs for the
 arithmetic basis and upstream unrefutability; this refactoring does not discharge
 those inputs in a concrete final RH application.
+
+## Constructed finite-check model
+
+`RH/Paper/ContinuationObstruction.lean` defines an expansion of the arithmetic
+language with a named rational-function code, a binary local-validity relation,
+and a ternary zero-check relation. Local validity in the standard finite models
+uses the previously proved Taylor and Dirichlet approximation witnesses.
+For each finite prefix the Mergelyan-derived code exceeds its bounds, passes
+its local checks, and fails at its planted off-line zero. Mathlib compactness
+then yields a model of the whole schema.
+
+`continuation_failure_witness` exposes the positive existential result:
+a model of the expanded base theory satisfying every standard local check
+and falsifying `globalZeroCheck`. Its custom-axiom dependency is only the
+published `mergelyan`; `ContinuationAudit.lean` prints the signature and dependencies.
+No original construction is introduced as an axiom.
+
+Scope: the theorem assumes the base arithmetic theory is true in ℕ and the
+stated geometric conditions on the compact sets. The new relation symbols
+are primitive in the expanded language. The result does not yet identify
+these symbols with arithmetic formulas or identify `globalZeroCheck` with
+the canonical RH round trip. In particular, it does not assert that the
+constructed model satisfies RH, nor does it remove the final RH theorem's
+unrefutability premise. This is an intermediate witness construction.
