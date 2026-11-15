@@ -614,6 +614,64 @@ formula and contour integration (\cite{Titchmarsh1986},
 Chapter~14; \cite{Iwaniec2004}, \S5.5).
 \end{proposition}
 
+\paragraph{Classical equivalence versus $\Lambda$--reducibility (the Robin--Lagarias criteria).}
+\label{rem:robin-lagarias}
+The classical arithmetic criteria for RH are explicitly acknowledged here.
+Robin \cite{Robin1984} proves that RH is equivalent to
+\[
+\forall n>5040,\qquad \sigma(n)<e^\gamma n\log\log n,
+\]
+where $\sigma(n)=\sum_{d\mid n}d$ and $\gamma$ is the Euler--Mascheroni
+constant. Lagarias \cite{Lagarias2002} proves that RH is equivalent to
+\[
+\forall n\geq 1,\qquad \sigma(n)\leq H_n+e^{H_n}\log H_n,
+\qquad H_n=\sum_{j=1}^n\frac{1}{j}.
+\]
+These criteria, with their arithmetic encodings, exemplify
+ZFC-birepresentability as in Proposition~\ref{prop:RH-birepresentable}.
+The classical equivalence of the arithmetic and analytic formulations is
+not denied by the $\Lambda$--obstruction framework; it is part of its setup.
+
+It is essential to distinguish a provable equivalence of two designated
+sentences from an admissible translation pair and its round-trip operators.
+In the notation of the preceding definitions, the equivalence
+\[
+\mathsf{ZFC}\vdash RH_L\leftrightarrow RH_C
+\]
+does not specify total, inductively defined translation maps on the
+relevant sentence classes, nor verify their Boolean, inference, model,
+and $\Pi_1$--kernel preservation requirements. In particular, assigning
+$T_{L\to C}(RH_L)=RH_C$ and $T_{C\to L}(RH_C)=RH_L$ would give an
+identity round trip on these two sentences, but the existence of these
+assignments alone does not establish their extension to a $\Lambda$--sound
+pair. Such an extension, if established, would indeed refute the asserted
+$\Lambda$--irreducibility of RH.
+
+For a specified $\Lambda$--sound pair $T$, the linear obstruction vanishes
+precisely when
+\[
+\forall M\in\mathcal M_L,\qquad
+M\models RH_L\ \Longleftrightarrow\ M\models R_L(RH_L),
+\]
+and an analogous condition holds for the curved obstruction, evaluated on
+$T_{L\to C}(RH_L)$ in $\mathcal M_C$. The arithmetic model class
+$\mathcal M_L$ consists of models of $I\Sigma_1$, not merely arithmetic
+reducts of models of ZFC. A ZFC-provable equivalence, when evaluated in
+models of ZFC, ensures agreement there; without further justification it
+need not ensure agreement throughout $\mathcal M_L$. Likewise, if the
+round-trip equivalence is established in the standard analytic structure
+$\mathcal A$, elementarity ensures agreement throughout $\mathcal M_C$.
+
+Accordingly, neither the Robin nor the Lagarias criterion alone establishes
+that either obstruction vanishes for an admissible pair. To use one of
+these equivalences as a counterexample to the universal irreducibility
+claim, one must establish an admissible pair and the vanishing of at least
+one of its two obstructions on the specified model class. Conversely,
+showing that the classical equivalences do not by themselves furnish
+such a counterexample is not a proof of irreducibility. That positive
+claim remains the burden of the obstruction lemmas used in
+Theorem~\ref{thm:RH-Lambda}.
+
 \begin{definition}[RH-Fragment]
 \label{def:rh-fragment}
 The \emph{RH-fragment} consists of the sentence classes
@@ -1610,6 +1668,12 @@ nonstandard precision), witnessing curved obstruction.
 
 We now combine the linear and curved obstruction results.
 
+Recall the distinction in the paragraph on the Robin--Lagarias criteria
+following Proposition~\ref{prop:RH-birepresentable}: the classical
+birepresentability of RH does not itself determine the obstructions of an
+admissible round-trip translation pair. The theorem below concerns the
+latter, not the existence of equivalent formulations of RH.
+
 \begin{theorem}[$\Lambda$--Irreducibility of RH]\label{thm:RH-Lambda}
 For every $\Lambda$--sound translation pair,
 \[
@@ -2552,6 +2616,11 @@ R.~Kaye,
 \emph{Models of Peano Arithmetic},
 Oxford Logic Guides, vol.~15, Oxford University Press, 1991.
 
+\bibitem{Lagarias2002}
+J.~C.~Lagarias,
+``An elementary problem equivalent to the Riemann hypothesis,''
+\emph{American Mathematical Monthly}, vol.~109, no.~6, pp.~534--543, 2002.
+
 \bibitem{Larson2004}
 P.~B.~Larson,
 \emph{The Stationary Tower: Notes on a Course by W.~Hugh Woodin},
@@ -2561,6 +2630,12 @@ University Lecture Series, vol.~32, AMS, 2004.
 Y.~Matiyasevich,
 \emph{Hilbert's Tenth Problem},
 MIT Press, 1993.
+
+\bibitem{Robin1984}
+G.~Robin,
+``Grandes valeurs de la fonction somme des diviseurs et hypoth\`ese de Riemann,''
+\emph{Journal de Math\'ematiques Pures et Appliqu\'ees}, vol.~63, no.~2,
+pp.~187--213, 1984.
 
 \bibitem{Titchmarsh1986}
 E.~C.~Titchmarsh,
