@@ -1,4 +1,5 @@
 import RH.Paper.Arith
+import RH.Paper.Robinson
 import Mathlib.ModelTheory.Satisfiability
 /-!
 # Deductive structure of Proof I of Nielsen & Semita
@@ -443,18 +444,81 @@ theorem RH_disagrees_of_named_precision_failure {τ : TranslationPair}
   have agreement := (M.sat_iff (τ.RL S.RH) (precisionSentence check)).mp (roundTrip M hBase)
   exact ⟨M, hBase, hRH, fun h => hfail (agreement.mp h)⟩
 
-/-- Theorem 1.18.2 (Truth from Unrefutability). -/
-theorem truth_from_unrefutability
-    (reflection : ∀ ψ, IsPi1 ψ → ¬ TrueInN ψ → S.Prov (neg ψ))
-    {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
-  Classical.byContradiction fun hfalse => hnot (reflection φ hpi hfalse)
+/-- A negated bounded check is still bounded. -/
+theorem IsDelta0.neg {n : ℕ} {ψ : L.BoundedFormula Empty n}
+    (hψ : IsDelta0 ψ) : IsDelta0 ψ.not :=
+  IsDelta0.imp hψ IsDelta0.falsum
 
-/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`. -/
+/-- Falsity of a Π₁ sentence supplies a standard natural-number witness.
+This extraction is in the metatheory. -/
+theorem standard_counterexample_of_not_true {φ : Sent} (hpi : IsPi1 φ)
+    (hfalse : ¬ TrueInN φ) :
+    ∃ ψ : L.BoundedFormula Empty 1, IsDelta0 ψ ∧ φ = ψ.all ∧
+      ∃ n : ℕ, ¬ ψ.Realize (default : Empty → ℕ)
+        (Fin.snoc (default : Fin 0 → ℕ) n) := by
+  classical
+  obtain ⟨ψ, hψ, rfl⟩ := hpi
+  refine ⟨ψ, hψ, rfl, ?_⟩
+  unfold TrueInN Language.Sentence.Realize Language.Formula.Realize at hfalse
+  rw [Language.BoundedFormula.realize_all] at hfalse
+  obtain ⟨n, hn⟩ := not_forall.mp hfalse
+  refine ⟨n, ?_⟩
+  exact (not_congr (iff_of_eq (congrArg₂
+      (fun (v : Empty → ℕ) (xs : Fin 0 → ℕ) => ψ.Realize v (Fin.snoc xs n))
+      (Subsingleton.elim _ _) (Subsingleton.elim _ _)))).mp hn
+
+/-- Finite-witness reflection, proved from published Σ₁-completeness of Q.
+The target arithmetic theory proves Q's eight explicitly listed axioms.
+No translation or round-trip premise enters this deduction. -/
+theorem finite_witness_reflection
+    (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
+    {φ : Sent} (hpi : IsPi1 φ) (hfalse : ¬ TrueInN φ) : S.Prov (neg φ) := by
+  obtain ⟨ψ, hψ, rfl, n, hn⟩ := standard_counterexample_of_not_true hpi hfalse
+  have witness : TrueInN ψ.not.ex := by
+    unfold TrueInN Language.Sentence.Realize Language.Formula.Realize
+    apply Language.BoundedFormula.realize_ex.mpr
+    refine ⟨n, Language.BoundedFormula.realize_not.mpr ?_⟩
+    exact (not_congr (iff_of_eq (congrArg₂
+      (fun (v : Empty → ℕ) (xs : Fin 0 → ℕ) => ψ.Realize v (Fin.snoc xs n))
+      (Subsingleton.elim _ _) (Subsingleton.elim _ _)))).mp hn
+  have derives := Robinson.sigma1_complete ψ.not hψ.neg witness
+  intro M hM
+  letI : L.Structure M.carrier := M.str
+  letI : Nonempty M.carrier := ⟨M.str.funMap zeroFunc Fin.elim0⟩
+  letI : Robinson.Q.Model M.carrier := ⟨fun q hq => arithmetic q hq M hM⟩
+  have existsFailure : M.Sat ψ.not.ex :=
+    Language.Theory.models_sentence_iff.mp derives
+      (Language.Theory.Model.bundled (T := Robinson.Q) (M := M.carrier) inferInstance)
+  apply (M.sat_neg ψ.all).mpr
+  intro allChecks
+  change ψ.not.ex.Realize (default : Empty → M.carrier)
+    (default : Fin 0 → M.carrier) at existsFailure
+  obtain ⟨m, hm⟩ := Language.BoundedFormula.realize_ex.mp existsFailure
+  exact (Language.BoundedFormula.realize_not.mp hm) (allChecks m)
+
+/-- Theorem 1.18.2: the metatheoretic right-hand branch of Figure 1.
+Unrefutability rules out the standard witness extracted above. -/
+theorem truth_from_unrefutability
+    (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
+    {φ : Sent} (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
+  Classical.byContradiction fun hfalse =>
+    hnot (finite_witness_reflection S arithmetic hpi hfalse)
+
+/-- Theorem 1.18.3 (Metamathematical Truth of RH): `ℕ ⊨ RH_L`.
+Following Jenny Lorraine Nielsen's Figure 1, this takes the previously
+established unrefutability result directly; it does not revisit the obstruction. -/
 theorem RH_true_in_N
     (rh_pi1 : IsPi1 S.RH)
-    (reflection : ∀ ψ, IsPi1 ψ → ¬ TrueInN ψ → S.Prov (neg ψ))
+    (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
     (hnot : ¬ S.Prov (neg S.RH)) : TrueInN S.RH :=
-  truth_from_unrefutability S reflection rh_pi1 hnot
+  truth_from_unrefutability S arithmetic rh_pi1 hnot
+
+/-- Feed the independence result into Figure 1's reflection branch. -/
+theorem RH_true_in_N_of_independence
+    (rh_pi1 : IsPi1 S.RH)
+    (arithmetic : ∀ q ∈ Robinson.Q, S.Prov q)
+    (independence : ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH)) : TrueInN S.RH :=
+  RH_true_in_N S rh_pi1 arithmetic independence.2
 
 /-! ### Connection to the Λ-sound framework -/
 
