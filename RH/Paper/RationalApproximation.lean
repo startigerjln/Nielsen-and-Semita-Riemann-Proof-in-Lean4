@@ -1,9 +1,13 @@
 import RH.Paper.Mergelyan
 import RH.Paper.PlantedZero
 import Mathlib.NumberTheory.LSeries.Dirichlet
+import Mathlib.Analysis.NormedSpace.FunctionSeries
 import Mathlib.Topology.Algebra.Order.Archimedean
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Linarith
+
+open Filter
+open scoped BigOperators
 
 namespace RH.Paper.PlantedZero
 
@@ -129,14 +133,13 @@ private theorem rootFactor_ne_zero_at (roots : List Point) (z : ℂ)
     exact mul_ne_zero (sub_ne_zero.mpr (Ne.symm (outside w (List.mem_cons_self ..))))
       (ih (fun r hr => outside r (List.mem_cons_of_mem _ hr)))
 
-/-- The same Gaussian-rational code both approximates on the compact set
-    and yields a standard counterexample to the direct zero-location check. -/
-theorem compact_approximation_with_standard_failure
+private theorem compact_polynomial_approximation_with_standard_failure
     (K : Set ℂ) (target : ℂ → ℂ) (N : ℕ)
     (compact : IsCompact K) (connected : IsConnected Kᶜ)
     (continuous : ContinuousOn target K) (holomorphic : DifferentiableOn ℂ target (interior K))
     (outside : ∀ w ∈ plantedRoots N, w.toComplex ∉ K) (ε : ℝ) (positive : 0 < ε) :
-    ∃ f : RationalFunction, N < Encodable.encode f ∧
+    ∃ (f : RationalFunction) (p : Polynomial ℂ), N < Encodable.encode f ∧
+      (∀ z, evalComplex f z = p.eval z) ∧
       (∀ z ∈ K, ‖evalComplex f z - target z‖ < ε) ∧
       ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
   let factor := rootFactor (plantedRoots N)
@@ -156,33 +159,34 @@ theorem compact_approximation_with_standard_failure
     change evalPolynomial (plantedPoint N) ((1, 0) :: List.replicate N (0, 0)) ≠ (0, 0)
     rw [evalPolynomial_one_padded]
     decide
-  refine ⟨plant N base, large, ?_, planted_code_fails N base defined⟩
+  have value (z : ℂ) : evalComplex (plant N base) z =
+      factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z := by
+    have one : Point.toComplex (1, 0) = 1 := by
+      apply Complex.ext <;> simp [Point.toComplex]
+    have zero : Point.toComplex (0, 0) = 0 := by
+      apply Complex.ext <;> simp [Point.toComplex]
+    have zeroCoefficients : ∀ n : ℕ,
+        polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0 := by
+      intro n
+      induction n with
+      | zero => rfl
+      | succ n ih =>
+        rw [List.replicate_succ]
+        change Polynomial.C 0 +
+          Polynomial.X * polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0
+        simp [ih]
+    have denominator : polynomialOfCoefficients (base.2.2.map Point.toComplex) = 1 := by
+      change polynomialOfCoefficients (List.map Point.toComplex
+        ((1, 0) :: List.replicate N (0, 0))) = 1
+      rw [List.map_cons, List.map_replicate, one, zero]
+      change Polynomial.C 1 + Polynomial.X * polynomialOfCoefficients (List.replicate N 0) = 1
+      simp [zeroCoefficients]
+    change factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z /
+      (polynomialOfCoefficients (base.2.2.map Point.toComplex)).eval z = _
+    simp [denominator]
+  refine ⟨plant N base, factor * polynomialOfCoefficients (cs.map Point.toComplex), large,
+    fun z => by rw [value z, Polynomial.eval_mul], ?_, planted_code_fails N base defined⟩
   · intro z hz
-    have value : evalComplex (plant N base) z =
-        factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z := by
-      have one : Point.toComplex (1, 0) = 1 := by
-        apply Complex.ext <;> simp [Point.toComplex]
-      have zero : Point.toComplex (0, 0) = 0 := by
-        apply Complex.ext <;> simp [Point.toComplex]
-      have zeroCoefficients : ∀ n : ℕ,
-          polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0 := by
-        intro n
-        induction n with
-        | zero => rfl
-        | succ n ih =>
-          rw [List.replicate_succ]
-          change Polynomial.C 0 +
-            Polynomial.X * polynomialOfCoefficients (List.replicate n (0 : ℂ)) = 0
-          simp [ih]
-      have denominator : polynomialOfCoefficients (base.2.2.map Point.toComplex) = 1 := by
-        change polynomialOfCoefficients (List.map Point.toComplex
-          ((1, 0) :: List.replicate N (0, 0))) = 1
-        rw [List.map_cons, List.map_replicate, one, zero]
-        change Polynomial.C 1 + Polynomial.X * polynomialOfCoefficients (List.replicate N 0) = 1
-        simp [zeroCoefficients]
-      change factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z /
-        (polynomialOfCoefficients (base.2.2.map Point.toComplex)).eval z = _
-      simp [denominator]
     have close := hp z hz
     rw [Polynomial.eval_mul] at close
     have scaled :
@@ -194,11 +198,26 @@ theorem compact_approximation_with_standard_failure
           mul_le_mul_of_nonneg_right ((hb z hz).trans (le_max_left _ _)) (norm_nonneg _)
         _ < max b 1 * (ε / 2 / max b 1) := mul_lt_mul_of_pos_left (hcs z hz) bPos
         _ = ε / 2 := mul_div_cancel₀ _ (ne_of_gt bPos)
-    rw [value, show factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z -
+    rw [value z, show factor.eval z * (polynomialOfCoefficients (cs.map Point.toComplex)).eval z -
       target z =
         factor.eval z * ((polynomialOfCoefficients (cs.map Point.toComplex)).eval z - p.eval z) +
           (factor.eval z * p.eval z - target z) by ring]
     exact (norm_add_le _ _).trans_lt (by linarith)
+
+/-- The same Gaussian-rational code both approximates on the compact set
+    and yields a standard counterexample to the direct zero-location check. -/
+theorem compact_approximation_with_standard_failure
+    (K : Set ℂ) (target : ℂ → ℂ) (N : ℕ)
+    (compact : IsCompact K) (connected : IsConnected Kᶜ)
+    (continuous : ContinuousOn target K) (holomorphic : DifferentiableOn ℂ target (interior K))
+    (outside : ∀ w ∈ plantedRoots N, w.toComplex ∉ K) (ε : ℝ) (positive : 0 < ε) :
+    ∃ f : RationalFunction, N < Encodable.encode f ∧
+      (∀ z ∈ K, ‖evalComplex f z - target z‖ < ε) ∧
+      ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
+  obtain ⟨f, _, large, _, close, failure⟩ :=
+    compact_polynomial_approximation_with_standard_failure K target N compact connected
+      continuous holomorphic outside ε positive
+  exact ⟨f, large, close, failure⟩
 
 /-- A standard code realizes any finite list of local uniform
     approximation requirements contained in a common compact set. -/
@@ -291,5 +310,66 @@ theorem zeta_approximation_can_disagree_on_perron_line
     have h := (approx w (Set.mem_insert _ _)).trans_le (min_le_right _ _)
     rw [← value, eq, zero w (Finset.mem_singleton_self w), sub_zero] at h
     linarith only [h, norm_nonneg (riemannZeta w)]
+
+private theorem zeta_uniform_dirichlet_partials (σ : ℝ) (hσ : 1 < σ) :
+    TendstoUniformlyOn (fun J z => ∑ j ∈ Finset.range J, LSeries.term 1 z j)
+      riemannZeta atTop {z : ℂ | σ ≤ z.re} := by
+  have summable : Summable (fun j => LSeries.term 1 (σ : ℂ) j) :=
+    LSeriesSummable_one_iff.mpr (by simpa using hσ)
+  have uniform := tendstoUniformlyOn_tsum_nat summable.norm
+    (s := {z : ℂ | σ ≤ z.re}) (f := fun j z => LSeries.term 1 z j)
+    (fun j z hz => LSeries.norm_term_le_of_re_le_re 1 (by simpa using hz) j)
+  refine uniform.congr_right (fun z hz => ?_)
+  exact (LSeriesHasSum_one (hσ.trans_le hz)).tsum_eq
+
+/-- Lemma 1.34's finite witness on a compact checked region. One
+    Gaussian-rational polynomial code has exact Taylor overlaps, agrees
+    with one sufficiently long Dirichlet partial sum at all requested
+    precisions on the checked subregion, and fails at its planted zero. -/
+theorem finite_taylor_dirichlet_checks_with_standard_failure
+    (K : Set ℂ) (N : ℕ) (compact : IsCompact K) (connected : IsConnected Kᶜ)
+    (poleOutside : (1 : ℂ) ∉ K) (zerosOutside : ∀ w ∈ plantedRoots N, w.toComplex ∉ K)
+    (D : Set ℂ) (dirichletCompact : IsCompact D) (contained : D ⊆ K)
+    (convergenceRegion : ∀ z ∈ D, 1 < z.re) :
+    ∃ (f : RationalFunction) (p : Polynomial ℂ) (J : ℕ),
+      N < Encodable.encode f ∧
+      (∀ z ∈ K, ‖evalComplex f z - riemannZeta z‖ < (1 / 2 : ℝ) ^ N) ∧
+      (∀ center z : ℂ,
+        (p.comp (Polynomial.X + Polynomial.C center)).eval (z - center) = evalComplex f z) ∧
+      (∀ k ≤ N, ∀ z ∈ D,
+        ‖evalComplex f z - (∑ j ∈ Finset.range J, LSeries.term 1 z j)‖ <
+          (1 / 2 : ℝ) ^ k) ∧
+      ¬ passes (Encodable.encode f) (Encodable.encode (plantedPoint N)) 3 := by
+  let precision := (1 / 2 : ℝ) ^ N
+  have positive : 0 < precision := by dsimp [precision]; positivity
+  obtain ⟨σ, hσ, margin⟩ : ∃ σ : ℝ, 1 < σ ∧ ∀ z ∈ D, σ ≤ z.re := by
+    by_cases nonempty : D.Nonempty
+    · obtain ⟨z, hz, minimum⟩ :=
+        dirichletCompact.exists_isMinOn nonempty Complex.continuous_re.continuousOn
+      exact ⟨z.re, convergenceRegion z hz, fun _ hw => minimum hw⟩
+    · exact ⟨2, by norm_num, fun z hz => (nonempty ⟨z, hz⟩).elim⟩
+  have differentiable (z : ℂ) (hz : z ∈ K) : DifferentiableAt ℂ riemannZeta z :=
+    differentiableAt_riemannZeta (fun eq => poleOutside (eq ▸ hz))
+  obtain ⟨f, p, large, value, close, failure⟩ :=
+    compact_polynomial_approximation_with_standard_failure K riemannZeta N compact connected
+      (fun z hz => (differentiable z hz).continuousAt.continuousWithinAt)
+      (fun z hz => (differentiable z (interior_subset hz)).differentiableWithinAt)
+      zerosOutside (precision / 2) (half_pos positive)
+  obtain ⟨J, dirichlet⟩ := (Metric.tendstoUniformlyOn_iff.mp (zeta_uniform_dirichlet_partials σ hσ)
+    (precision / 2) (half_pos positive)).exists
+  refine ⟨f, p, J, large, fun z hz => (close z hz).trans (half_lt_self positive),
+    ?_, ?_, failure⟩
+  · intro center z
+    rw [Polynomial.eval_comp, Polynomial.eval_add, Polynomial.eval_X, Polynomial.eval_C,
+      sub_add_cancel, value z]
+  · intro k hk z hz
+    have tailError : ‖riemannZeta z - ∑ j ∈ Finset.range J, LSeries.term 1 z j‖ <
+        precision / 2 := by
+      simpa only [dist_eq_norm] using dirichlet z (margin z hz)
+    have bound : precision ≤ (1 / 2 : ℝ) ^ k :=
+      pow_le_pow_of_le_one (by norm_num) (by norm_num) hk
+    rw [← sub_add_sub_cancel _ (riemannZeta z)]
+    exact ((norm_add_le _ _).trans_lt
+      (by linarith only [close z (contained hz), tailError])).trans_le bound
 
 end RH.Paper.PlantedZero
