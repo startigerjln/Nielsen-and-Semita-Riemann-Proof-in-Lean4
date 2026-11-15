@@ -77,6 +77,10 @@ def TranslationPair.RL (τ : TranslationPair) (φ : Sent) : Sent := τ.toL (τ.t
 structure Setting where
   T : L.Theory
   RH : Sent
+  /-- RH is not already a theorem of T (otherwise independence is trivially false). -/
+  rh_not_in_T : RH ∉ T
+  /-- ¬RH is not already a theorem of T. -/
+  neg_rh_not_in_T : neg RH ∉ T
 
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
@@ -133,11 +137,6 @@ axiom mergelyan_rh :
   ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {S.RH} ∪ {neg (canonical.RL S.RH)} →
   ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
-/-- Mergelyan 1951 (curved case): same for ¬RH_L. -/
-axiom mergelyan_neg :
-  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))} →
-  ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
-
 /-- Theorem 1.10.2 (Linear Reconstruction Failure): there exists a model
     of `Th_Arith(ZFC)` in which `RH_L` holds but `R_L(RH_L)` fails.
     Proved from compactness + the Mergelyan witnesses. -/
@@ -160,23 +159,6 @@ theorem canonical_disagreement_rh :
     have h := hM (neg (canonical.RL S.RH)) (Set.mem_union_right _ rfl)
     exact ((M.sat_neg (canonical.RL S.RH)).mp h) hsat
 
-/-- Theorem 1.12.4 (Analytic Reconstruction Failure):
-    a model where `¬RH_L` holds but `R_L(¬RH_L)` fails.
-    Proved from compactness + the analytic obstruction witnesses. -/
-theorem canonical_disagreement_neg :
-    ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
-      ¬ M.Sat (canonical.RL (neg S.RH)) := by
-  obtain ⟨M, hM⟩ := compactness (S.T ∪ {neg S.RH} ∪ {neg (canonical.RL (neg S.RH))})
-    (mergelyan_neg S)
-  refine ⟨M, ?_, ?_, ?_⟩
-  · intro φ hφ
-    exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · exact hM (neg S.RH) (Set.mem_union_left _
-      (Set.mem_union_right _ rfl))
-  · intro hsat
-    have h := hM (neg (canonical.RL (neg S.RH))) (Set.mem_union_right _ rfl)
-    exact ((M.sat_neg (canonical.RL (neg S.RH))).mp h) hsat
-
 /-! ## Theorems -/
 
 /-- `ZFC ⊬ RH_L`. Contrapositive of preservation against the
@@ -186,11 +168,12 @@ theorem RH_not_provable : ¬ S.Prov S.RH := by
   obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_rh S
   exact hfail (perron_pres S S.RH hprov M hM)
 
-/-- `ZFC ⊬ ¬RH_L`. -/
+/-- `ZFC ⊬ ¬RH_L`. The positive disagreement model satisfies RH_L,
+    so ZFC cannot prove ¬RH_L either. -/
 theorem neg_RH_not_provable : ¬ S.Prov (neg S.RH) := by
   intro hprov
-  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement_neg S
-  exact hfail (perron_pres S (neg S.RH) hprov M hM)
+  obtain ⟨M, hM, hsat, -⟩ := canonical_disagreement_rh S
+  exact ((M.sat_neg S.RH).mp (hprov M hM)) hsat
 
 /-- Corollary 1.13.2 (ZFC Undecidability of RH). -/
 theorem RH_independent : ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
@@ -220,27 +203,12 @@ theorem changes_rh :
   obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_rh S
   exact hfail (((M.sat_iff S.RH ((canonical).RL S.RH)).mp (hprov M hM)).mp hsat)
 
-/-- The round-trip non-equivalence for ¬RH. -/
-theorem changes_neg :
-    ¬ S.Prov (iffS (neg S.RH) ((canonical).RL (neg S.RH))) := by
-  intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement_neg S
-  exact hfail (((M.sat_iff (neg S.RH) ((canonical).RL (neg S.RH))).mp
-    (hprov M hM)).mp hsat)
-
 /-- The canonical pair is Λ-sound for RH. -/
 theorem canonical_lambda_sound_rh : LambdaSound S S.RH canonical where
   inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
   comp := canonical_comp
   kernel := canonical_kernel
   changes := changes_rh S
-
-/-- The canonical pair is Λ-sound for ¬RH. -/
-theorem canonical_lambda_sound_neg : LambdaSound S (neg S.RH) canonical where
-  inv ψ hψ M hM _ := perron_pres S ψ hψ M hM
-  comp := canonical_comp
-  kernel := canonical_kernel
-  changes := changes_neg S
 
 /-- Lemma 1.5.6 (Uniform Preservation). -/
 theorem uniform_preservation {S' : Setting} {φ : Sent} {τ : TranslationPair}
