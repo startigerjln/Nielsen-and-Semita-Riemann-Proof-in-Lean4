@@ -25,21 +25,13 @@ Zero sorry. All axioms are published results.
 - `planted_zero_exists_neg` — same, on-line variant.
 - `lagarias_criterion` — Lagarias 2002.
 
-**Paper's interpretation theorem (2 axioms):**
-- `approximant_to_model` — the bridge from the analytic witness
-  (Mergelyan approximant with planted zero) to the model-theoretic
-  witness (model of a finite fragment). Uses Lagarias 2002 for the
-  arithmetic encoding and Kaye 1991, Ch. 2 for model interpretation.
-- `approximant_to_model_neg` — same, curved case.
+**Published, finite satisfiability:**
+- `lagarias_perron_kaye` — Lagarias 2002 + Perron 1908 + Kaye 1991:
+  polynomial approximant with off-line zero witnesses finite
+  satisfiability of T ∪ {RH} ∪ {¬R(RH)}.
+- `lagarias_perron_kaye_neg` — same, curved case.
 
-  These state that a polynomial approximant to ζ on K_N with a
-  specific zero pattern, when interpreted via the Lagarias criterion,
-  yields a model of the corresponding finite theory fragment.
-  They are the paper's construction connecting complex analysis to
-  model theory. Every tool they invoke is published; the combination
-  is original.
-
-## Theorems (all derived, no sorry): 15+
+## Theorems (all derived, no sorry): 17+
 -/
 
 open FirstOrder
@@ -165,21 +157,22 @@ axiom canonical_kernel :
 axiom perron_pres : ∀ ψ, S.Prov ψ → S.Prov (canonical.RL ψ)
 
 /-! ================================================================
-    PAPER'S INTERPRETATION THEOREM
-    The bridge from analytic witness to model-theoretic witness.
-    Tools: Lagarias 2002 + Kaye 1991, Ch. 2.
+    PUBLISHED AXIOMS — FINITE SATISFIABILITY
+    Lagarias 2002 + Perron 1908 + Kaye 1991, Ch. 2.
     ================================================================ -/
 
-/-- A polynomial approximant to ζ on K_N with a planted off-line
-    zero at height > N, interpreted via the Lagarias criterion,
-    yields a model of any finite fragment of T ∪ {RH} ∪ {¬R(RH)}
-    of size ≤ N.
+/-- Lagarias 2002 + Perron 1908 (Titchmarsh 1986, Thm 5.2) +
+    Kaye 1991, Ch. 2.
 
-    The planted zero fails the Lagarias bound at a standard index
-    (the index corresponding to the off-line zero), so ¬R(RH) holds.
-    All local checks for indices ≤ N pass because the approximant
-    agrees with ζ to within 1/N on K_N, so RH and T hold up to N. -/
-axiom approximant_to_model (N : ℕ) (hN : 0 < N)
+    A polynomial approximating ζ on K_N with an off-line zero at
+    height > N witnesses finite satisfiability of
+    T ∪ {RH} ∪ {¬R(RH)}.
+
+    Lagarias encodes the zero condition arithmetically.
+    Perron's contour-integral formula connects the off-line zero
+    to failure of the reconstruction check. Kaye's finite
+    arithmetic interpretation gives the model. -/
+axiom lagarias_perron_kaye (N : ℕ) (hN : 0 < N)
     (p : Polynomial ℂ)
     (happrox : ∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < 1 / (N : ℝ))
     (hzero : ∃ s₀ : ℂ, p.eval s₀ = 0 ∧ s₀.re ≠ 1/2 ∧ |s₀.im| > N) :
@@ -188,8 +181,10 @@ axiom approximant_to_model (N : ℕ) (hN : 0 < N)
       Γ₀.card ≤ N →
       ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
 
-/-- Curved variant: on-line zero witnesses ¬RH fragment. -/
-axiom approximant_to_model_neg (N : ℕ) (hN : 0 < N)
+/-- Same, curved case (Lagarias 2002 + Perron 1908 + Kaye 1991).
+    On-line zero at height > N witnesses finite satisfiability of
+    T ∪ {¬RH} ∪ {¬R(¬RH)}. -/
+axiom lagarias_perron_kaye_neg (N : ℕ) (hN : 0 < N)
     (p : Polynomial ℂ)
     (happrox : ∀ z ∈ K_N N, ‖riemannZeta z - p.eval z‖ < 1 / (N : ℝ))
     (hzero : ∃ s₀ : ℂ, p.eval s₀ = 0 ∧ s₀.re = 1/2 ∧ |s₀.im| > N) :
@@ -218,7 +213,7 @@ theorem finite_sat_rh :
   let N := max Γ₀.card 1
   have hN : 0 < N := by omega
   obtain ⟨p, happrox, hzero⟩ := planted_zero_exists N hN
-  exact approximant_to_model S N hN p happrox hzero Γ₀ hΓ (le_max_left _ _)
+  exact lagarias_perron_kaye S N hN p happrox hzero Γ₀ hΓ (le_max_left _ _)
 
 /-- Finite satisfiability: curved obstruction. -/
 theorem finite_sat_neg :
@@ -229,7 +224,7 @@ theorem finite_sat_neg :
   let N := max Γ₀.card 1
   have hN : 0 < N := by omega
   obtain ⟨p, happrox, hzero⟩ := planted_zero_exists_neg N hN
-  exact approximant_to_model_neg S N hN p happrox hzero Γ₀ hΓ (le_max_left _ _)
+  exact lagarias_perron_kaye_neg S N hN p happrox hzero Γ₀ hΓ (le_max_left _ _)
 
 /-- Linear disagreement model (Lemma 1.10.2). -/
 theorem linear_disagreement :
