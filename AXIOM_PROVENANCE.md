@@ -139,3 +139,17 @@ axioms of witness extraction, reflection, and both final truth theorems.
 The final theorems depend only on Lean's `propext`, `Classical.choice`,
 `Quot.sound`, and `Robinson.sigma1_complete`. No original paper result is
 introduced as an axiom by this change. The obstruction code is unchanged.
+
+### Explicit blocked-counterexample step
+
+`StandardCounterexample` names the standard finite Δ₀ witness in Figure 1.
+`refutation_of_standard_counterexample` turns it into the forbidden refutation
+using the published arithmetic input. `standard_counterexample_blocked` applies
+the upstream unrefutability result to rule out that witness.
+`truth_of_standard_counterexample_blocked` then concludes standard truth;
+`truth_from_unrefutability` now follows exactly these two steps.
+
+No axiom was added. The obstruction and translation declarations are unchanged.
+These remain generic deductions with the existing explicit inputs for the
+arithmetic basis and upstream unrefutability; this refactoring does not discharge
+those inputs in a concrete final RH application.
