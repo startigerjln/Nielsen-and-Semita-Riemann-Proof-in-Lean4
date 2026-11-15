@@ -77,10 +77,8 @@ def TranslationPair.RL (τ : TranslationPair) (φ : Sent) : Sent := τ.toL (τ.t
 structure Setting where
   T : L.Theory
   RH : Sent
-  /-- RH is not already a theorem of T (otherwise independence is trivially false). -/
-  rh_not_in_T : RH ∉ T
-  /-- ¬RH is not already a theorem of T. -/
-  neg_rh_not_in_T : neg RH ∉ T
+  /-- T is consistent: it has a model. (Standard assumption for ZFC.) -/
+  consistent : ∃ M : Model, ∀ φ ∈ T, M.Sat φ
 
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
