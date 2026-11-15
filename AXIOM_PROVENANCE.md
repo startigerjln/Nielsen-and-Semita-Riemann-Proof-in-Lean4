@@ -30,7 +30,8 @@ Section and theorem numbers below refer to Nielsen and Semita's
 | `changes_rh` and `changes_neg` | A model satisfying the original sentence and falsifying its round trip |
 | `changes_neg_of_RH_disagreement` | Commutation with negation and a model satisfying RH_L while falsifying its round trip. This is a consequence about the arithmetic biconditional. Lemma 1.12.4 concerns the analytic round trip. |
 | `lambda_sound_of_disagreement` | Preservation, commutation with negation, Π₁ truth preservation in ℕ, and disagreement |
-| `RH_true_in_N` | The Π₁ form, reflection for the given theory (via Σ₁-completeness for ZFC), and unrefutability |
+| `finite_witness_reflection` | Proved from published Σ₁-completeness of the explicitly defined Robinson Q. The target arithmetic theory proves Q's eight axioms. |
+| `RH_true_in_N` and `RH_true_in_N_of_independence` | The Π₁ form, the target theory's arithmetic basis Q, and the previously established unrefutability (or independence) result. Reflection is now a proved theorem, not an input hypothesis. |
 | `uniform_preservation` and `round_trip_adequacy` | Λ-soundness and provability of the input sentence |
 
 Jenny Lorraine Nielsen observed that unprovability uses only round-trip
@@ -98,7 +99,43 @@ integrand. The manuscript's proof translation still needs to justify
 that its local validity checks are sufficient for the coefficient
 identities invoked in the translation.
 
-The two custom axioms are the published analytic statements
-`mergelyan` and `perron_formula`. Compactness comes from Mathlib.
+The three custom axioms are the published analytic statements
+`mergelyan` and `perron_formula`, and the published arithmetic theorem
+`Robinson.sigma1_complete`. Compactness comes from Mathlib.
 Preservation of the canonical round trip is a separate premise of
 the relevant Proof I deductions.
+
+## Finite-witness reflection — Figure 1, right branch
+
+Following Jenny Lorraine Nielsen's argument, the right branch starts with
+unrefutability obtained by the preceding argument. It extracts a standard
+natural-number counterexample from the hypothetical falsity of a Π₁ sentence.
+The negated bounded check is Δ₀, so its existential closure is Σ₁. Published
+Σ₁-completeness of Robinson Q supplies that existential sentence in every
+Q-model. Hence the target theory entails the negation, contradicting
+unrefutability. This proves standard arithmetic truth in the metatheory.
+The reflection theorems contain no translation pair or round-trip condition.
+
+`RH/Paper/Robinson.lean` explicitly defines the eight axioms of Q in the
+existing arithmetic language, including the definition of ≤. Its only custom
+axiom, `Robinson.sigma1_complete`, is the one-variable instance of Q's
+Σ₁-completeness, expressed as semantic consequence via first-order soundness.
+Sources: L. D. Beklemishev, *Gödel incompleteness theorems and the limits of
+their applicability. I*, Russian Mathematical Surveys 65 (2010), §3.5,
+Theorem 6, <https://homepage.mi-ras.ru/~bekl/Papers/goedel-en.pdf>;
+for the exact eight-axiom presentation, Definition 3.1 and Theorem 3.10 of
+<https://www.mff.cuni.cz/data/web/obsah/department_math/ka/MathLogic.pdf>.
+The published completeness theorem remains an external axiom, as permitted
+for published results; finite-witness reflection itself is proved.
+
+The existing `Setting` is an arbitrary arithmetic theory. Its arithmetic
+basis is therefore explicit: `∀ q ∈ Robinson.Q, S.Prov q`. This is not a
+new RH-specific assertion. `Setting.Prov` continues to mean semantic
+consequence in this formalization. These generic theorems do not themselves
+instantiate a set-theoretic ZFC interpretation or a concrete RH formula.
+
+`ReflectionAudit.lean` checks the eight encoded Q axioms in ℕ and prints the
+axioms of witness extraction, reflection, and both final truth theorems.
+The final theorems depend only on Lean's `propext`, `Classical.choice`,
+`Quot.sound`, and `Robinson.sigma1_complete`. No original paper result is
+introduced as an axiom by this change. The obstruction code is unchanged.
