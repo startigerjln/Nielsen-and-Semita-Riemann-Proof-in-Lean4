@@ -1,6 +1,9 @@
 import RH.Paper.ProofI
 open FirstOrder RH.Paper
 #print axioms RH.Paper.standard_counterexample_of_not_true
+#print axioms RH.Paper.refutation_of_standard_counterexample
+#print axioms RH.Paper.standard_counterexample_blocked
+#print axioms RH.Paper.truth_of_standard_counterexample_blocked
 #print axioms RH.Paper.finite_witness_reflection
 #print axioms RH.Paper.RH_true_in_N
 #print axioms RH.Paper.RH_true_in_N_of_independence
