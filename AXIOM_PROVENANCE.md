@@ -12,7 +12,7 @@ Lean 4.16.0 and pinned Mathlib.
 | `IsPi1 S.RH` | RH is a Π₁ arithmetic sentence | [Davis–Matiyasevich–Robinson 1976] |
 | `WitnessReflection S` | False Π₁ sentences are refutable (Σ₁ completeness) | [Kreisel 1951; Kaye 1991] |
 | `RoundTripPreserves S τ` | Provability is preserved by the round trip | Manuscript §1.5–1.7 |
-| `TruthGivesFS S τ` | ℕ ⊨ RH → positive disagreement theory is finitely satisfiable | Manuscript Lemma 1.34a [Mergelyan 1951; Kaye 1991] |
+| `TruthGivesFS S τ` | ℕ ⊨ RH → positive disagreement theory is finitely satisfiable | Manuscript Lemma 1.34a [Kaye 1991, Thm 15.1] |
 | `NegTruthGivesFS S τ` | ℕ ⊨ ¬RH → negative disagreement theory is finitely satisfiable | Symmetric argument |
 | Compositionality and kernel agreement | Inputs to the LambdaSound structure | Explicit hypotheses |
 
@@ -26,13 +26,13 @@ hypothesis being refuted:
     RH_not_provable:
       intro hprov : S.Prov S.RH          -- reductio hypothesis
       have := hs S.RH hprov              -- soundness → TrueInN S.RH
-      have := htfs ‹TrueInN S.RH›        -- Mergelyan → FS
+      have := htfs ‹TrueInN S.RH›        -- overspill → FS
       ...                                 -- compactness → model → ⊥
 
     neg_RH_not_provable:
       intro hprov : S.Prov (neg S.RH)    -- reductio hypothesis
       have := hs (neg S.RH) hprov        -- soundness → TrueInN (neg S.RH)
-      have := hntfs ‹TrueInN (neg S.RH)› -- Mergelyan → FS
+      have := hntfs ‹TrueInN (neg S.RH)› -- overspill → FS
       ...                                 -- compactness → model → ⊥
 
 Lean's kernel verifies that neither `TrueInN S.RH` nor any finite
@@ -57,7 +57,7 @@ satisfiability into the full disagreement model.
 
 ## Principal conditional theorems
 
-- `RH_not_provable`: soundness + Mergelyan bridge + compactness + round-trip preservation → ZFC ⊬ RH.
+- `RH_not_provable`: soundness + overspill bridge + compactness + round-trip preservation → ZFC ⊬ RH.
 - `neg_RH_not_provable`: symmetric reductio → ZFC ⊬ ¬RH.
 - `neg_RH_not_provable_of_model`: a model of T + RH suffices for non-refutability (alternative route).
 - `RH_independent`: combines both directions.

@@ -12,14 +12,14 @@ refuted, via soundness of ZFC:
 
   Non-provability: assume ZFC ⊢ RH
     → soundness: ℕ ⊨ RH
-    → Mergelyan schema: disagreement theory is finitely satisfiable
+    → overspill: disagreement theory is finitely satisfiable
     → compactness: disagreement model exists
     → round-trip preservation contradicts the model → ⊥
     → discharge: ZFC ⊬ RH
 
   Non-refutability: assume ZFC ⊢ ¬RH
     → soundness: ℕ ⊨ ¬RH
-    → Mergelyan schema: negation disagreement theory is finitely satisfiable
+    → overspill: negation disagreement theory is finitely satisfiable
     → compactness: negation disagreement model exists
     → round-trip preservation contradicts the model → ⊥
     → discharge: ZFC ⊬ ¬RH
@@ -120,10 +120,10 @@ def RoundTripPreserves (S : Setting) (τ : TranslationPair) : Prop :=
 
 The disagreement theories express the claim that RH (or ¬RH)
 holds in a model of T, but the round-trip translation does not
-preserve this.  The finite satisfiability of these theories is
-the Mergelyan schema argument: each finite fragment constrains
-only finitely many standard bounds, all met in ℕ once soundness
-(inside the reductio) has supplied truth.
+preserve this.  The finite satisfiability of these theories follows
+from overspill: each finite fragment constrains only finitely many
+standard bounds, all met in ℕ once soundness (inside the reductio)
+has supplied truth.
 -/
 
 /-- The positive disagreement theory: RH holds but its
@@ -142,19 +142,19 @@ def OverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
 def NegOverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
   FiniteSatisfiable (negDisagreementTheory S τ)
 
-/-- The positive Mergelyan bridge: truth of RH in ℕ implies finite
-    satisfiability of the positive disagreement theory.
+/-- The positive finite-satisfiability bridge: truth of RH in ℕ
+    implies finite satisfiability of the positive disagreement theory.
 
     Each finite fragment Δ ⊂ T ∪ {RH} ∪ {¬RL(RH)} constrains only
     finitely many standard numerals.  Since ℕ ⊨ RH (supplied by
     soundness inside the reductio), all finite bounds are met in ℕ,
     so every finite Δ is satisfiable.
-    [Mergelyan 1951; Kaye 1991, Thm 15.1] -/
+    [Kaye 1991, Thm 15.1] -/
 def TruthGivesFS (S : Setting) (τ : TranslationPair) : Prop :=
   TrueInN S.RH → OverspillFiniteSatisfiability S τ
 
-/-- The negative Mergelyan bridge: truth of ¬RH in ℕ implies finite
-    satisfiability of the negative disagreement theory.
+/-- The negative finite-satisfiability bridge: truth of ¬RH in ℕ
+    implies finite satisfiability of the negative disagreement theory.
     Symmetric argument. -/
 def NegTruthGivesFS (S : Setting) (τ : TranslationPair) : Prop :=
   TrueInN (neg S.RH) → NegOverspillFiniteSatisfiability S τ
@@ -200,7 +200,7 @@ theorem neg_canonical_disagreement (S : Setting) (τ : TranslationPair)
 Both directions share the same structure:
 1. `intro hprov` — assume provability (the reductio hypothesis)
 2. `hs _ hprov`  — soundness gives truth in ℕ
-3. `h(n)tfs _`   — Mergelyan bridge gives finite satisfiability
+3. `h(n)tfs _`   — overspill bridge gives finite satisfiability
 4. compactness   — disagreement model exists
 5. round-trip    — preservation contradicts the model → False
 6. discharge     — `hprov` is consumed; nothing about truth survives
@@ -210,7 +210,7 @@ Both directions share the same structure:
 
     The finite satisfiability that feeds compactness is derived
     inside the reductio from `hprov : S.Prov S.RH` via soundness
-    and the Mergelyan bridge.  It is never an external assumption. -/
+    and the overspill bridge.  It is never an external assumption. -/
 theorem RH_not_provable (S : Setting) (τ : TranslationPair)
     (hc : Compactness)
     (hs : ArithSoundness S)
@@ -219,7 +219,7 @@ theorem RH_not_provable (S : Setting) (τ : TranslationPair)
   intro hprov
   -- Soundness: the reductio hypothesis gives truth in ℕ
   have htruth : TrueInN S.RH := hs S.RH hprov
-  -- Mergelyan bridge: truth gives finite satisfiability
+  -- Overspill bridge: truth gives finite satisfiability
   have hf : OverspillFiniteSatisfiability S τ := htfs htruth
   -- Compactness: disagreement model
   obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement S τ hc hf
@@ -230,7 +230,7 @@ theorem RH_not_provable (S : Setting) (τ : TranslationPair)
 
     The finite satisfiability that feeds compactness is derived
     inside the reductio from `hprov : S.Prov (neg S.RH)` via
-    soundness and the negative Mergelyan bridge. -/
+    soundness and the negative overspill bridge. -/
 theorem neg_RH_not_provable (S : Setting) (τ : TranslationPair)
     (hc : Compactness)
     (hs : ArithSoundness S)
@@ -239,7 +239,7 @@ theorem neg_RH_not_provable (S : Setting) (τ : TranslationPair)
   intro hprov
   -- Soundness: the reductio hypothesis gives ¬RH true in ℕ
   have htruth : TrueInN (neg S.RH) := hs (neg S.RH) hprov
-  -- Negative Mergelyan bridge: truth of ¬RH gives finite satisfiability
+  -- Negative overspill bridge: truth of ¬RH gives finite satisfiability
   have hf : NegOverspillFiniteSatisfiability S τ := hntfs htruth
   -- Compactness: negation disagreement model
   obtain ⟨M, hM, -, hfail⟩ := neg_canonical_disagreement S τ hc hf
