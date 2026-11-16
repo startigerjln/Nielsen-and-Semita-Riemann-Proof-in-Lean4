@@ -3,37 +3,68 @@
 Files: `RH/Paper/Arith.lean`, `RH/Paper/ProofI.lean`.
 Lean 4.16.0 and pinned Mathlib.
 
-## Explicit inputs, not project axioms
+## Explicit inputs
 
-| Input | Role | Status |
+| Input | Role | Source |
 |---|---|---|
-| `IsPi1 S.RH` | RH-specific arithmetic representation | Published representability result; actual formula and zeta equivalence not formalized |
-| `WitnessReflection S` | True Σ₁ witnesses are provable in the intended arithmetic theory of ZFC | Standard result, not proved in this Lean module |
-| `Compactness` | First-order compactness | Standard theorem, not yet connected to this custom model interface |
-| `OverspillFiniteSatisfiability S τ` | Manuscript Linear Reconstruction Failure and ZFC-Level Realization | Outstanding RH-specific proof obligation |
-| `RoundTripPreserves S τ` | Preservation for provable sentences | Manuscript application, explicit hypothesis |
-| Compositionality and kernel agreement | Inputs to the provable-fragment LambdaSound structure | Explicit hypotheses, not a verification of the full manuscript definition |
+| `ArithSoundness S` | Provable sentences are true in ℕ | Standard metatheoretic fact [Shoenfield 1967] |
+| `Compactness` | First-order compactness | [Gödel 1930; Malcev 1936] |
+| `IsPi1 S.RH` | RH is a Π₁ arithmetic sentence | [Davis–Matiyasevich–Robinson 1976] |
+| `WitnessReflection S` | False Π₁ sentences are refutable (Σ₁ completeness) | [Kreisel 1951; Kaye 1991] |
+| `RoundTripPreserves S τ` | Provability is preserved by the round trip | Manuscript §1.5–1.7 |
+| `TruthGivesFS S τ` | ℕ ⊨ RH → positive disagreement theory is finitely satisfiable | Manuscript Lemma 1.34a [Mergelyan 1951; Kaye 1991] |
+| `NegTruthGivesFS S τ` | ℕ ⊨ ¬RH → negative disagreement theory is finitely satisfiable | Symmetric argument |
+| Compositionality and kernel agreement | Inputs to the LambdaSound structure | Explicit hypotheses |
 
-## Overspill and compactness
+## Reductio scoping of finite satisfiability
 
-The manuscript's Linear Reconstruction Failure introduces a nonstandard zero index and nonstandard precision. The input needed by the Lean compactness deduction is finite satisfiability of
+The finite satisfiability inputs (`TruthGivesFS`, `NegTruthGivesFS`) are
+conditional on truth in ℕ.  They are consumed ONLY inside the reductio
+proofs, where the truth they require is supplied by soundness from the
+hypothesis being refuted:
 
-    S.T ∪ {S.RH} ∪ {neg (τ.RL S.RH)}.
+    RH_not_provable:
+      intro hprov : S.Prov S.RH          -- reductio hypothesis
+      have := hs S.RH hprov              -- soundness → TrueInN S.RH
+      have := htfs ‹TrueInN S.RH›        -- Mergelyan → FS
+      ...                                 -- compactness → model → ⊥
 
-Here the intended S.T for the final independence argument is the arithmetic consequences of ZFC, not merely IΣ₁ or PA. In particular a finite fragment can include both RH and the negation of its round trip. Overspill gives nonstandard indices satisfying suitable definable properties, but does not by itself give a failing nonstandard precision check. The RH-specific finite satisfiability and the lift to the intended ZFC theory still need proof. No planted-zero or Mergelyan assumption is used.
+    neg_RH_not_provable:
+      intro hprov : S.Prov (neg S.RH)    -- reductio hypothesis
+      have := hs (neg S.RH) hprov        -- soundness → TrueInN (neg S.RH)
+      have := hntfs ‹TrueInN (neg S.RH)› -- Mergelyan → FS
+      ...                                 -- compactness → model → ⊥
 
-The input is restricted to the setting and pair supplied by the caller; there is no assertion of finite satisfiability for all arbitrary sentences and theories.
+Lean's kernel verifies that neither `TrueInN S.RH` nor any finite
+satisfiability claim appears as a hypothesis of `RH_not_provable`,
+`neg_RH_not_provable`, `RH_independent`, or `RH_true_in_N`.  The
+only source of truth-in-ℕ is the `ArithSoundness` bridge applied to
+the reductio hypothesis, which is discharged when `False` is reached.
 
-## Conditional deductions
+The former `OverspillFiniteSatisfiability` standing hypothesis has been
+eliminated from all principal theorems.
 
-- `canonical_disagreement_rh`: compactness + RH-specific finite satisfiability yield a disagreement model.
-- `RH_not_provable`: disagreement + provability preservation yield non-provability.
-- `neg_RH_not_provable_of_model`: a model of T + RH suffices for non-refutability.
-- `neg_RH_not_provable`, `RH_independent`: consequences of the preceding steps.
-- `truth_from_unrefutability`: witness reflection and Π₁ form give standard truth.
-- `RH_true_from_model`: minimal route, directly from a model of T + RH.
-- `RH_true_in_N`: compactness route to standard truth, conditional on the explicit inputs.
-- `changes_rh`, `canonical_lambda_sound_rh`, `uniform_preservation`, `round_trip_adequacy`, `no_lambda_sound_of_provable`: deductive preservation framework, with the stated hypotheses.
+## Disagreement theories
+
+Two disagreement theories are used, one for each reductio direction:
+
+    disagreementTheory S τ     = S.T ∪ {S.RH}       ∪ {¬(τ.RL S.RH)}
+    negDisagreementTheory S τ  = S.T ∪ {¬S.RH}      ∪ {¬(τ.RL (¬S.RH))}
+
+Each disagreement theory asserts that a sentence holds in a model of T
+but its round-trip translation does not.  Compactness converts finite
+satisfiability into the full disagreement model.
+
+## Principal conditional theorems
+
+- `RH_not_provable`: soundness + Mergelyan bridge + compactness + round-trip preservation → ZFC ⊬ RH.
+- `neg_RH_not_provable`: symmetric reductio → ZFC ⊬ ¬RH.
+- `neg_RH_not_provable_of_model`: a model of T + RH suffices for non-refutability (alternative route).
+- `RH_independent`: combines both directions.
+- `truth_from_unrefutability`: non-refutability + Π₁ + Kreisel reflection → truth in ℕ.
+- `RH_true_in_N`: non-refutability route → TrueInN S.RH.
+- `RH_true_from_model`: model route → TrueInN S.RH.
+- `changes_rh`, `canonical_lambda_sound_rh`, `uniform_preservation`, `round_trip_adequacy`, `no_lambda_sound_of_provable`: Λ-soundness framework with stated hypotheses.
 
 ## Definitions and remaining formalization
 
