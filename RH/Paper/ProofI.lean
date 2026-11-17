@@ -1,37 +1,17 @@
 import RH.Paper.Arith
+import Mathlib.ModelTheory.Satisfiability
 /-!
-# Proof I: Λ-Irreducibility and independence of RH
+# Proof I with explicit finite satisfiability
 
-This module formalizes the deductive core of Nielsen & Semita's Proof I.
+The positive disagreement theory's finite satisfiability is a local axiom
+`hf`, not a consequence asserted from truth or overspill. The same `hf`
+feeds both non-provability (with preservation) and non-refutability.
+Compactness is proved below using mathlib. The existing LambdaSound
+framework is retained. Published arithmetic inputs remain explicit:
+`IsPi1` and `WitnessReflection`; see AXIOM_PROVENANCE.md.
 
-## Key design: reductio-scoped finite satisfiability
-
-The finite satisfiability of each disagreement theory is NOT an external
-assumption.  It is derived INSIDE each reductio from the hypothesis being
-refuted, via soundness of ZFC:
-
-  Non-provability: assume ZFC ⊢ RH
-    → soundness: ℕ ⊨ RH
-    → overspill: disagreement theory is finitely satisfiable
-    → compactness: disagreement model exists
-    → round-trip preservation contradicts the model → ⊥
-    → discharge: ZFC ⊬ RH
-
-  Non-refutability: assume ZFC ⊢ ¬RH
-    → soundness: ℕ ⊨ ¬RH
-    → overspill: negation disagreement theory is finitely satisfiable
-    → compactness: negation disagreement model exists
-    → round-trip preservation contradicts the model → ⊥
-    → discharge: ZFC ⊬ ¬RH
-
-  Truth: non-refutability + Π₁ + Σ₁-completeness (Kreisel reflection)
-
-The dependency graph is explicit in Lean's kernel: `TruthGivesFS` and
-`NegTruthGivesFS` take the truth derived from soundness as an argument.
-The `intro hprov` that opens each reductio is the ONLY source of the
-truth that feeds finite satisfiability.  When `False` is reached, `hprov`
-is discharged and nothing about truth or finite satisfiability survives
-into the conclusion.
+A local axiom is a theorem parameter, not a universal assertion that every
+setting and translation has a satisfiable disagreement theory.
 -/
 
 open FirstOrder
@@ -99,11 +79,20 @@ def FiniteSatisfiable (Γ : Set Sent) : Prop :=
 def Compactness : Prop :=
   ∀ Γ : Set Sent, FiniteSatisfiable Γ → ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
 
-/-- Soundness of the base theory for arithmetic:
-    every provable sentence is true in ℕ.
-    For ZFC this is a standard metatheoretic fact [Shoenfield 1967]. -/
-def ArithSoundness (S : Setting) : Prop :=
-  ∀ φ, S.Prov φ → TrueInN φ
+/-- Compactness, discharged by mathlib rather than assumed. -/
+theorem compactness : Compactness := by
+  intro Γ hf
+  have hfin : Language.Theory.IsFinitelySatisfiable Γ := by
+    intro Γ₀ hsub
+    obtain ⟨M, hM⟩ := hf Γ₀ hsub
+    letI := M.str
+    letI : Nonempty M.carrier := ⟨M.str.funMap zeroFunc Fin.elim0⟩
+    letI : Language.Theory.Model M.carrier (↑Γ₀ : L.Theory) := ⟨hM⟩
+    exact Language.Theory.Model.isSatisfiable M.carrier
+  obtain ⟨M⟩ := Language.Theory.isSatisfiable_iff_isFinitelySatisfiable.mpr hfin
+  refine ⟨⟨M, inferInstance⟩, ?_⟩
+  intro φ hφ
+  exact Language.Theory.realize_sentence_of_mem Γ hφ
 
 /-- Σ₁ witness reflection (Kreisel): if a Π₁ sentence is false in ℕ,
     there is a standard witness to its failure, so its negation is
@@ -116,48 +105,19 @@ def WitnessReflection (S : Setting) : Prop :=
 def RoundTripPreserves (S : Setting) (τ : TranslationPair) : Prop :=
   ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ)
 
-/-! ## Disagreement theories and finite satisfiability
-
-The disagreement theories express the claim that RH (or ¬RH)
-holds in a model of T, but the round-trip translation does not
-preserve this.  The finite satisfiability of these theories follows
-from overspill: each finite fragment constrains only finitely many
-standard bounds, all met in ℕ once soundness (inside the reductio)
-has supplied truth.
--/
+/-! ## Disagreement theory and the finite-satisfiability axiom -/
 
 /-- The positive disagreement theory: RH holds but its
     round trip fails. -/
 def disagreementTheory (S : Setting) (τ : TranslationPair) : Set Sent :=
   S.T ∪ {S.RH} ∪ {neg (τ.RL S.RH)}
 
-/-- The negative disagreement theory: ¬RH holds but its
-    round trip fails. -/
-def negDisagreementTheory (S : Setting) (τ : TranslationPair) : Set Sent :=
-  S.T ∪ {neg S.RH} ∪ {neg (τ.RL (neg S.RH))}
-
-def OverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
+/-- The single finite-satisfiability premise for the selected setting
+and translation. It is assumed explicitly; no overspill derivation is claimed. -/
+def FiniteSatisfiabilityAxiom (S : Setting) (τ : TranslationPair) : Prop :=
   FiniteSatisfiable (disagreementTheory S τ)
 
-def NegOverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
-  FiniteSatisfiable (negDisagreementTheory S τ)
-
-/-- The positive finite-satisfiability bridge: truth of RH in ℕ
-    implies finite satisfiability of the positive disagreement theory.
-
-    Each finite fragment Δ ⊂ T ∪ {RH} ∪ {¬RL(RH)} constrains only
-    finitely many standard numerals.  Since ℕ ⊨ RH (supplied by
-    soundness inside the reductio), all finite bounds are met in ℕ,
-    so every finite Δ is satisfiable.
-    [Kaye 1991, Thm 15.1] -/
-def TruthGivesFS (S : Setting) (τ : TranslationPair) : Prop :=
-  TrueInN S.RH → OverspillFiniteSatisfiability S τ
-
-/-- The negative finite-satisfiability bridge: truth of ¬RH in ℕ
-    implies finite satisfiability of the negative disagreement theory.
-    Symmetric argument. -/
-def NegTruthGivesFS (S : Setting) (τ : TranslationPair) : Prop :=
-  TrueInN (neg S.RH) → NegOverspillFiniteSatisfiability S τ
+abbrev OverspillFiniteSatisfiability := FiniteSatisfiabilityAxiom
 
 /-! ## Disagreement models from compactness -/
 
@@ -178,73 +138,23 @@ theorem canonical_disagreement (S : Setting) (τ : TranslationPair)
     have h := hM (neg (τ.RL S.RH)) (Set.mem_union_right _ rfl)
     exact ((M.sat_neg (τ.RL S.RH)).mp h) hsat
 
-/-- Compactness converts finite satisfiability of the negative
-    disagreement theory into a model where ¬RH holds but its
-    round trip fails. -/
-theorem neg_canonical_disagreement (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hf : NegOverspillFiniteSatisfiability S τ) :
-    ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
-      ¬ M.Sat (τ.RL (neg S.RH)) := by
-  obtain ⟨M, hM⟩ := hc (negDisagreementTheory S τ) hf
-  refine ⟨M, ?_, ?_, ?_⟩
-  · intro φ hφ
-    exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · exact hM (neg S.RH) (Set.mem_union_left _
-      (Set.mem_union_right _ rfl))
-  · intro hsat
-    have h := hM (neg (τ.RL (neg S.RH))) (Set.mem_union_right _ rfl)
-    exact ((M.sat_neg (τ.RL (neg S.RH))).mp h) hsat
+/-! ## Reductio arguments from the same finite-satisfiability axiom -/
 
-/-! ## The reductio arguments
-
-Both directions share the same structure:
-1. `intro hprov` — assume provability (the reductio hypothesis)
-2. `hs _ hprov`  — soundness gives truth in ℕ
-3. `h(n)tfs _`   — overspill bridge gives finite satisfiability
-4. compactness   — disagreement model exists
-5. round-trip    — preservation contradicts the model → False
-6. discharge     — `hprov` is consumed; nothing about truth survives
--/
-
-/-- **Non-provability of RH** (Theorem 1.6.1 / Remark 1.6.2).
-
-    The finite satisfiability that feeds compactness is derived
-    inside the reductio from `hprov : S.Prov S.RH` via soundness
-    and the overspill bridge.  It is never an external assumption. -/
+/-- Non-provability from finite satisfiability and the existing preservation premise. -/
 theorem RH_not_provable (S : Setting) (τ : TranslationPair)
-    (hc : Compactness)
-    (hs : ArithSoundness S)
-    (htfs : TruthGivesFS S τ)
+    (hf : FiniteSatisfiabilityAxiom S τ)
     (hp : RoundTripPreserves S τ) : ¬ S.Prov S.RH := by
   intro hprov
-  -- Soundness: the reductio hypothesis gives truth in ℕ
-  have htruth : TrueInN S.RH := hs S.RH hprov
-  -- Overspill bridge: truth gives finite satisfiability
-  have hf : OverspillFiniteSatisfiability S τ := htfs htruth
-  -- Compactness: disagreement model
-  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement S τ hc hf
-  -- Round-trip preservation contradicts the model
+  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement S τ compactness hf
   exact hfail (hp S.RH hprov M hM)
 
-/-- **Non-refutability of RH** (symmetric reductio).
-
-    The finite satisfiability that feeds compactness is derived
-    inside the reductio from `hprov : S.Prov (neg S.RH)` via
-    soundness and the negative overspill bridge. -/
+/-- Non-refutability uses only positive finite satisfiability: a model
+of T + RH cannot also satisfy a consequence ¬RH of T. -/
 theorem neg_RH_not_provable (S : Setting) (τ : TranslationPair)
-    (hc : Compactness)
-    (hs : ArithSoundness S)
-    (hntfs : NegTruthGivesFS S τ)
-    (hp : RoundTripPreserves S τ) : ¬ S.Prov (neg S.RH) := by
+    (hf : FiniteSatisfiabilityAxiom S τ) : ¬ S.Prov (neg S.RH) := by
   intro hprov
-  -- Soundness: the reductio hypothesis gives ¬RH true in ℕ
-  have htruth : TrueInN (neg S.RH) := hs (neg S.RH) hprov
-  -- Negative overspill bridge: truth of ¬RH gives finite satisfiability
-  have hf : NegOverspillFiniteSatisfiability S τ := hntfs htruth
-  -- Compactness: negation disagreement model
-  obtain ⟨M, hM, -, hfail⟩ := neg_canonical_disagreement S τ hc hf
-  -- Round-trip preservation contradicts the model
-  exact hfail (hp (neg S.RH) hprov M hM)
+  obtain ⟨M, hM, hsat, -⟩ := canonical_disagreement S τ compactness hf
+  exact ((M.sat_neg S.RH).mp (hprov M hM)) hsat
 
 /-- Non-refutability via an explicit model of ZFC + RH.
     Useful when the model is obtained by other means. -/
@@ -257,14 +167,12 @@ theorem neg_RH_not_provable_of_model (S : Setting)
 
 /-! ## Independence and truth -/
 
-/-- **Independence of RH from ZFC** (Theorem 1.18.1). -/
+/-- Independence, retaining the existing theorem-preservation hypothesis. -/
 theorem RH_independent (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hs : ArithSoundness S)
-    (htfs : TruthGivesFS S τ) (hntfs : NegTruthGivesFS S τ)
+    (hf : FiniteSatisfiabilityAxiom S τ)
     (hp : RoundTripPreserves S τ) :
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
-  ⟨RH_not_provable S τ hc hs htfs hp,
-   neg_RH_not_provable S τ hc hs hntfs hp⟩
+  ⟨RH_not_provable S τ hf hp, neg_RH_not_provable S τ hf⟩
 
 /-- Truth from non-refutability (Theorem 1.18.2).
     Kreisel reflection: a Π₁ sentence that is not refutable in a
@@ -274,19 +182,13 @@ theorem truth_from_unrefutability (S : Setting)
     (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
   Classical.byContradiction fun hfalse => hnot (hr φ hpi hfalse)
 
-/-- **Truth of RH in ℕ** (Theorem 1.18.3).
-
-    Non-refutability (from the symmetric reductio) + Π₁ + Kreisel
-    reflection.  Both reductios have already closed; this step is
-    external to them. -/
+/-- Standard truth from the finite-satisfiability axiom and the
+published Π₁ / finite-witness inputs. No arithmetic soundness or
+round-trip preservation is used in this theorem. -/
 theorem RH_true_in_N (S : Setting) (τ : TranslationPair)
     (hpi : IsPi1 S.RH) (hr : WitnessReflection S)
-    (hc : Compactness) (hs : ArithSoundness S)
-    (hntfs : NegTruthGivesFS S τ)
-    (hp : RoundTripPreserves S τ) :
-    TrueInN S.RH :=
-  truth_from_unrefutability S hr hpi
-    (neg_RH_not_provable S τ hc hs hntfs hp)
+    (hf : FiniteSatisfiabilityAxiom S τ) : TrueInN S.RH :=
+  truth_from_unrefutability S hr hpi (neg_RH_not_provable S τ hf)
 
 /-- Truth via model (minimal route, Theorem 1.18.3 variant). -/
 theorem RH_true_from_model (S : Setting)
@@ -300,7 +202,7 @@ theorem RH_true_from_model (S : Setting)
 This structure captures the conditions used in the deductive reductio,
 not the entire two-language Definition 1.4.3 of the manuscript.
 The `changes` field is derived from the disagreement model, which
-is itself produced inside the reductio (see `changes_rh`).
+is obtained from the explicit finite-satisfiability premise (see `changes_rh`).
 -/
 
 structure LambdaSound (S : Setting) (φ : Sent) (τ : TranslationPair) : Prop where

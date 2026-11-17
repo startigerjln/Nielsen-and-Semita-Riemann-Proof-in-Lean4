@@ -1,73 +1,59 @@
-# Provenance of the Lean formalization
+# Lean dependency audit
 
-Files: `RH/Paper/Arith.lean`, `RH/Paper/ProofI.lean`.
-Lean 4.16.0 and pinned Mathlib.
+The manuscript (`unified.tex` and `unified.pdf`) and the `LambdaSound`
+definition are unchanged by this revision.
 
-## Explicit inputs
+## Finite satisfiability
 
-| Input | Role | Source |
-|---|---|---|
-| `ArithSoundness S` | Provable sentences are true in ℕ | Standard metatheoretic fact [Shoenfield 1967] |
-| `Compactness` | First-order compactness | [Gödel 1930; Malcev 1936] |
-| `IsPi1 S.RH` | RH is a Π₁ arithmetic sentence | [Davis–Matiyasevich–Robinson 1976] |
-| `WitnessReflection S` | False Π₁ sentences are refutable (Σ₁ completeness) | [Kreisel 1951; Kaye 1991] |
-| `RoundTripPreserves S τ` | Provability is preserved by the round trip | Manuscript §1.5–1.7 |
-| `TruthGivesFS S τ` | ℕ ⊨ RH → positive disagreement theory is finitely satisfiable | Manuscript Lemma 1.34a [Kaye 1991, Thm 15.1] |
-| `NegTruthGivesFS S τ` | ℕ ⊨ ¬RH → negative disagreement theory is finitely satisfiable | Symmetric argument |
-| Compositionality and kernel agreement | Inputs to the LambdaSound structure | Explicit hypotheses |
+`FiniteSatisfiabilityAxiom S τ` is precisely finite satisfiability of
+`S.T ∪ {S.RH} ∪ {neg (τ.RL S.RH)}`. It is the one finite-satisfiability
+premise `hf` used throughout the principal proof. It is a local axiom
+(a theorem parameter), not a global axiom asserting this for every
+arbitrary theory and translation. Such a universal assertion would be
+inconsistent, for example for the identity round trip.
 
-## Reductio scoping of finite satisfiability
+The former `TruthGivesFS` and `NegTruthGivesFS` bridges have been removed.
+Both non-provability and non-refutability use the same positive
+finite-satisfiability premise. Arithmetic soundness is unnecessary and
+has been removed. Compactness is proved using mathlib's
+`FirstOrder.Language.Theory.isSatisfiable_iff_isFinitelySatisfiable`.
 
-The finite satisfiability inputs (`TruthGivesFS`, `NegTruthGivesFS`) are
-conditional on truth in ℕ.  They are consumed ONLY inside the reductio
-proofs, where the truth they require is supplied by soundness from the
-hypothesis being refuted:
+## Exact remaining inputs
 
-    RH_not_provable:
-      intro hprov : S.Prov S.RH          -- reductio hypothesis
-      have := hs S.RH hprov              -- soundness → TrueInN S.RH
-      have := htfs ‹TrueInN S.RH›        -- overspill → FS
-      ...                                 -- compactness → model → ⊥
+| Conclusion | Explicit inputs beyond the setting and translation |
+|---|---|
+| `neg_RH_not_provable` | `FiniteSatisfiabilityAxiom S τ` |
+| `RH_true_in_N` | The same finite satisfiability; `IsPi1 S.RH`; `WitnessReflection S` |
+| `RH_not_provable`, `RH_independent` | The same finite satisfiability; existing `RoundTripPreserves S τ` |
 
-    neg_RH_not_provable:
-      intro hprov : S.Prov (neg S.RH)    -- reductio hypothesis
-      have := hs (neg S.RH) hprov        -- soundness → TrueInN (neg S.RH)
-      have := hntfs ‹TrueInN (neg S.RH)› -- overspill → FS
-      ...                                 -- compactness → model → ⊥
+The arithmetic inputs correspond to published mathematics:
 
-Lean's kernel verifies that neither `TrueInN S.RH` nor any finite
-satisfiability claim appears as a hypothesis of `RH_not_provable`,
-`neg_RH_not_provable`, `RH_independent`, or `RH_true_in_N`.  The
-only source of truth-in-ℕ is the `ArithSoundness` bridge applied to
-the reductio hypothesis, which is discharged when `False` is reached.
+- Davis, Matiyasevich and Robinson, *Hilbert's tenth problem: Diophantine
+  equations: Positive aspects of a negative solution*, Proceedings of
+  Symposia in Pure Mathematics 28 (1976), pp. 323–378, for an arithmetic
+  presentation of RH. This does not prove `IsPi1` for an arbitrary
+  sentence supplied as `S.RH`.
+- Richard Kaye, *Models of Peano Arithmetic* (1991), Chapter 2,
+  pp. 16–27, for Σ₁ completeness of PA⁻ and the finite-witness argument.
+  https://doi.org/10.1093/oso/9780198532132.003.0003
+  This applies to theories containing sufficient elementary arithmetic,
+  not to every arbitrary `Setting.T`.
 
-The former `OverspillFiniteSatisfiability` standing hypothesis has been
-eliminated from all principal theorems.
+These are explicit interfaces to published results, not Lean proofs of
+those results for a concrete ZFC/RH encoding. `RoundTripPreserves` is
+retained from the existing framework; it is a separate premise for the
+independence conclusion, not a consequence of finite satisfiability.
+It is not used in the standard-truth conclusion.
 
-## Disagreement theories
+## Scope of the check
 
-Two disagreement theories are used, one for each reductio direction:
+`Setting.T` and `Setting.RH` remain parameters. `Setting.Prov` remains
+semantic consequence. A concrete ZFC interpretation, selected RH syntax,
+and equivalence with mathlib's analytic `RiemannHypothesis` have not been
+added in this narrowly scoped revision. The existing `Setting.consistent`
+field is retained, although finite satisfiability supplies a model itself.
 
-    disagreementTheory S τ     = S.T ∪ {S.RH}       ∪ {¬(τ.RL S.RH)}
-    negDisagreementTheory S τ  = S.T ∪ {¬S.RH}      ∪ {¬(τ.RL (¬S.RH))}
-
-Each disagreement theory asserts that a sentence holds in a model of T
-but its round-trip translation does not.  Compactness converts finite
-satisfiability into the full disagreement model.
-
-## Principal conditional theorems
-
-- `RH_not_provable`: soundness + overspill bridge + compactness + round-trip preservation → ZFC ⊬ RH.
-- `neg_RH_not_provable`: symmetric reductio → ZFC ⊬ ¬RH.
-- `neg_RH_not_provable_of_model`: a model of T + RH suffices for non-refutability (alternative route).
-- `RH_independent`: combines both directions.
-- `truth_from_unrefutability`: non-refutability + Π₁ + Kreisel reflection → truth in ℕ.
-- `RH_true_in_N`: non-refutability route → TrueInN S.RH.
-- `RH_true_from_model`: model route → TrueInN S.RH.
-- `changes_rh`, `canonical_lambda_sound_rh`, `uniform_preservation`, `round_trip_adequacy`, `no_lambda_sound_of_provable`: Λ-soundness framework with stated hypotheses.
-
-## Definitions and remaining formalization
-
-`Setting.T` is an arbitrary arithmetic theory and `Setting.RH` an arbitrary sentence, not yet instantiated as ZFC's arithmetic consequences and actual arithmetic RH. `Setting.Prov` is semantic consequence; identifying it with syntactic derivability uses first-order completeness and the intended theory. The translation pair uses arithmetic syntax for both maps as a placeholder for the manuscript's distinct languages. The `LambdaSound` structure captures the provable-fragment reductio, not the full manuscript definition.
-
-The link to Mathlib's `RiemannHypothesis` is outstanding. The module prints kernel axiom dependencies for the principal conditional theorems; this does not discharge their explicit inputs. No Proof II or III formalization is included.
+`#print axioms` reports global kernel dependencies, not theorem parameters.
+The audit must therefore inspect both theorem signatures and axiom output.
+No `sorry`, project-wide global axiom, or substituted definition of Λ is
+introduced. Finite satisfiability is explicitly assumed, not claimed proved.
