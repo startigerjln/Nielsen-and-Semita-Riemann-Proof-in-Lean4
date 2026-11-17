@@ -18,6 +18,7 @@
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{hypothesis}[theorem]{Hypothesis}
 \newtheorem{remark}[theorem]{Remark}
 \geometry{margin=1in}
 \setlength{\parindent}{0pt}
@@ -62,16 +63,18 @@
 
 
 \begin{abstract}
-The linear and analytic formulations of the Riemann Hypothesis (RH) describe
-different mathematical objects. We compare what a specified round trip
-preserves about the witnesses and precision checks attached to these
-formulations. We prove the reduction from a semantic obstruction, realized in
-the appropriate ZFC models, to independence and standard arithmetic truth.
-Theorem~\ref{lem:uniformity-inexpressibility} gives equivalent syntactic
-and model-theoretic formulations of the required separation. The RH
-application specifies the separation required in each reductio branch.
-The subsequent sections discuss analytic completeness and phase rigidity
-in extended settings.
+We give a conditional reduction of the Riemann Hypothesis (RH) to the
+\emph{$\Lambda$-Separation Hypothesis} (LSH) for a fixed arithmetic
+reconstruction of its analytic formulation. LSH asserts the existence of a
+model of ZFC in which the native arithmetic criterion holds and a specified
+reconstructed precision check fails. The native and reconstructed witness
+data in that model exhibit the semantic obstruction. The model rules out a
+ZFC refutation of RH. Since the native criterion has a faithful $\Pi^0_1$
+encoding, it follows under LSH that RH holds in standard arithmetic.
+If the round trip also preserves ZFC proofs at the RH sentence, the same
+model rules out a ZFC proof of RH, giving independence. We give equivalent
+consistency and finite-satisfiability formulations of LSH. Later sections
+consider the separate hypotheses of analytic completeness and phase rigidity.
 \end{abstract}
 
 \section*{Introduction}
@@ -83,14 +86,17 @@ translated back. To ask it one must specify what constitutes a witness and how
 the translation transports that witness. A classical equivalence of closed
 sentences supplies neither specification.
 
-Proof~I has two parts. A failure to recover a designated witness condition
-gives a semantic obstruction. To use this obstruction against a hypothetical
-ZFC proof, the failure must occur in a model of the theory to which that proof
-applies and must contradict a consequence of the proof. Section~\ref{sec:separation}
-gives the precise implication. For a faithful arithmetic $\Pi^0_1$
-representation of RH, non-refutability suffices for standard truth.
+Write $S=RH_L$ and $A=R_L(S)$ for the selected reconstruction.
+Proof~I takes as its premise a single model $M\models\mathsf{ZFC}+S+\neg A$
+(Hypothesis~\ref{def:lsh}). Since $M$ satisfies $S$, ZFC cannot prove
+$\neg S$. A standard counterexample to the native arithmetic criterion
+would give just such a proof. This proves standard truth conditional on LSH.
+For independence we use the other feature of the same model, its failing
+reconstructed check. If a ZFC proof of $S$ could be transformed into a ZFC
+proof of $A$, the latter would hold in $M$. Section~\ref{sec:lsh-consequences}
+formalizes both deductions.
 
-\section{Proof I: Truth in the Natural Numbers via Metamathematical Proof of ZFC Independence and of \texorpdfstring{$\Pi_1$}{Pi1}-soundness}
+\section{Proof I. Standard arithmetic truth and ZFC independence under semantic separation}
 
 \subsection{Paradigms, Semantic Structure, and the \texorpdfstring{$\Lambda$}{Lambda} Irreducibility Obstruction}
 
@@ -181,25 +187,33 @@ sentence's Boolean value is unnecessary for a semantic obstruction.
 A nonempty difference can affect the reductio only through an appropriate
 consequence for the sentence being proved.
 
-\subsection{Undecidability from obstruction}
-Let $X$ be one of $RH_L$ and $\neg RH_L$. For the reconstruction chosen
-in this branch, write $A_X=R_L(X)$. The adequacy used in the reductio is
-the metatheoretic implication
+\subsection{Round-trip adequacy}
+For a fixed theory $B$, sentence $S$ and round trip $R_L$, write $A=R_L(S)$.
+The independence argument uses the following preservation condition at $S$:
 \[
-             (B\vdash X)\ \Longrightarrow\ (B\vdash A_X).
+             (B\vdash S)\ \Longrightarrow\ (B\vdash A).
+\tag{Adequacy}
 \]
-An axiom- and inference-preserving transformation of $B$-derivations
-on the relevant fragment suffices, by induction on the proof. Adequacy is
-a hypothesis whenever such a transformation has not been verified.
+This is a statement about proofs in the original theory $B$. It is weaker
+than requiring a derivation of $S\to A$ within $B$.
 
-If a hypothetical proof of $X$ yields this consequence and also a
-model of $B+X+\neg A_X$, soundness gives a contradiction in that branch.
-For $X=RH_L$, the native kernel is empty in this model and the reconstructed
-kernel contains a specific witness. This is a sufficient semantic obstruction
-whatever the comparison relation, since the image of the empty set is empty.
-For $X=\neg RH_L$ the same proof-level argument applies with its own
-reconstructed sentence. A mismatch of two nonempty witness sets alone
-does not give the displayed contradiction.
+\begin{proposition}[Sufficient condition for round-trip adequacy]
+\label{thm:round-trip-adequacy}
+Suppose the round trip is defined on every formula occurring in the
+derivations in question, sends each initial axiom to a $B$-theorem,
+and sends every rule application to a derivation of its translated
+conclusion from its translated premises, respecting discharged assumptions.
+Then it preserves $B$-provability at $S$.
+\end{proposition}
+\begin{proof}
+Apply the stated transformations successively along a derivation of $S$.
+At each inference, insert the translated subderivations for its premises.
+The resulting derivation has conclusion $R_L(S)$ and no undischarged
+assumptions beyond $B$.
+\end{proof}
+For the specified RH reconstruction, adequacy remains an explicit hypothesis
+of the independence theorem unless its proof transformation or the displayed
+preservation implication is independently established.
 
 \subsection{The canonical RH reconstruction and its scope}
 \begin{definition}[ZFC-Birepresentable Sentence]
@@ -262,7 +276,7 @@ and a nonempty reconstructed kernel for that pair. The following
 reductio therefore uses proof preservation at $S$ as specified above.
 A proof of $S$ by itself does not construct a translation on all formulas.
 
-\subsection{Uniformity separation for the fixed reconstruction}
+\subsection{The \texorpdfstring{$\Lambda$}{Lambda}-Separation Hypothesis}
 \label{sec:separation}
 \begin{theorem}[Uniformity separation and finite satisfiability]
 \label{lem:uniformity-inexpressibility}\label{thm:uniformity-separation}
@@ -283,31 +297,41 @@ contradiction uses finitely many axioms $F$ of $B$. Soundness rules
 out the model required for this $F$ by (3).
 \end{proof}
 
-\paragraph{Step 3. From semantic separation to the ZFC model.}
-Take $B=\mathsf{ZFC}$, $S=RH_L$ and $A=R_L(RH_L)$ throughout.
-If the RH obstruction gives $B+S\nvdash A$ for this fixed
-reconstruction in the reductio branch, Theorem~\ref{lem:uniformity-inexpressibility}
-gives a model of $B+S+\neg A$ in that branch. Internally it satisfies
-$\forall u\,\varphi(u)$ and has a pair $(n,k)$ with $\neg\psi(n,k)$.
-Thus every native test passes, and a particular reconstructed test fails.
-To conclude that $k$ is nonstandard it suffices to show, for each
-standard $j$, that $B+S\vdash\forall n\,\psi(n,\bar j)$.
-Without that premise the model gives a failing pair with no specified
-coordinate known to be nonstandard.
+\begin{corollary}[Separation and the round-trip implication]
+\label{cor:lsh-bridge}
+A model of $B+S+\neg A$ exists if and only if $B\nvdash S\to A$.
+\end{corollary}
+\begin{proof}
+By deduction, $B\vdash S\to A$ if and only if $B+S\vdash A$.
+Apply Theorem~\ref{lem:uniformity-inexpressibility}.
+\end{proof}
 
-\emph{Alternate argument by compactness.}
-For each finite $F\subseteq B$, exhibit a model of $F+S+\neg A$.
-These fragments are cofinal among the finite subsets of $B+S+\neg A$.
-Compactness then gives the same conclusion. Finiteness alone cannot
-establish the existence of the models. If $B\vdash S\to A$, one
-finite derivation uses only finitely many axioms $F_0\subseteq B$.
-Then $F_0+S+\neg A$ is inconsistent. This applies equally to a
-proof using instances of Separation or Replacement in developing
-complex analysis. In particular, retaining all-model invariance for this very
-pair gives such a finite obstruction to the proposed compactness argument
-by completeness and the finiteness of proofs. A separation theorem over $I\Sigma_1$ gives a
-model of that weaker base. A ZFC-level conclusion needs the
-separation over ZFC or a proved transfer for these sentences.
+\begin{hypothesis}[$\Lambda$-Separation Hypothesis (LSH)]
+\label{def:lsh}
+Fix $B=\mathsf{ZFC}$, the native arithmetic sentence $S=RH_L$, and the
+designated arithmetic reconstruction $A=R_L(S)=\forall n\forall k\,\psi(n,k)$.
+There exists a model $M\models B$ such that
+\[
+                 M\models S\qquad\text{and}\qquad M\models\neg A.
+\]
+\end{hypothesis}
+LSH is an external hypothesis about models of the original ZFC. The
+encodings of $S$ and $A$ are held fixed throughout. In the separation
+model the native kernel is empty and the reconstructed kernel contains
+a pair $(n,k)$ at which verification fails. Every transport relation
+sends the empty kernel to the empty set, so this pair witnesses a
+semantic obstruction as defined above. To locate the failure at a
+nonstandard precision specifically, it suffices to prove
+$B+S\vdash\forall n\,\psi(n,\bar j)$ for every standard $j$.
+
+\paragraph{An alternate route by finite satisfiability.}
+For these same $B,S,A$, Theorem~\ref{lem:uniformity-inexpressibility}
+identifies LSH with the assertion that each finite $F\subseteq B$ has
+a model satisfying $F+S+\neg A$. Establishing that assertion would
+prove LSH by compactness. If $B$ proves $S\to A$, some finite set of
+axioms already supports that proof and its corresponding fragment has
+no model. In particular, if ZFC proves both $S\leftrightarrow RH_C$
+and $RH_C\to A$ for the specified coding, LSH fails for that coding.
 
 \begin{proposition}[Conservation at arithmetic precision sentences]
 For arithmetic sentences $S,A$, if $\mathsf{WKL}_0+S\vdash A$ then
@@ -322,35 +346,40 @@ Thus a proof using contour integration would give no lower bound merely
 by its use of that method. A second universal variable also leaves a
 universal arithmetic formula with bounded matrix in $\Pi^0_1$.
 
-\subsection{The two reductio branches}
-\begin{theorem}[Independence from branchwise separation]\label{thm:RH-Lambda}
-Let $B=\mathsf{ZFC}$. For each $X\in\{RH_L,\neg RH_L\}$, assume that
-under the hypothesis $B\vdash X$ one can establish both $B\vdash A_X$
-and $B+X\nvdash A_X$ for its specified reconstruction $A_X$.
-Then $B\nvdash RH_L$ and $B\nvdash\neg RH_L$.
+\subsection{ZFC independence and truth in \texorpdfstring{$\mathbb N$}{N}}
+\label{sec:lsh-consequences}
+\begin{theorem}[Consequences of the separation model]\label{thm:RH-Lambda}
+Assume LSH for the fixed pair $(S,A)$. Then $\mathsf{ZFC}\nvdash\neg S$.
+If round-trip adequacy also holds at $S$, then $\mathsf{ZFC}\nvdash S$.
+Under both hypotheses, $S$ is independent of ZFC.
 \end{theorem}
 \begin{proof}
-In either branch the alleged proof gives $B\vdash A_X$. Its consequences
-hold in every $B$-model. The other premise gives a model of
-$B+X+\neg A_X$ by Theorem~\ref{lem:uniformity-inexpressibility}.
-This yields a contradiction in that branch. Discharging the two
-hypotheses proves the two claims.
+Choose the model $M$ from Hypothesis~\ref{def:lsh}. If ZFC proved
+$\neg S$, soundness would give $M\models\neg S$, contradicting
+$M\models S$. Now assume adequacy. If ZFC proved $S$, it would
+prove $A$. Soundness would give $M\models A$, contradicting
+$M\models\neg A$. Both contradictions use the same model.
 \end{proof}
-If the positive separation model is obtained unconditionally, that
-same model already rules out a $B$-refutation of $RH_L$ by soundness.
-A model obtained only inside the positive reductio has no such use
-after its hypothesis is discharged.
-\subsection{Arithmetic \texorpdfstring{$\Pi_1$}{Pi1} witness reflection}
-\begin{theorem}[Standard truth from non-refutability]\label{thm:RH-truth}
-For a faithful arithmetic $\Pi^0_1$ representation $S$ of RH,
-$\mathsf{ZFC}\nvdash\neg S$ implies $\mathbb N\models S$.
+
+\begin{theorem}[Standard truth under LSH]\label{thm:RH-truth}
+Assume LSH for a faithful arithmetic $\Pi^0_1$ representation
+$S=RH_L$. Then $\mathbb N\models S$, and hence RH holds for the
+standard Riemann zeta function.
 \end{theorem}
 \begin{proof}
-Write $S=\forall u\,\varphi(u)$ with bounded matrix. If $S$ fails
-in $\mathbb N$, some standard $m$ satisfies $\neg\varphi(m)$.
-Evaluation of the closed bounded instance gives an arithmetic proof
-of $\neg\varphi(\bar m)$ and hence a ZFC proof of $\neg S$.
+Write $S=\forall u\,\varphi(u)$ with bounded matrix in the chosen
+arithmetic encoding. If $S$ failed in $\mathbb N$, a standard integer
+$m$ would satisfy $\neg\varphi(m)$. Evaluating the closed bounded
+instance gives a proof of $\neg\varphi(\bar m)$ in elementary
+arithmetic and hence a ZFC proof of $\neg S$. This contradicts the
+first conclusion of Theorem~\ref{thm:RH-Lambda}. The equivalence
+of the selected criterion with analytic RH in the standard setting
+gives the final assertion.
 \end{proof}
+The proof uses ZFC's verification of a particular finite computation.
+It requires only the model's satisfaction of $S$. Adequacy enters
+solely in the independence conclusion.
+
 For example, search over $n$ and rational enclosures for a strict
 violation of the Lagarias inequality \cite{Lagarias2002}. Each
 strict violation is detected as the enclosures shrink. A finite
@@ -857,12 +886,14 @@ lie on the critical line.
 
 
 \section*{Conclusion}
-Theorem~\ref{lem:uniformity-inexpressibility} proves the equivalence
-used in Step~3. Given RH separation in the relevant ZFC proof branches
-and their round-trip adequacy, the two reductios prove independence.
-The negative branch then gives standard arithmetic truth by witness
-reflection. The specific mathematical issue is to realize the semantic
-obstruction for the fixed RH reconstruction over this base.
+For the fixed RH reconstruction, LSH supplies one model with an empty
+native counterexample kernel and a failing reconstructed precision check.
+The first property implies standard truth by arithmetic witness reflection.
+The second, together with round-trip adequacy, excludes a ZFC proof of
+the native sentence and completes the conditional independence argument.
+Theorem~\ref{lem:uniformity-inexpressibility} identifies the exact
+finite-satisfiability assertion that would establish LSH.
+
 \begin{thebibliography}{99}
 \bibitem{Hirschfeldt}
 D.~R.~Hirschfeldt, \emph{Slicing the Truth}, Lecture Notes Series,
