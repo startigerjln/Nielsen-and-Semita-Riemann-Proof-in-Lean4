@@ -348,6 +348,21 @@ universal arithmetic formula with bounded matrix in $\Pi^0_1$.
 
 \subsection{ZFC independence and truth in \texorpdfstring{$\mathbb N$}{N}}
 \label{sec:lsh-consequences}
+
+\begin{proposition}[Separate inputs for the two nonprovability conclusions]
+\label{prop:two-channels}
+For a first-order theory $B$, fix sentences $S,A$. If
+$(B\vdash S)\Rightarrow(B\vdash A)$ and $B\nvdash A$, then $B\nvdash S$.
+Independently, $B\nvdash\neg S$ is equivalent to consistency of $B+S$.
+\end{proposition}
+\begin{proof}
+The first assertion is the contrapositive of the stated proof-preservation
+condition. The second is the classical deduction theorem applied to a
+derivation of contradiction from $B+S$.
+\end{proof}
+These inputs can be established separately. The separation model is another
+sufficient premise, as the next theorem shows.
+
 \begin{theorem}[Consequences of the separation model]\label{thm:RH-Lambda}
 Assume LSH for the fixed pair $(S,A)$. Then $\mathsf{ZFC}\nvdash\neg S$.
 If round-trip adequacy also holds at $S$, then $\mathsf{ZFC}\nvdash S$.
@@ -385,6 +400,82 @@ violation of the Lagarias inequality \cite{Lagarias2002}. Each
 strict violation is detected as the enclosures shrink. A finite
 accepting computation is an arithmetic certificate. Absence of
 such a computation gives the corresponding universal sentence.
+
+\subsection{Bandwidth and precision}
+Fix a specified computable integer cutoff $B(n)$, for example
+$\lfloor s\log(n+2)\rfloor$ with a fixed positive parameter and a verified
+integer implementation. One must specify the Boolean answer, if any, at a
+precision beyond the cutoff. Two encodings illustrate the difference. If
+inputs above the cutoff are omitted, the assertion is
+\[
+  A_{\rm range}=\forall n\,\forall k\le B(n)\;\psi(n,k).
+\]
+The resource bound alone gives no lower bound on proofs of this sentence:
+taking $\psi(n,k)$ to be $0=0$ makes it an arithmetic theorem with the
+same cutoff. If every omitted input is instead counted as a failure, the
+assertion that every input passes becomes
+\[
+  A_{\rm all}=\forall n\,\forall k\;(k\le B(n)\land\psi(n,k)).
+\]
+Arithmetic refutes this assertion whenever it proves that $B(0)$ exists:
+take $k=B(0)+1$. The failure then records the domain restriction. A
+derivation translating ZFC proofs of RH to ZFC proofs of this refutable
+sentence would itself require justification. A bandwidth limit on the
+\emph{modes} used to compute a value, with unrestricted precision requests,
+is a third specification and requires a formula for the output and an
+error estimate. In particular, a function represented exactly by retained
+modes can be correct at every precision.
+
+\subsection{Local analytic data and the curved comparison}
+\begin{proposition}[Finite Taylor data do not determine a distant zero]
+Fix $a\ne b$ in $\mathbb C$ and $m\ge0$. There exist entire functions
+with the same derivatives through order $m$ at $a$, exactly one of which
+vanishes at $b$.
+\end{proposition}
+\begin{proof}
+Take $f(z)=1$ and $g(z)=1-((z-a)/(b-a))^{m+1}$.
+The difference has a zero of order $m+1$ at $a$, while $f(b)=1$ and $g(b)=0$.
+\end{proof}
+This gives a semantic loss of information under restriction to the specified
+finite Taylor data. For full holomorphic germs the identity theorem instead
+gives uniqueness whenever both continuations are holomorphic on the same
+connected domain. A first-order sentence retained in a reduct has the same
+satisfaction relation there. For a sentence using omitted symbols, a
+comparison requires expansions interpreting those symbols. To obtain an RH
+obstruction from finite data one must exhibit expansions satisfying the
+specified zeta axioms and validate the implication from their difference to
+failure of the designated arithmetic reconstruction in a ZFC model.
+The polynomials above establish the finite-data claim on the class of entire
+functions.
+
+\subsection{The global Weil trace criterion}
+In the normalization of Connes and Consani \cite[Eq.~(4)]{ConnesConsaniWeil},
+take $g\in C_c^\infty(\mathbb R_+^\times)$ with
+$\widehat g(\pm i/2)=0$, where the transform uses the logarithmic variable.
+Write $g^*(x)=\overline{g(x^{-1})}$ and take convolution with respect to
+$dx/x$. The global Weil criterion reads
+\[
+ RH\quad\Longleftrightarrow\quad
+ E(g):=\sum_v W_v(g*g^*)\le0\quad\text{for every such }g .
+\]
+Here $v$ includes the real place and every prime. Each test has only finitely
+many nonzero prime terms, with the relevant primes depending on the support.
+The underlying group is one-dimensional. The space $L^2(\mathbb R_+^\times,dx/x)$ is
+infinite-dimensional. The sign assertion is stated on the indicated test
+domain. The archimedean trace result in \cite{ConnesConsaniWeil} does not
+supply this sign for the full global form on that domain.
+
+An independent proof of this global sign in standard mathematics would
+give standard RH directly. If its proof and the criterion are formalized
+in ZFC, ZFC proves $RH_L$. This is incompatible with the first conclusion
+of Proposition~\ref{prop:two-channels} when its hypotheses hold with
+$B=\mathsf{ZFC}$ and $S=RH_L$. If the sign argument instead uses a
+stronger metatheory, standard truth alone does not imply ZFC
+non-refutability without a suitable soundness or consistency premise.
+For instance, a metatheoretic proof of $\operatorname{Con}(\mathsf{ZFC}+RH_L)$
+would give exactly the required non-refutability. Thus the two proposed
+arguments must identify their base theories as well as their conclusions.
+
 \section{Analytic completeness and phase rigidity in extensions of ZFC}
 
 \paragraph{Scope of the extension arguments.}
@@ -895,6 +986,11 @@ Theorem~\ref{lem:uniformity-inexpressibility} identifies the exact
 finite-satisfiability assertion that would establish LSH.
 
 \begin{thebibliography}{99}
+\bibitem{ConnesConsaniWeil}
+A.~Connes and C.~Consani, \emph{Weil positivity and trace formula, the
+archimedean place}, Selecta Mathematica (N.S.), 2021.
+\href{https://arxiv.org/abs/2006.13771}{arXiv:2006.13771}.
+
 \bibitem{Hirschfeldt}
 D.~R.~Hirschfeldt, \emph{Slicing the Truth}, Lecture Notes Series,
 Institute for Mathematical Sciences, National University of Singapore,
