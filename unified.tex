@@ -611,7 +611,11 @@ $RH_L$ is ZFC-birepresentable. The equivalence
 $\mathsf{ZFC} \vdash RH_L \leftrightarrow RH_C$ is a classical
 theorem of analytic number theory, established via the explicit
 formula and contour integration (\cite{Titchmarsh1986},
-Chapter~14; \cite{Iwaniec2004}, \S5.5).
+Chapter~14; \cite{Iwaniec2004}, \S5.5). Throughout Proof~I this
+equivalence, in the form of the Lagarias and Robin criteria
+\cite{Lagarias2002,Robin1984}, is \emph{assumed} as background. It is
+an input to the $\Lambda$ framework. It is not the object that the
+framework examines.
 \end{proposition}
 
 \paragraph{Classical equivalence versus $\Lambda$--reducibility (the Robin--Lagarias criteria).}
@@ -702,11 +706,21 @@ T^{\mathrm{can}}_{L\to C} : \mathcal{F}_{RH,L} \to
 T^{\mathrm{can}}_{C\to L} : \mathcal{F}_{RH,C} \to
 \mathcal{F}_{RH,L},
 \]
-induced by the $\mathsf{ZFC}$--internal proof of the classical
-equivalence $RH_L \leftrightarrow RH_C$: the maps are defined by
-the explicit formula, contour integration, and Euler product
-machinery that establishes the correspondence between arithmetic
-bounds and analytic zero-distribution conditions. The pair is
+defined as follows. The pair \emph{assumes} the classical
+equivalence $RH_L \leftrightarrow RH_C$ (the Lagarias and Robin
+criteria, Proposition~\ref{prop:RH-birepresentable}). It is not
+identical with that equivalence. The classical equivalence is used
+for one purpose only: to fix $RH_C$ as the analytic sentence
+corresponding to $RH_L$, so that
+$T^{\mathrm{can}}_{L\to C}(RH_L) = RH_C$. The reverse map
+$T^{\mathrm{can}}_{C\to L}$ does \emph{not} apply the Lagarias or
+Robin criterion in the opposite direction. It re-encodes an
+analytic sentence in arithmetic directly from that sentence's own
+form, inductively on syntactic complexity, as in the definition of
+a translation pair. In particular
+$T^{\mathrm{can}}_{C\to L}(RH_C)$ is not the sentence $RH_L$. It is
+the precision-check sentence described in
+Lemma~\ref{lem:canonical-round-trip-structure}. The pair is
 total on the RH-fragment and preserves Boolean structure within
 it. By the $\Lambda$--Exhaustiveness theorem, it is
 $\Lambda$--sound on $\mathcal{F}_{RH,L} \cup \mathcal{F}_{RH,C}$.
@@ -737,9 +751,13 @@ $\Re(\rho_n) = \tfrac{1}{2}$ is arithmetically verified.
 The canonical translation $T^{\mathrm{can}}_{L\to C}(RH_L)$
 maps $RH_L$ to the analytic sentence $RH_C$, which asserts that
 every nontrivial zero of $\zeta(s)$ lies exactly on
-$\Re(s) = \tfrac{1}{2}$. The reverse translation
+$\Re(s) = \tfrac{1}{2}$. (This step assumes the classical
+equivalence.) The reverse translation
 $T^{\mathrm{can}}_{C\to L}$ must re-encode this exact equality
-as an arithmetic sentence. Since the critical-line condition is
+as an arithmetic sentence. It does so directly from the form of
+$RH_C$, not by applying the Lagarias or Robin criterion in
+reverse, so the result is a new arithmetic sentence and not
+$RH_L$. Since the critical-line condition is
 an exact equality---not an approximate bound---any finitary
 arithmetic encoding must express it as agreement to arbitrary
 precision: for each candidate zero $\rho_n$ and each precision
@@ -762,6 +780,43 @@ uniformity constraint across all models of $I\Sigma_1$.
 Therefore $R^{\mathrm{can}}_L(RH_L)$ necessarily acquires the
 unbounded $\forall k$ quantifier.
 \end{proof}
+
+\begin{remark}[The Round Trip Is Not the Lagarias or Robin Criterion]
+\label{rem:round-trip-not-lagarias}
+Two arithmetic sentences must be kept apart.
+\begin{enumerate}
+\item $RH_L$, the arithmetic formulation of RH: a $\Pi^0_1$
+sentence $\forall n\,\varphi_{RH}(n)$, such as the Lagarias
+inequality $\sigma(n) \le H_n + e^{H_n}\log H_n$ or the Robin
+inequality.
+\item $R^{\mathrm{can}}_L(RH_L)$, the round-trip reconstruction:
+the sentence $\forall n\,\forall k\,\psi(n,k)$ obtained by
+re-encoding $RH_C$ directly as a precision check on the zeros.
+\end{enumerate}
+These are different sentences. The framework \emph{assumes} that
+the Lagarias and Robin criteria hold, that is, that
+$\mathsf{ZFC} \vdash RH_L \leftrightarrow RH_C$. It does not
+assume, and the classical criteria do not state, that
+$RH_L \leftrightarrow R^{\mathrm{can}}_L(RH_L)$. The Lagarias and
+Robin theorems relate $RH_L$ to $RH_C$. They say nothing about the
+sentence produced by re-encoding $RH_C$ in arithmetic at arbitrary
+precision.
+
+The $\Lambda$--obstruction is the comparison of (1) with (2).
+For the canonical pair, $\Lambda_L(RH) = 0$ means that these two
+sentences have the same truth value in every model of the relevant
+class, and $\Lambda_L(RH) \neq 0$ means that there is a model in
+which they differ. Whether they agree is therefore not settled by
+the classical equivalence alone. It is the content of the
+obstruction lemmas (Lemma~\ref{lem:linear-failure} and
+Corollary~\ref{cor:zfc-obstruction}), which assert that the direct
+re-encoding fails at nonstandard precision.
+
+A reader who identifies the round trip with the Lagarias or Robin
+criterion will conclude, wrongly, that $\Lambda$ vanishes because
+the classical equivalence holds. The round trip is a separate
+sentence, and its agreement with $RH_L$ is a separate claim.
+\end{remark}
 
 \begin{theorem}[Round-Trip Adequacy]
 \label{thm:round-trip-adequacy}
@@ -825,9 +880,12 @@ a theorem:
 $\mathsf{ZFC} \vdash RH_L \leftrightarrow RH_C$
 (Proposition~\ref{prop:RH-birepresentable}).
 
-\item \emph{The classical equivalence induces a canonical
-$\Lambda$--sound translation pair}
-(Definition~\ref{def:canonical-translation}).
+\item \emph{Assuming the classical equivalence, there is a
+canonical $\Lambda$--sound translation pair}
+(Definition~\ref{def:canonical-translation}). Its round trip
+$R^{\mathrm{can}}_L(RH_L)$ is the direct precision-check
+re-encoding of $RH_C$. It is not the Lagarias or Robin sentence
+(Remark~\ref{rem:round-trip-not-lagarias}).
 
 \item \emph{Round-trip adequacy.} If
 $\mathsf{ZFC} \vdash RH_L$, then
@@ -1003,8 +1061,11 @@ $RH_L$ uniformly across all models.
 This dilemma is formalized via the Round-Trip Adequacy theorem
 (Theorem~\ref{thm:round-trip-adequacy}): since $RH_L$ is
 ZFC-birepresentable (Proposition~\ref{prop:RH-birepresentable}),
-the classical equivalence induces a canonical $\Lambda$--sound
-translation pair (Definition~\ref{def:canonical-translation}),
+the classical equivalence is assumed, and on that assumption
+there is a canonical $\Lambda$--sound translation pair
+(Definition~\ref{def:canonical-translation}) whose round trip is a
+sentence distinct from $RH_L$
+(Remark~\ref{rem:round-trip-not-lagarias}),
 and any $\mathsf{ZFC}$ proof of $RH_L$ would force
 $\mathsf{ZFC} \vdash RH_L \leftrightarrow
 R^{\mathrm{can}}_L(RH_L)$---which the obstruction models show
@@ -1140,7 +1201,10 @@ constraint on the analytic behavior of $\zeta(s)$---specifically, a
 constraint equivalent to the critical-line condition on nontrivial zeros.
 
 The reverse translation $T_{C\to L}$ must then re-encode this analytic 
-constraint as an arithmetic sentence $R_L(RH_L)$. We now analyze what 
+constraint as an arithmetic sentence $R_L(RH_L)$. This re-encoding is 
+direct. It is not the classical criterion read backwards, and 
+$R_L(RH_L)$ is not the sentence $RH_L$ 
+(Remark~\ref{rem:round-trip-not-lagarias}). We now analyze what 
 $R_L(RH_L)$ must express.
 
 \medskip
