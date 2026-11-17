@@ -1,9 +1,12 @@
 \documentclass{article}
 \usepackage{abstract}
+\usepackage{lmodern}
 \usepackage{amsthm}
 
 \usepackage{mathtools}
 \usepackage{amssymb}
+\newcommand{\llbracket}{[\![}
+\newcommand{\rrbracket}{]\!]}
 \usepackage{hyperref}
 \usepackage{geometry}
 \usepackage{tikz-cd}
@@ -21,7 +24,7 @@
 \geometry{margin=1in}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
-\usepackage{amsthm}
+\setlength{\emergencystretch}{2em}
 \theoremstyle{definition}
 \newtheorem{axiom}{Axiom}
 
@@ -72,6 +75,17 @@ We additionally present a geometric proof of RH in extended foundational setting
 Together these proofs successfully resolve the Clay-Millennium problem of proving the Riemann hypothesis.
 
 \end{abstract}
+\paragraph{Dependency convention for the amended Proof I.}
+The title and abstract retain the authors' stated claim. In the amended
+deductive argument below, the obstruction-model step is explicitly subject
+to the finite-satisfiability obligation in
+Lemma~\ref{lem:uniformity-inexpressibility}, for the same background
+theory and reconstruction used by reduction soundness. The two directions
+must both be supplied. The revised Lean file verifies the consequences
+of these inputs; it does not certify their concrete RH instantiation or
+Proofs II and III. In particular, the proposed reverse-mathematical
+argument does not yet discharge this obligation.
+
 \section*{Introduction}
 
 The Riemann Hypothesis (RH) asserts that all nontrivial zeros of the Riemann zeta function
@@ -134,9 +148,10 @@ we write $M\models_P\varphi$.
 \paragraph{Linear Paradigm $L$.}
 \begin{itemize}
 \item $\mathcal{L}_L$: first--order arithmetic;
-\item $\mathcal{M}_L$: models of $I\Sigma_1$ (including nonstandard models).
+\item $\mathcal{M}_L$: arithmetic reducts of models of $\mathsf{ZFC}$.
 \end{itemize}
-This paradigm captures discrete, stepwise, arithmetic structure.
+This paradigm captures discrete arithmetic structure in models of the
+full background theory used by the reductio.
 \paragraph{Curved Paradigm $C$.}
 \begin{itemize}
 \item $\mathcal{L}_C$: a first--order expansion of the language of 
@@ -181,6 +196,7 @@ R_{C}=T_{L\to C}\circ T_{C\to L}.
 \end{definition}
 
 \begin{definition}[$\Lambda$--Sound Translation Pair]
+\label{def:lambda-sound}
 A translation pair $(T_{L\to C}, T_{C\to L})$ is called \emph{$\Lambda$-sound} if it satisfies the
 following conditions:
 \begin{enumerate}
@@ -191,8 +207,17 @@ $\mathbb{M} \models ZFC$,
 \]
 \item (\emph{Inference Preservation}) The translations preserve the validity of
 first--order inference rules (in particular, modus ponens and quantifier rules).
-\item (\emph{Model Invariance}) For every sentence $S$ and every $\mathbb{M} \models ZFC$,
-$\mathbb{M} \models S$ implies $\mathbb{M} \models T_{C\to L}(T_{L\to C}(S))$.
+\item (\emph{Elementary Invariance}) The reconstruction is a fixed
+first-order sentence, evaluated by ordinary satisfaction; elementarily
+equivalent models agree on it. This does not assert pointwise preservation
+of every sentence under reconstruction. Such preservation, together with
+Boolean negation preservation, would force every obstruction to vanish.
+
+\item (\emph{Preservation of Derivations}) For the chosen background
+$T$ and each sentence $S$ in the domain of reconstruction,
+$T\vdash S$ implies $T\vdash R_P(S)$. This requirement must be
+verified for the concrete maps; it is distinct from the existence of
+an obstruction model.
 
 \item (\emph{$\Pi_1$-Kernel Preservation}) For any arithmetic $\Pi_{1}$ sentence $S \equiv \forall n \in \mathbb{N} \varphi(n)$, where $\mathrm{Ker}(S)$ is the semantic kernel defined as:
 \[
@@ -231,14 +256,17 @@ $\Lambda$--sound translations are finitary and first--order in nature.
 \subsection{Semantic Profiles and Obstruction}
 
 \begin{definition}[Semantic Profile]
-For a sentence $S$ in paradigm $P$, its semantic profile is the function
+Fix a class $\mathcal M_{P,T}$ of structures interpreting paradigm $P$
+and satisfying the background theory $T$. The semantic profile of $S$ is
+its extension in that class:
 \[
-S_P:\mathcal{M}_P\to\{0,1\},\qquad S_P(M)=
-\begin{cases}
-1 & M\models_P S,\\
-0 & \text{otherwise}.
-\end{cases}
+\llbracket S\rrbracket_{P,T}
+   =\{M\in\mathcal M_{P,T}:M\models_P S\}.
 \]
+This is a class of models, not the single truth value of $S$ in
+$\mathbb N$. For the ZFC reductio, use models of ZFC with the specified
+interpretations. Profiles over all models of $I\Sigma_1$ are separate
+objects and cannot be substituted into a ZFC-level argument.
 \end{definition}
 
 \begin{theorem}[$\Lambda$--Reduction Soundness]
@@ -261,26 +289,28 @@ Thus S and its round-trip translation have identical semantic profiles in both t
 
 
 \begin{definition}[$\Lambda$-Obstruction]
-Let $(T_{L\to C}, T_{C\to L})$ be a $\Lambda$--sound translation pair 
-with associated round--trip operators $R_L$ and $R_C$.
-The $\Lambda$-Obstruction of $S$ with respect to this pair in paradigm $P$ 
-is the set of disagreement models:
-$$A_{\mathcal{P}}(S) = S_{\mathcal{P}} \triangle R_{\mathcal{P}}(S)_{\mathcal{P}} = \{M \in \mathcal{M}_{\mathcal{P}} : M \models S \oplus M \models R_{\mathcal{P}}(S)\},$$
-where $\triangle$ denotes the symmetric difference and $\oplus$ denotes exclusive disjunction.
-We write $\Lambda_P(S) \neq 0$ to mean $A_{\mathcal{P}}(S) \neq \varnothing$.
-\begin{remark}
-Nonzero $\Lambda$--obstruction identifies models of $\mathsf{ZFC}$ in
-which round-trip translation alters truth values. By the Completeness
-Theorem, the existence of such models directly entails that no
-derivation of $S$ exists in $\mathsf{ZFC}$. This is the same
-methodology by which Cohen's forcing models establish the independence
-of the Continuum Hypothesis \cite{Cohen1963} and G\"odel's constructible universe
-establishes its consistency: one builds the models; completeness
-delivers the conclusion. The $\Lambda$--Irreducibility Theorem below
-completes this chain for the Riemann Hypothesis.
+For a specified translation pair $\tau$ with round-trip operator $R_P^\tau$,
+define the semantic obstruction by
+\[
+\Lambda^\tau_{P,T}(S)
+ =\llbracket S\rrbracket_{P,T}\mathbin{\triangle}
+   \llbracket R_P^\tau(S)\rrbracket_{P,T}.
+\]
+The notation $\Lambda^\tau_{P,T}(S)=0$ means this disagreement class
+is empty; $\Lambda^\tau_{P,T}(S)\ne0$ means it is nonempty. The symbols
+$0$ and $\ne0$ are shorthand, not an independently assigned numerical
+truth indicator. Neither the maps nor this class are defined by choosing
+between cases according to whether RH is true in $\mathbb N$.
+\end{definition}
+
+\begin{remark}[The role of the model class]
+A disagreement model contradicts a purported proof only when the proof's
+preservation theorem applies to that same model class and reconstruction.
+If $T\vdash S$ implies $T\vdash R_P^\tau(S)$, a $T$-model in the
+obstruction contradicts $T\vdash S$. Disagreement solely in a weaker
+arithmetic model is insufficient for this conclusion about ZFC.
 \end{remark}
 
-\end{definition}
 \begin{definition}[$\Lambda$--Irreducibility]
 A sentence $S$ is \emph{$\Lambda$--irreducible} if for \emph{every} 
 $\Lambda$--sound translation pair $(T_{L\to C}, T_{C\to L})$,
@@ -366,9 +396,12 @@ $\Lambda(S)\neq 0$. This is a direct contradiction.
 \emph{Conclusion.} Therefore the assumption fails:
 $\mathsf{ZFC}\nvdash S$.
 
-The argument for $\mathsf{ZFC}\nvdash\lnot S$ is symmetric: assuming
-$\mathsf{ZFC}\vdash\lnot S$ induces the same type of identification
-scheme, leading to the same contradiction.
+For the negative direction, assume $\mathsf{ZFC}\vdash\neg S$ and
+use the negative FS obligation for $\neg S$ and $R_L^\tau(\neg S)$.
+Compactness gives a ZFC model where the former holds and the latter
+fails. Preservation of derivations forces the latter to hold in that
+same model, a contradiction. The negative FS obligation must be supplied;
+calling the argument symmetric does not establish it.
 \end{proof}
 
 \begin{remark}[Logical Structure of the Proof]
@@ -659,10 +692,10 @@ M\models RH_L\ \Longleftrightarrow\ M\models R_L(RH_L),
 \]
 and an analogous condition holds for the curved obstruction, evaluated on
 $T_{L\to C}(RH_L)$ in $\mathcal M_C$. The arithmetic model class
-$\mathcal M_L$ consists of models of $I\Sigma_1$, not merely arithmetic
-reducts of models of ZFC. A ZFC-provable equivalence, when evaluated in
-models of ZFC, ensures agreement there; without further justification it
-need not ensure agreement throughout $\mathcal M_L$. Likewise, if the
+$\mathcal M_L$ consists here of arithmetic reducts of ZFC models.
+A ZFC-provable arithmetic equivalence therefore holds throughout that
+class. The question is whether the specified reconstruction, not merely
+the designated arithmetic criterion, satisfies such an equivalence. Likewise, if the
 round-trip equivalence is established in the standard analytic structure
 $\mathcal A$, elementarity ensures agreement throughout $\mathcal M_C$.
 
@@ -771,14 +804,11 @@ it would reduce the sentence to a finite-precision approximation,
 which does not express the exact equality and therefore does not
 faithfully encode $RH_C$.
 
-The alternative---that $R^{\mathrm{can}}_L(RH_L)$ remains
-$\Delta_0$-bounded without the precision quantifier---is
-excluded by the Uniformity Inexpressibility Lemma
-(Lemma~\ref{lem:uniformity-inexpressibility}), which shows that
-no $\Delta_0$ arithmetic sentence can encode the global analytic
-uniformity constraint across all models of $I\Sigma_1$.
-Therefore $R^{\mathrm{can}}_L(RH_L)$ necessarily acquires the
-unbounded $\forall k$ quantifier.
+This describes the intended precision reconstruction. A concrete coding
+of candidate zeros and verification predicates must still be provided
+and its correctness proved. Lemma~\ref{lem:uniformity-inexpressibility}
+explains the separation obligation for that specified sentence; it does
+not assert that every faithful encoding must increase quantifier complexity.
 \end{proof}
 
 \begin{remark}[The Round Trip Is Not the Lagarias or Robin Criterion]
@@ -873,8 +903,9 @@ $\mathsf{ZFC} \nvdash S_L$.
 \end{proof}
 
 \begin{remark}[The Central Logical Chain]
-The independence argument has the following structure, each step
-a theorem:
+The independence argument has the following dependency structure.
+The concrete translation and its preservation properties are inputs;
+the obstruction-model step assumes FS:
 \begin{enumerate}
 \item \emph{RH is ZFC-birepresentable.}
 $\mathsf{ZFC} \vdash RH_L \leftrightarrow RH_C$
@@ -893,11 +924,11 @@ $\mathsf{ZFC} \vdash RH_L \leftrightarrow
 R^{\mathrm{can}}_L(RH_L)$
 (Theorem~\ref{thm:round-trip-adequacy}).
 
-\item \emph{Obstruction models exist.} For every $\Lambda$--sound
-translation pair---including the canonical one---there is a model
-of $\mathsf{ZFC}$ where $RH_L$ and its round-trip disagree
-(Lemmas~\ref{lem:linear-failure}
-and~\ref{lem:curved-obstruction}).
+\item \emph{Obstruction models from FS.} For the specified pair,
+ZFC-level finite satisfiability gives a ZFC model where $RH_L$ and its
+round-trip disagree (Lemma~\ref{lem:linear-failure}). The negative
+direction uses the separate negative branch of FS. A universal claim
+over pairs requires this obligation for each pair.
 
 \item \emph{Contrapositive.} Since
 $\mathsf{ZFC} \nvdash RH_L \leftrightarrow
@@ -909,7 +940,8 @@ round-trip adequacy theorem to the obstruction lemmas: the
 obstruction holds for all $\Lambda$--sound pairs, the canonical
 pair is $\Lambda$--sound, and round-trip adequacy shows that
 provability of $RH_L$ would force agreement under this pair.
-The three cannot coexist.
+Under the stated inputs, the reductio assumption cannot coexist with
+the resulting disagreement model.
 \end{remark}
 
 \begin{remark}[Scope of $\Lambda$--Irreducibility]
@@ -1089,8 +1121,9 @@ conditions of admissibility and hence be $\Lambda$--sound.
 \subsection{Structural Sources of Obstruction for the Riemann Hypothesis}
 
 We now demonstrate that the Riemann Hypothesis exhibits nonzero
-$\Lambda$--obstruction in both paradigms.  This subsection is entirely
-internal to ZFC and does not appeal to any additional axioms.
+$\Lambda$--obstruction in both paradigms.  The amended deductive route uses the explicit FS obligation below.
+The subsequent semantic constructions are not independently certified by
+the Lean formalization.
 
 The key point is that $\Lambda$--obstruction does \emph{not} arise from
 altering the definition of RH or its associated arithmetic and analytic
@@ -1112,354 +1145,169 @@ All obstruction arises from standard model--theoretic phenomena:
 nonstandard initial segments, partial analytic envelopes, and the
 failure of reconstruction under definable translation.
 
-\begin{lemma}[Uniformity Inexpressibility for Linear Reconstructions]
+\begin{lemma}[Uniformity Separation and Finite Satisfiability]
 \label{lem:uniformity-inexpressibility}
-
-By Lemma~\ref{lem:finitary}, every $\Lambda$--sound translation is finitary and
-first--order definable; in particular, it cannot encode genuinely global
-asymptotic uniformity constraints into arithmetic sentences preserved across all
-models of $I\Sigma_1$.
-
-Let $T_{C\to L}$ be any $\Lambda$--sound translation from the curved paradigm
-to the linear arithmetic paradigm.
-Then $T_{C\to L}$ cannot encode global analytic uniformity constraints
-(e.g.\ asymptotic bounds of the form $|M(x)| \le x^{1/2+\epsilon}$ for all $\epsilon>0$)
-as arithmetic sentences whose truth is preserved across all models of $I\Sigma_1$.
-
-In particular, for any such translation, there exists a nonstandard model
-$M_L \models I\Sigma_1$ with a nonstandard cut $D \subseteq \mathbb{N}^*$ such that
-the translated sentence $R_L(S) = T_{C\to L}(T_{L\to C}(S))$
-fails to enforce the intended uniform bound on $D$.
+Fix a first-order background theory $T$, a sentence $S$, and the
+specified reconstruction $A=R_L^\tau(S)$. The following are equivalent:
+\begin{enumerate}
+\item $T\cup\{S\}\nvdash A$;
+\item $T\cup\{S,\neg A\}$ has a model;
+\item every finite subset of $T\cup\{S,\neg A\}$ has a model.
+\end{enumerate}
 \end{lemma}
-
 \begin{proof}
-Suppose, for contradiction, that there exists a $\Lambda$--sound translation
-$T_{C\to L}$ which encodes a global analytic uniformity constraint of the form
-$\forall x\, (|M(x)| \le x^{1/2+\epsilon})$ as an arithmetic sentence $\psi$
-whose truth is preserved across all models of $I\Sigma_1$.
-
-Such a constraint expresses an asymptotic bound uniform over all sufficiently
-large $x$. However, $I\Sigma_1$ admits nonstandard models with proper initial
-segments $D \subset \mathbb{N}^*$ in which every standard instance of $\psi$
-holds, yet $\psi$ fails globally on $D$ due to the existence of nonstandard
-elements exceeding all standard bounds.
-
-By compactness, there exists a nonstandard model $M_L \models I\Sigma_1$
-realizing this failure: $M_L$ satisfies all finite approximations of the bound
-but violates the global uniform constraint on a nonstandard cut $D$.
-Since $\Lambda$--soundness requires preservation of arithmetic truth under
-round--trip translation, this contradicts the assumption that $\psi$ is preserved
-in all such models.
-
-Therefore no $\Lambda$--sound translation can encode global analytic uniformity
-constraints as arithmetic sentences invariant across all models of $I\Sigma_1$.
+By completeness, failure of derivability in (1) gives a model of
+$T\cup\{S\}$ in which $A$ fails, proving (2). Soundness gives the
+converse. Every model of a theory satisfies all its finite subsets,
+so (2) implies (3). Compactness gives (3) implies (2).
 \end{proof}
 
+\paragraph{Finite-satisfiability obligation (FS).}
+For the fixed reconstruction used in the reductio, the required input is
+\[
+\begin{aligned}
+ T\vdash RH_L&\ \Longrightarrow\
+ \operatorname{FS}\bigl(T\cup\{RH_L,\neg R_L^\tau(RH_L)\}\bigr),\\
+ T\vdash\neg RH_L&\ \Longrightarrow\
+ \operatorname{FS}\bigl(T\cup\{\neg RH_L,\neg R_L^\tau(\neg RH_L)\}\bigr).
+\end{aligned}
+\]
+Here $\operatorname{FS}$ means finite satisfiability. This is one
+obligation with two directions. It is assumed in the amended deductive
+core, rather than attributed to overspill. Applying an assumed implication
+inside a reductio does not establish that implication. A proof of the
+corresponding separation statements in the lemma would discharge FS.
+For a conclusion about ZFC, $T$ must be ZFC (with the chosen encodings),
+or a faithfully connected theory; $T=I\Sigma_1$ alone is insufficient.
+
+\begin{remark}[What the proposed precision argument establishes]
+The proposed reconstruction has the form
+$A=\forall n\,\forall k\,\psi(n,k)$. This form alone does not prove
+$T+RH_L\nvdash A$. If $\psi$ is bounded, the two leading universal
+quantifiers still give a $\Pi^0_1$ sentence. The original
+$RH_L=\forall n\,\varphi(n)$ is itself unbounded, even when
+$\varphi$ is bounded. The Lagarias criterion, with its universal
+quantifier and real-valued expressions, is not as written a
+$\Delta_0$ sentence of first-order arithmetic.
+
+Nor does the use of second-order analysis in one proof establish that
+a particular arithmetic consequence is unprovable in a first-order
+base theory. Conservation theorems are relevant here: for example,
+$\mathsf{WKL}_0$ is conservative over $\mathsf{RCA}_0$ for
+$\Pi^1_1$ sentences, including arithmetic sentences
+\cite{Hirschfeldt2014}, Theorem~7.8. A specific separation theorem
+for the specified reconstruction is required. Once it is proved,
+the completeness step above is valid.
+\end{remark}
+
+\begin{remark}[Non-categoricity and the revised ZFC-level proposal]
+Moving the separation claim to ZFC makes the background theory match the
+reductio. However, non-categoricity alone does not establish
+\[
+\mathsf{ZFC}\nvdash RH_L\to R_L^\tau(RH_L).
+\]
+Nonisomorphic models may be elementarily equivalent, and elementary
+extensions preserve every first-order sentence. Nonstandard precision
+parameters therefore do not by themselves imply a failure of this
+particular reconstruction. A specific separation theorem is still
+required before completeness supplies the desired disagreement model.
+\end{remark}
+
+\begin{remark}[Exact equality and all-precision reconstruction]
+For every real number $x$ and target $c$, ZFC proves
+\[
+x=c\quad\Longleftrightarrow\quad
+\forall k\in\mathbb N,\ |x-c|<2^{-k}.
+\]
+The forward implication is immediate. For the converse, if
+$d=|x-c|>0$, the Archimedean property gives $k$ with $2^{-k}<d$,
+contradicting the displayed bound. The same proof applies to an
+indexed family of real parts of zeros. Inside a nonstandard ZFC
+model, the quantifiers and the Archimedean theorem use that model's
+own natural numbers; the proof is not restricted to external standard
+precision levels. Consequently, exact equality versus all-precision
+verification alone supplies no semantic disagreement. A concrete
+arithmetic coding still needs its own correctness proof.
+The corresponding ordered-field equivalence is checked in
+\texttt{RH/Paper/Precision.lean}.
+\end{remark}
 
 \subsection{Linear Obstruction: Nonstandard Arithmetic Drift}
 
 Let $RH_L$ denote any standard arithmetic formulation of RH, such as a
 Mertens bound or Li--coefficient positivity condition.
 \begin{definition}[Nonstandard Linear Envelope]
-A linear envelope is a model
+A linear envelope is the arithmetic reduct
 \[
-M_{L} = (\mathbb{N}^{\ast}, +^{M_L}, \times^{M_L}, <^{M_L})
+M_L=(\mathbb N^M,+^M,\times^M,<^M)
 \]
-satisfying $I\Sigma_{1}$ with a nonstandard initial segment
-$D \subset \mathbb{N}^{\ast}$ that properly contains all standard naturals.
+of a model $M\models\mathsf{ZFC}$ whose natural numbers are nonstandard.
 \end{definition}
-
-
-Such models exist by compactness (see e.g.\ \cite{Kaye1991}, Chapter~11).
+Given a model of ZFC, compactness supplies such a nonstandard extension
+by adding a natural-number constant larger than every standard numeral.
+This construction alone does not supply a disagreement model.
 
 \paragraph{Key Observation.}
-In $M_L$, arithmetic truth over $D$ need not coincide with arithmetic
-truth over $\mathbb{N}$ when statements quantify implicitly over
-unbounded growth rates.
-\begin{lemma}[Linear Reconstruction Failure]
+The quantifiers in $M_L$ include nonstandard elements. The existence of
+these elements alone does not imply failure of a specified arithmetic
+implication.
+\begin{lemma}[Linear Reconstruction Failure under FS]
 \label{lem:linear-failure}
-For every $\Lambda$--sound translation pair $(T_{L\to C}, T_{C\to L})$, 
-there exists a nonstandard linear envelope $M_L \models I\Sigma_1$ 
-such that
+Fix $T$ and $\tau$. If
+$\operatorname{FS}(T\cup\{RH_L,\neg R_L^\tau(RH_L)\})$, there is
+a model $M\models T$ such that
 \[
-M_L \models RH_L
-\quad\text{but}\quad
-M_L \not\models R_{L}(RH_L).
+M\models RH_L,\qquad M\not\models R_L^\tau(RH_L).
 \]
 \end{lemma}
-
 \begin{proof}
-Let $RH_L \equiv \forall n\,\varphi_{RH}(n)$ be the arithmetic 
-formulation of RH, with $\varphi_{RH}$ a $\Delta_0$ predicate encoding 
-(for instance) the Mertens-type bound.
-
-The translation $T_{L\to C}(RH_L)$ maps this arithmetic sentence into 
-the curved paradigm. By the definition of $T_{L\to C}$, which preserves 
-Boolean structure and is defined inductively on complexity, the 
-translated sentence expresses, in the language $\mathcal{L}_C$, a 
-constraint on the analytic behavior of $\zeta(s)$---specifically, a 
-constraint equivalent to the critical-line condition on nontrivial zeros.
-
-The reverse translation $T_{C\to L}$ must then re-encode this analytic 
-constraint as an arithmetic sentence $R_L(RH_L)$. This re-encoding is 
-direct. It is not the classical criterion read backwards, and 
-$R_L(RH_L)$ is not the sentence $RH_L$ 
-(Remark~\ref{rem:round-trip-not-lagarias}). We now analyze what 
-$R_L(RH_L)$ must express.
-
-\medskip
-\noindent
-\emph{Step 1: The round-trip sentence encodes verification depth.}
-
-The analytic sentence $T_{L\to C}(RH_L)$ expresses a global constraint 
-on $\zeta(s)$: that all zeros in the critical strip lie on $\Re(s) = 
-\tfrac{1}{2}$. When $T_{C\to L}$ translates this back to arithmetic, 
-it must encode a verification procedure that, for each candidate zero 
-location, confirms the critical-line condition to sufficient precision.
-
-Because $T_{C\to L}$ is $\Lambda$--sound and hence finitary and 
-first-order definable (Lemma~\ref{lem:finitary}), this verification 
-procedure takes the form of an arithmetic sentence with a parameter 
-$k$ representing the verification depth or precision level:
-\[
-R_L(RH_L) \equiv \forall n\,\forall k\,\psi(n,k),
-\]
-where $\psi(n,k)$ asserts that the $n$-th candidate zero passes a 
-$k$-level precision check confirming $\Re(\rho_n) = \tfrac{1}{2}$.
-
-The universal quantifier $\forall k$ is essential: the analytic 
-statement requires the condition to hold at \emph{all} levels of 
-precision, because the critical-line condition is an exact equality, 
-not an approximate bound. Any finitary arithmetic encoding of this 
-exact condition must quantify over precision parameters.
-
-\medskip
-\noindent
-\emph{Step 2: Nonstandard models introduce nonstandard precision.}
-
-By compactness, there exists a nonstandard model 
-$M_L \models I\Sigma_1$ containing a nonstandard initial segment $D$ 
-that properly extends $\mathbb{N}$. In $M_L$, the quantifier 
-$\forall k$ in $R_L(RH_L)$ ranges over all elements of $M_L$, 
-including nonstandard elements $k^* \in D \setminus \mathbb{N}$.
-
-For standard values of $k$, the verification $\psi(n,k)$ succeeds 
-(since it agrees with the standard computation). But for nonstandard 
-$k^*$, the verification $\psi(n,k^*)$ requires confirming the 
-critical-line condition at a nonstandard precision level---a 
-computation that has no standard analytic correlate.
-
-\medskip
-\noindent
-\emph{Step 3: Overspill produces failure.}
-
-In the standard model $\mathbb{N}$, the set
-\[
-S = \{k \in \mathbb{N} : \text{the } k\text{-level verification 
-succeeds for all standard zeros}\}
-\]
-is cofinal in $\mathbb{N}$ (i.e., $S = \mathbb{N}$, assuming RH holds 
-in $\mathbb{N}$). By overspill (a standard consequence of 
-nonstandard models of $I\Sigma_1$; see \cite{Kaye1991}, Proposition 
-6.1), $S$ extends to some nonstandard element of $M_L$. However, 
-overspill does not guarantee that $S$ extends to \emph{all} nonstandard 
-elements.
-
-By a further compactness argument, there exists a nonstandard model 
-$M_L$ in which the verification succeeds for all standard precision 
-levels but fails at some nonstandard precision level $k^*$. 
-Specifically, we add to the theory $I\Sigma_1 + RH_L$ the assertion 
-$\exists k\,\neg\psi(c,k)$ for a new constant $c$ representing a 
-nonstandard zero index. This extended theory is consistent: every 
-finite subset is satisfiable because for any fixed standard $n$, the 
-standard model satisfies $RH_L$ and $\forall k\,\psi(n,k)$, while the 
-nonstandard element introduces no contradiction with any finite 
-fragment.
-
-Thus $M_L \models RH_L$ (since $\varphi_{RH}(n)$ holds for all 
-elements of $M_L$, the original predicate being $\Delta_0$ and 
-satisfiable in $M_L$) but $M_L \not\models R_L(RH_L)$ (since the 
-round-trip sentence fails at nonstandard precision).
-
-\medskip
-\noindent
-\emph{Step 4: Universality over translations.}
-
-The above construction does not depend on the specific choice of 
-$\Lambda$--sound translation. The structural features exploited---that 
-the translation is finitary, that it must encode precision parameters, 
-and that nonstandard models extend precision quantifiers beyond the 
-standard range---are consequences of $\Lambda$--soundness itself. 
-Therefore, for \emph{every} $\Lambda$--sound translation pair, a 
-corresponding obstruction model exists.
+Apply compactness to the displayed theory. Its model satisfies every
+axiom of $T$, the original sentence, and the negation of its
+reconstruction. No assumption about truth of RH in $\mathbb N$ is used.
+The negative direction follows by applying the same argument to
+$S=\neg RH_L$ and its own reconstruction.
 \end{proof}
-
-Thus, $M_{L}$ is a witness to the obstruction because the disagreement holds:
-$$M_{L} \models RH_{L} \land M_{L} \not\models R_{L}(RH_{L}).$$
-Since $RH_{L}$ and $R_{L}(RH_{L})$ disagree on truth in $M_{L}$, the semantic profile difference is non-zero.
-
-The obstruction is not failure of arithmetic truth, but failure of uniform analytic-derived bounds under nonstandard extension.
 
 \begin{corollary}
-\[
-\Lambda_L(RH)\neq 0.
-\]
+Under the hypotheses of Lemma~\ref{lem:linear-failure},
+$\Lambda^\tau_{L,T}(RH_L)\ne0$.
 \end{corollary}
+\begin{proof}
+The model supplied by that lemma belongs to the semantic discrepancy class.
+\end{proof}
 
-\begin{remark}[Quantifier Dichotomy for Round--Trip Sentences]
+\begin{remark}[Precision and the fixed reconstruction]
 \label{rem:quantifier-dichotomy}
-A natural challenge to the Linear Reconstruction Failure is to ask
-whether a $\Lambda$--sound translation might produce a round--trip
-sentence $R_L(RH_L)$ that retains the same quantifier complexity as
-$RH_L$ itself---that is, a sentence of the form
-$\forall n\,\varphi'(n)$ with $\varphi'$ still $\Delta_0$.  If so,
-$\varphi'(n)$ would be absolute between standard and nonstandard
-models, and the overspill argument would not apply.
-
-This alternative is excluded by the Uniformity Inexpressibility Lemma
-(Lemma~1.8.1).  The two possibilities are exhaustive:
-
-\begin{enumerate}
-\item \emph{$R_L(RH_L)$ acquires unbounded quantifiers.}  The
-round--trip through the analytic paradigm and back forces the
-arithmetic reconstruction to encode a verification procedure with
-an unbounded precision parameter $k$, yielding a sentence of the
-form $\forall n\,\forall k\,\psi(n,k)$.  This is the generic case
-analyzed in the proof of Lemma~\ref{lem:linear-failure}: the
-$\forall k$ quantifier ranges over nonstandard elements in
-nonstandard models, and overspill produces the obstruction.
-
-\item \emph{$R_L(RH_L)$ remains $\Delta_0$--bounded.}  The
-translation compresses the full analytic content of the
-critical--line condition---a global uniformity constraint on the
-zero set of $\zeta(s)$---into a bounded arithmetic predicate
-preserved across all models of $I\Sigma_1$.  But this is precisely
-what the Uniformity Inexpressibility Lemma rules out: global
-analytic uniformity constraints (such as
-$|M(x)| \le x^{1/2+\epsilon}$ for all $\epsilon > 0$) cannot be
-encoded as arithmetic sentences whose truth is preserved across
-all models of $I\Sigma_1$.  A translation that achieved this would
-have \emph{solved within bounded arithmetic} the problem of
-expressing global analytic coherence---the very problem whose
-insolubility is the source of the $\Lambda$--obstruction.
-\end{enumerate}
-
-In either case, the obstruction holds.  The first horn produces
-nonstandard failure via overspill.  The second horn contradicts the
-Uniformity Inexpressibility Lemma.  There is no third possibility:
-a $\Lambda$--sound translation is finitary and first--order definable,
-so the round--trip sentence is a definite arithmetic sentence whose
-quantifier structure falls into one of these two cases.
-
-This dichotomy makes explicit why the extra quantifier in the
-round--trip sentence is not an optional artifact of a particular
-translation choice, but a \emph{necessary structural consequence} of
-faithfully encoding analytic content in arithmetic.  The analytic
-paradigm's content---exact location of zeros in the complex
-plane---requires verification at unbounded precision.  Any arithmetic
-encoding of this content must either express that unbounded
-verification (acquiring the extra quantifier) or fail to capture the
-analytic content (violating $\Lambda$--soundness).
+A direct precision reconstruction and the Robin--Lagarias arithmetic
+criteria need not be syntactically identical. Their semantic agreement
+or disagreement is tested over the fixed class of models. A difference
+in syntax, an additional universal parameter, or the existence of
+nonstandard elements does not alone prove disagreement. The FS
+obligation specifies the required model-existence claim exactly.
 \end{remark}
 
-\subsubsection{PA--Robustness of the Linear Obstruction (``PA Objection'')}
-
-A natural objection is that the Linear Obstruction of \S 3.2 was formulated over
-weak arithmetic (e.g.\ $I\Sigma_{1}$), whereas $\mathsf{ZFC}$ proves full Peano
-Arithmetic $\mathsf{PA}$. One might therefore worry that the obstruction
-disappears once one strengthens the background theory to $\mathsf{PA}$.
-
-\medskip
-
-\noindent\textbf{Response.}
-Strengthening induction does not remove the source of the obstruction.
-The obstruction arises from the existence of nonstandard models and the
-undefinability of the standard cut---structural features present in every
-consistent extension of $\mathsf{PA}$, including $\mathsf{ZFC}$.
-
-\begin{lemma}[PA--Robust Linear Obstruction]\label{lem:PA-robust-linear-obstruction}
-Let $M\models \mathsf{PA}$ be a nonstandard model of full Peano Arithmetic.
-Let $T_{L\to C}$ and $T_{C\to L}$ be \emph{$\mathsf{PA}$--definable} translation
-maps between the linear language $\mathcal{L}_{L}$ and the curved/analytic
-language $\mathcal{L}_{C}$, and define the round--trip operator
-\[
-R_{L}(\varphi)\ :=\ T_{C\to L}\!\bigl(T_{L\to C}(\varphi)\bigr).
-\]
-Then there exists a $\Pi^{0}_{1}$ sentence $\varphi$ (in particular, one may take
-$\varphi=RH_{L}$) such that
-\[
-M\models \varphi \qquad\text{but}\qquad M\not\models R_{L}(\varphi).
-\]
-Consequently, no $\mathsf{PA}$--internal translation scheme yields uniform
-round--trip semantic preservation for $\Pi^{0}_{1}$ statements.
+\begin{lemma}[Background-Theory Dependence]\label{lem:PA-robust-linear-obstruction}
+For any chosen first-order theory $T$, finite satisfiability of
+$T\cup\{S,\neg R_L^\tau(S)\}$ gives a model of that same theory
+witnessing the obstruction. Replacing $T$ by a stronger theory requires
+finite satisfiability for that stronger theory.
 \end{lemma}
-
-\begin{proof}[Proof]
-Since $\mathsf{PA}$ is consistent, it has nonstandard models by compactness.
-In any nonstandard $M\models \mathsf{PA}$, the \emph{standard cut} is not
-first--order definable (see \cite{Kaye1991}, Theorem~15.1), so $M$ cannot internally distinguish ``all standard
-parameters'' from ``all parameters.''
-
-The Linear Obstruction in \S 3.2 exploits precisely this gap: the sentence
-$R_{L}(\varphi)$ obtained by analytic round--trip translation necessarily
-encodes a uniform verification scheme (equivalently, a global stabilization or
-uniform bound on the relevant analytic approximation/precision parameters).
-In a nonstandard model $M$, such uniformity is evaluated over \emph{nonstandard}
-indices as well. By overspill, any internal claim of stabilization that holds
-for all standard indices must extend to some nonstandard index, where the
-intended equivalence fails. Thus $M$ can satisfy the original $\Pi^{0}_{1}$
-statement $\varphi$ (no \emph{standard} counterexample) while failing the
-round--trip sentence $R_{L}(\varphi)$, which implicitly quantifies over
-nonstandard ``precision'' or ``verification depth'' parameters.
-
-Therefore $M\models \varphi$ but $M\not\models R_{L}(\varphi)$, proving the claim.
-\end{proof}
-
-\noindent
-\textbf{Corollary.} The Linear Obstruction is not an artifact of weak arithmetic:
-it persists in full $\mathsf{PA}$ and therefore also in any stronger background
-theory (including $\mathsf{ZFC}$) that interprets $\mathsf{PA}$.
-
-\begin{corollary}[ZFC--Level Realization of the Linear Obstruction]
-\label{cor:zfc-obstruction}
-There exists a model $M \models \mathsf{ZFC}$ whose arithmetic reduct
-$\mathbb{N}^M$ exhibits the linear $\Lambda$--obstruction: that is,
-\[
-M \models RH_L
-\quad\text{but}\quad
-M \not\models R_L(RH_L).
-\]
-Consequently, by G\"odel's Completeness Theorem,
-$\mathsf{ZFC} \nvdash (RH_L \to R_L(RH_L))$,
-and the $\Lambda$--obstruction witnesses a genuine failure of 
-provability in $\mathsf{ZFC}$, not merely in subsystems.
-\end{corollary}
-
 \begin{proof}
-By Lemma~\ref{lem:PA-robust-linear-obstruction}, there exists a 
-countable nonstandard model $N \models \mathsf{PA}$ such that 
-$N \models RH_L$ but $N \not\models R_L(RH_L)$.
-
-By a standard result in models of arithmetic (see Friedman 
-\cite{Kaye1991}, Chapter~12; cf.\ also Krajewski), every countable 
-model of $\mathsf{PA}$ is isomorphic to the arithmetic reduct of 
-some model of $\mathsf{ZFC}$. Specifically, there exists 
-$M \models \mathsf{ZFC}$ with $\mathbb{N}^M \cong N$.
-
-Since $RH_L$ and $R_L(RH_L)$ are arithmetic sentences, their truth 
-values in $M$ are determined by $\mathbb{N}^M$. Therefore
-$M \models RH_L$ and $M \not\models R_L(RH_L)$.
-
-Since $M$ is a model of $\mathsf{ZFC}$ in which $RH_L \to R_L(RH_L)$ 
-fails, the Completeness Theorem yields 
-$\mathsf{ZFC} \nvdash (RH_L \to R_L(RH_L))$.
-
-In particular, $\mathsf{ZFC}$ cannot establish that $RH_L$ and its 
-round--trip reconstruction are equivalent, and the 
-$\Lambda$--obstruction is realized at the level of full 
-$\mathsf{ZFC}$.
+This is compactness with the indicated background. A model of the
+weaker theory need not satisfy the additional axioms of a stronger one.
 \end{proof}
 
+\begin{corollary}[ZFC-Level Realization under FS]
+\label{cor:zfc-obstruction}
+If every finite fragment of
+$\mathsf{ZFC}\cup\{RH_L,\neg R_L^\tau(RH_L)\}$ has a model,
+there is a ZFC model in the obstruction class.
+\end{corollary}
+\begin{proof}
+Apply Lemma~\ref{lem:linear-failure} with $T=\mathsf{ZFC}$.
+This does not assert that every model of PA is the arithmetic reduct
+of a model of ZFC. No such lifting claim is used.
+\end{proof}
 
 \subsection{Why This Is \emph{Not} a Redefinition of Arithmetic}
 
@@ -2694,6 +2542,14 @@ University Lecture Series, vol.~32, AMS, 2004.
 Y.~Matiyasevich,
 \emph{Hilbert's Tenth Problem},
 MIT Press, 1993.
+
+\bibitem{Hirschfeldt2014}
+D.~R.~Hirschfeldt,
+\emph{Slicing the Truth: On the Computability Theoretic and Reverse
+Mathematical Analysis of Combinatorial Principles},
+Lecture Notes Series, Institute for Mathematical Sciences,
+National University of Singapore, vol.~28, World Scientific, 2014,
+Theorem~7.8.
 
 \bibitem{Robin1984}
 G.~Robin,

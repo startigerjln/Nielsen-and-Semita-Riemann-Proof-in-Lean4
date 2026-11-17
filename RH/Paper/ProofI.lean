@@ -1,37 +1,21 @@
 import RH.Paper.Arith
+import Mathlib.ModelTheory.Satisfiability
 /-!
-# Proof I: Λ-Irreducibility and independence of RH
+# Proof I: semantic obstruction and the finite-satisfiability obligation
 
-This module formalizes the deductive core of Nielsen & Semita's Proof I.
+Λ is a set of models on which a sentence and its specified round trip disagree.
+It is not defined from the truth value of RH in ℕ. Soundness and obstruction
+are separate conditions: nonzero obstruction is never a field of LambdaSound.
 
-## Key design: reductio-scoped finite satisfiability
+The reductios below assume a single, two-direction FiniteSatisfiabilityObligation.
+Applying that assumption inside a reductio does not prove the assumption.
+Compactness is proved from Mathlib. Uniformity separation can supply finite
+satisfiability, but separation for the concrete RH reconstruction remains open
+in this formalization. Quantifier shape alone is not a proof of separation.
 
-The finite satisfiability of each disagreement theory is NOT an external
-assumption.  It is derived INSIDE each reductio from the hypothesis being
-refuted, via soundness of ZFC:
-
-  Non-provability: assume ZFC ⊢ RH
-    → soundness: ℕ ⊨ RH
-    → overspill: disagreement theory is finitely satisfiable
-    → compactness: disagreement model exists
-    → round-trip preservation contradicts the model → ⊥
-    → discharge: ZFC ⊬ RH
-
-  Non-refutability: assume ZFC ⊢ ¬RH
-    → soundness: ℕ ⊨ ¬RH
-    → overspill: negation disagreement theory is finitely satisfiable
-    → compactness: negation disagreement model exists
-    → round-trip preservation contradicts the model → ⊥
-    → discharge: ZFC ⊬ ¬RH
-
-  Truth: non-refutability + Π₁ + Σ₁-completeness (Kreisel reflection)
-
-The dependency graph is explicit in Lean's kernel: `TruthGivesFS` and
-`NegTruthGivesFS` take the truth derived from soundness as an argument.
-The `intro hprov` that opens each reductio is the ONLY source of the
-truth that feeds finite satisfiability.  When `False` is reached, `hprov`
-is discharged and nothing about truth or finite satisfiability survives
-into the conclusion.
+Setting.T, Setting.RH and the translation maps are parameters. No theorem here
+instantiates them as ZFC, arithmetic RH, or Mathlib's RiemannHypothesis.
+See AXIOM_PROVENANCE.md for the complete list of explicit inputs.
 -/
 
 open FirstOrder
@@ -49,6 +33,7 @@ def impS (φ ψ : Sent) : Sent := Language.BoundedFormula.imp φ ψ
 structure Model where
   carrier : Type
   str : L.Structure carrier
+  nonempty : Nonempty carrier
 
 def Model.Sat (M : Model) (φ : Sent) : Prop :=
   @Language.Sentence.Realize L M.carrier M.str φ
@@ -83,271 +68,230 @@ def TranslationPair.RL (τ : TranslationPair) (φ : Sent) : Sent := τ.toL (τ.t
 structure Setting where
   T : L.Theory
   RH : Sent
-  /-- T is consistent: it has a model. (Standard assumption for ZFC.) -/
+  /-- An explicit model-existence assumption on the chosen theory. -/
   consistent : ∃ M : Model, ∀ φ ∈ T, M.Sat φ
 
 def Setting.ZFCModel (S : Setting) (M : Model) : Prop := ∀ φ ∈ S.T, M.Sat φ
+/-- Semantic consequence in the chosen arithmetic theory, not a syntactic ZFC calculus. -/
 def Setting.Prov (S : Setting) (φ : Sent) : Prop := ∀ M, S.ZFCModel M → M.Sat φ
 
-/-! ## Published inputs -/
 
-/-- Finite satisfiability of a set of sentences. -/
-def FiniteSatisfiable (Γ : Set Sent) : Prop :=
-  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
+/-! ## Semantic profiles and Λ -/
 
-/-- First-order compactness [Gödel 1930; Malcev 1936]. -/
-def Compactness : Prop :=
-  ∀ Γ : Set Sent, FiniteSatisfiable Γ → ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
+/-- The extension of a sentence over the fixed class of models of T. -/
+def SemanticProfile (S : Setting) (φ : Sent) : Set Model :=
+  {M | S.ZFCModel M ∧ M.Sat φ}
 
-/-- Soundness of the base theory for arithmetic:
-    every provable sentence is true in ℕ.
-    For ZFC this is a standard metatheoretic fact [Shoenfield 1967]. -/
-def ArithSoundness (S : Setting) : Prop :=
-  ∀ φ, S.Prov φ → TrueInN φ
+/-- The semantic discrepancy set. No evaluation of RH in ℕ enters this definition. -/
+def LambdaObstruction (S : Setting) (τ : TranslationPair) (φ : Sent) : Set Model :=
+  {M | S.ZFCModel M ∧ ¬ (M.Sat φ ↔ M.Sat (τ.RL φ))}
 
-/-- Σ₁ witness reflection (Kreisel): if a Π₁ sentence is false in ℕ,
-    there is a standard witness to its failure, so its negation is
-    provable.  Contrapositive: non-refutability implies truth.
-    [Kreisel 1951; Kaye 1991] -/
-def WitnessReflection (S : Setting) : Prop :=
-  ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
+def LambdaZero (S : Setting) (τ : TranslationPair) (φ : Sent) : Prop :=
+  ∀ M, S.ZFCModel M → (M.Sat φ ↔ M.Sat (τ.RL φ))
 
-/-- Provability preservation for the round trip [Manuscript §1.5–1.7]. -/
+theorem lambdaZero_iff_profiles (S : Setting) (τ : TranslationPair) (φ : Sent) :
+    LambdaZero S τ φ ↔ SemanticProfile S φ = SemanticProfile S (τ.RL φ) := by
+  constructor
+  · intro h
+    ext M
+    exact and_congr_right fun hM => h M hM
+  · intro h M hM
+    have he := Set.ext_iff.mp h M
+    exact ⟨fun hφ => (he.mp ⟨hM, hφ⟩).2,
+      fun hφ => (he.mpr ⟨hM, hφ⟩).2⟩
+
+theorem lambdaZero_iff_empty (S : Setting) (τ : TranslationPair) (φ : Sent) :
+    LambdaZero S τ φ ↔ LambdaObstruction S τ φ = ∅ := by
+  classical
+  simp only [LambdaZero, LambdaObstruction, Set.eq_empty_iff_forall_not_mem,
+    Set.mem_setOf_eq, not_and, not_not]
+
+/-- Preservation of consequences; it does not assume preservation of every
+sentence at every individual model. That stronger condition would force Λ=0. -/
 def RoundTripPreserves (S : Setting) (τ : TranslationPair) : Prop :=
   ∀ ψ, S.Prov ψ → S.Prov (τ.RL ψ)
 
-/-! ## Disagreement theories and finite satisfiability
+/-- Conditions used by the deductive core. Obstruction is a separate hypothesis.
+The full concrete two-language interpretation remains to be implemented. -/
+structure LambdaSound (S : Setting) (τ : TranslationPair) : Prop where
+  preserves : RoundTripPreserves S τ
+  comp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ)
+  kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))
 
-The disagreement theories express the claim that RH (or ¬RH)
-holds in a model of T, but the round-trip translation does not
-preserve this.  The finite satisfiability of these theories follows
-from overspill: each finite fragment constrains only finitely many
-standard bounds, all met in ℕ once soundness (inside the reductio)
-has supplied truth.
--/
+theorem uniform_preservation {S : Setting} {τ : TranslationPair}
+    (hp : RoundTripPreserves S τ) {φ : Sent} (hφ : S.Prov φ) :
+    LambdaZero S τ φ :=
+  fun M hM => ⟨fun _ => hp φ hφ M hM, fun _ => hφ M hM⟩
 
-/-- The positive disagreement theory: RH holds but its
-    round trip fails. -/
+theorem round_trip_adequacy {S : Setting} {τ : TranslationPair}
+    (hp : RoundTripPreserves S τ) {φ : Sent} (hφ : S.Prov φ) :
+    S.Prov (iffS φ (τ.RL φ)) :=
+  fun M hM => (M.sat_iff φ (τ.RL φ)).mpr (uniform_preservation hp hφ M hM)
+
+/-! ## Compactness from Mathlib -/
+
+def FiniteSatisfiable (Γ : Set Sent) : Prop :=
+  ∀ Γ₀ : Finset Sent, ↑Γ₀ ⊆ Γ → ∃ M : Model, ∀ φ ∈ Γ₀, M.Sat φ
+
+def Compactness : Prop :=
+  ∀ Γ : Set Sent, FiniteSatisfiable Γ → ∃ M : Model, ∀ φ ∈ Γ, M.Sat φ
+
+/-- Standard first-order compactness, discharged by the pinned Mathlib theorem. -/
+theorem firstOrderCompactness : Compactness := by
+  intro Γ hf
+  have hfin : Language.Theory.IsFinitelySatisfiable (Γ : L.Theory) := by
+    intro Γ₀ hΓ₀
+    obtain ⟨M, hM⟩ := hf Γ₀ hΓ₀
+    letI : L.Structure M.carrier := M.str
+    letI : Nonempty M.carrier := M.nonempty
+    letI : Language.Theory.Model M.carrier (↑Γ₀ : L.Theory) :=
+      ⟨fun φ hφ => hM φ hφ⟩
+    exact Language.Theory.Model.isSatisfiable M.carrier
+  have hsat := Language.Theory.isSatisfiable_iff_isFinitelySatisfiable.mpr hfin
+  let N := hsat.some
+  refine ⟨⟨N, inferInstance, inferInstance⟩, ?_⟩
+  intro φ hφ
+  exact Language.Theory.realize_sentence_of_mem Γ hφ
+
+/-! ## One finite-satisfiability obligation, with both reductio directions -/
+
+def disagreementTheoryFor (S : Setting) (τ : TranslationPair) (φ : Sent) : Set Sent :=
+  S.T ∪ {φ} ∪ {neg (τ.RL φ)}
+
 def disagreementTheory (S : Setting) (τ : TranslationPair) : Set Sent :=
-  S.T ∪ {S.RH} ∪ {neg (τ.RL S.RH)}
+  disagreementTheoryFor S τ S.RH
 
-/-- The negative disagreement theory: ¬RH holds but its
-    round trip fails. -/
 def negDisagreementTheory (S : Setting) (τ : TranslationPair) : Set Sent :=
-  S.T ∪ {neg S.RH} ∪ {neg (τ.RL (neg S.RH))}
+  disagreementTheoryFor S τ (neg S.RH)
 
-def OverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
-  FiniteSatisfiable (disagreementTheory S τ)
+/-- The RH-specific assumption. This is an explicit theorem parameter, not a
+universal axiom for arbitrary settings or translation maps. Neither direction
+is attributed to overspill or to a published reverse-mathematics theorem. -/
+structure FiniteSatisfiabilityObligation (S : Setting) (τ : TranslationPair) : Prop where
+  positive : S.Prov S.RH → FiniteSatisfiable (disagreementTheory S τ)
+  negative : S.Prov (neg S.RH) → FiniteSatisfiable (negDisagreementTheory S τ)
 
-def NegOverspillFiniteSatisfiability (S : Setting) (τ : TranslationPair) : Prop :=
-  FiniteSatisfiable (negDisagreementTheory S τ)
+/-- Separation must use the SAME background theory and reconstruction as the
+reductio. A separation theorem over IΣ₁ alone does not supply this input. -/
+def UniformitySeparation (S : Setting) (τ : TranslationPair) (φ : Sent) : Prop :=
+  ¬ ∀ M, S.ZFCModel M → M.Sat φ → M.Sat (τ.RL φ)
 
-/-- The positive finite-satisfiability bridge: truth of RH in ℕ
-    implies finite satisfiability of the positive disagreement theory.
+/-- A genuine separation result supplies a model and hence every finite fragment. -/
+theorem finiteSatisfiable_of_uniformitySeparation (S : Setting)
+    (τ : TranslationPair) (φ : Sent) (hsep : UniformitySeparation S τ φ) :
+    FiniteSatisfiable (disagreementTheoryFor S τ φ) := by
+  classical
+  obtain ⟨M, hM, hφ, hfail⟩ : ∃ M, S.ZFCModel M ∧ M.Sat φ ∧ ¬ M.Sat (τ.RL φ) := by
+    simpa only [UniformitySeparation, not_forall, exists_prop] using hsep
+  intro Γ₀ hΓ₀
+  refine ⟨M, ?_⟩
+  intro ψ hψ
+  rcases hΓ₀ hψ with (hT | hs) | hn
+  · exact hM ψ hT
+  · simpa only [Set.mem_singleton_iff.mp hs] using hφ
+  · simpa only [Set.mem_singleton_iff.mp hn] using (M.sat_neg (τ.RL φ)).mpr hfail
 
-    Each finite fragment Δ ⊂ T ∪ {RH} ∪ {¬RL(RH)} constrains only
-    finitely many standard numerals.  Since ℕ ⊨ RH (supplied by
-    soundness inside the reductio), all finite bounds are met in ℕ,
-    so every finite Δ is satisfiable.
-    [Kaye 1991, Thm 15.1] -/
-def TruthGivesFS (S : Setting) (τ : TranslationPair) : Prop :=
-  TrueInN S.RH → OverspillFiniteSatisfiability S τ
+/-- The proposed separation route, with its two actual premises visible. -/
+theorem finiteSatisfiabilityObligation_of_separation (S : Setting) (τ : TranslationPair)
+    (hpos : S.Prov S.RH → UniformitySeparation S τ S.RH)
+    (hneg : S.Prov (neg S.RH) → UniformitySeparation S τ (neg S.RH)) :
+    FiniteSatisfiabilityObligation S τ where
+  positive h := finiteSatisfiable_of_uniformitySeparation S τ S.RH (hpos h)
+  negative h := finiteSatisfiable_of_uniformitySeparation S τ (neg S.RH) (hneg h)
 
-/-- The negative finite-satisfiability bridge: truth of ¬RH in ℕ
-    implies finite satisfiability of the negative disagreement theory.
-    Symmetric argument. -/
-def NegTruthGivesFS (S : Setting) (τ : TranslationPair) : Prop :=
-  TrueInN (neg S.RH) → NegOverspillFiniteSatisfiability S τ
+/-! ## Disagreement models and the reductios -/
 
-/-! ## Disagreement models from compactness -/
+theorem canonical_disagreement_for (S : Setting) (τ : TranslationPair) (φ : Sent)
+    (hf : FiniteSatisfiable (disagreementTheoryFor S τ φ)) :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat φ ∧ ¬ M.Sat (τ.RL φ) := by
+  obtain ⟨M, hM⟩ := firstOrderCompactness (disagreementTheoryFor S τ φ) hf
+  refine ⟨M, ?_, ?_, ?_⟩
+  · intro ψ hψ
+    exact hM ψ (Set.mem_union_left _ (Set.mem_union_left _ hψ))
+  · exact hM φ (Set.mem_union_left _ (Set.mem_union_right _ rfl))
+  · exact (M.sat_neg (τ.RL φ)).mp (hM _ (Set.mem_union_right _ rfl))
 
-/-- Compactness converts finite satisfiability of the positive
-    disagreement theory into a model where RH holds but its
-    round trip fails. -/
 theorem canonical_disagreement (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ) :
-    ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧
-      ¬ M.Sat (τ.RL S.RH) := by
-  obtain ⟨M, hM⟩ := hc (disagreementTheory S τ) hf
-  refine ⟨M, ?_, ?_, ?_⟩
-  · intro φ hφ
-    exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · exact hM S.RH (Set.mem_union_left _
-      (Set.mem_union_right _ rfl))
-  · intro hsat
-    have h := hM (neg (τ.RL S.RH)) (Set.mem_union_right _ rfl)
-    exact ((M.sat_neg (τ.RL S.RH)).mp h) hsat
+    (hf : FiniteSatisfiable (disagreementTheory S τ)) :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH ∧ ¬ M.Sat (τ.RL S.RH) :=
+  canonical_disagreement_for S τ S.RH hf
 
-/-- Compactness converts finite satisfiability of the negative
-    disagreement theory into a model where ¬RH holds but its
-    round trip fails. -/
 theorem neg_canonical_disagreement (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hf : NegOverspillFiniteSatisfiability S τ) :
-    ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧
-      ¬ M.Sat (τ.RL (neg S.RH)) := by
-  obtain ⟨M, hM⟩ := hc (negDisagreementTheory S τ) hf
-  refine ⟨M, ?_, ?_, ?_⟩
-  · intro φ hφ
-    exact hM φ (Set.mem_union_left _ (Set.mem_union_left _ hφ))
-  · exact hM (neg S.RH) (Set.mem_union_left _
-      (Set.mem_union_right _ rfl))
-  · intro hsat
-    have h := hM (neg (τ.RL (neg S.RH))) (Set.mem_union_right _ rfl)
-    exact ((M.sat_neg (τ.RL (neg S.RH))).mp h) hsat
+    (hf : FiniteSatisfiable (negDisagreementTheory S τ)) :
+    ∃ M : Model, S.ZFCModel M ∧ M.Sat (neg S.RH) ∧ ¬ M.Sat (τ.RL (neg S.RH)) :=
+  canonical_disagreement_for S τ (neg S.RH) hf
 
-/-! ## The reductio arguments
+theorem obstruction_nonempty (S : Setting) (τ : TranslationPair) (φ : Sent)
+    (hf : FiniteSatisfiable (disagreementTheoryFor S τ φ)) :
+    (LambdaObstruction S τ φ).Nonempty := by
+  obtain ⟨M, hM, hφ, hfail⟩ := canonical_disagreement_for S τ φ hf
+  exact ⟨M, hM, fun h => hfail (h.mp hφ)⟩
 
-Both directions share the same structure:
-1. `intro hprov` — assume provability (the reductio hypothesis)
-2. `hs _ hprov`  — soundness gives truth in ℕ
-3. `h(n)tfs _`   — overspill bridge gives finite satisfiability
-4. compactness   — disagreement model exists
-5. round-trip    — preservation contradicts the model → False
-6. discharge     — `hprov` is consumed; nothing about truth survives
--/
+theorem not_provable_of_obstruction (S : Setting) (τ : TranslationPair) (φ : Sent)
+    (hp : RoundTripPreserves S τ) (hΛ : (LambdaObstruction S τ φ).Nonempty) :
+    ¬ S.Prov φ := by
+  intro hprov
+  obtain ⟨M, hM, hfail⟩ := hΛ
+  exact hfail (uniform_preservation hp hprov M hM)
 
-/-- **Non-provability of RH** (Theorem 1.6.1 / Remark 1.6.2).
-
-    The finite satisfiability that feeds compactness is derived
-    inside the reductio from `hprov : S.Prov S.RH` via soundness
-    and the overspill bridge.  It is never an external assumption. -/
 theorem RH_not_provable (S : Setting) (τ : TranslationPair)
-    (hc : Compactness)
-    (hs : ArithSoundness S)
-    (htfs : TruthGivesFS S τ)
-    (hp : RoundTripPreserves S τ) : ¬ S.Prov S.RH := by
+    (hfs : FiniteSatisfiabilityObligation S τ) (hp : RoundTripPreserves S τ) :
+    ¬ S.Prov S.RH := by
   intro hprov
-  -- Soundness: the reductio hypothesis gives truth in ℕ
-  have htruth : TrueInN S.RH := hs S.RH hprov
-  -- Overspill bridge: truth gives finite satisfiability
-  have hf : OverspillFiniteSatisfiability S τ := htfs htruth
-  -- Compactness: disagreement model
-  obtain ⟨M, hM, -, hfail⟩ := canonical_disagreement S τ hc hf
-  -- Round-trip preservation contradicts the model
-  exact hfail (hp S.RH hprov M hM)
+  exact not_provable_of_obstruction S τ S.RH hp
+    (obstruction_nonempty S τ S.RH (hfs.positive hprov)) hprov
 
-/-- **Non-refutability of RH** (symmetric reductio).
-
-    The finite satisfiability that feeds compactness is derived
-    inside the reductio from `hprov : S.Prov (neg S.RH)` via
-    soundness and the negative overspill bridge. -/
 theorem neg_RH_not_provable (S : Setting) (τ : TranslationPair)
-    (hc : Compactness)
-    (hs : ArithSoundness S)
-    (hntfs : NegTruthGivesFS S τ)
-    (hp : RoundTripPreserves S τ) : ¬ S.Prov (neg S.RH) := by
-  intro hprov
-  -- Soundness: the reductio hypothesis gives ¬RH true in ℕ
-  have htruth : TrueInN (neg S.RH) := hs (neg S.RH) hprov
-  -- Negative overspill bridge: truth of ¬RH gives finite satisfiability
-  have hf : NegOverspillFiniteSatisfiability S τ := hntfs htruth
-  -- Compactness: negation disagreement model
-  obtain ⟨M, hM, -, hfail⟩ := neg_canonical_disagreement S τ hc hf
-  -- Round-trip preservation contradicts the model
-  exact hfail (hp (neg S.RH) hprov M hM)
-
-/-- Non-refutability via an explicit model of ZFC + RH.
-    Useful when the model is obtained by other means. -/
-theorem neg_RH_not_provable_of_model (S : Setting)
-    (hmodel : ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH) :
+    (hfs : FiniteSatisfiabilityObligation S τ) (hp : RoundTripPreserves S τ) :
     ¬ S.Prov (neg S.RH) := by
   intro hprov
-  obtain ⟨M, hM, hsat⟩ := hmodel
-  exact ((M.sat_neg S.RH).mp (hprov M hM)) hsat
+  exact not_provable_of_obstruction S τ (neg S.RH) hp
+    (obstruction_nonempty S τ (neg S.RH) (hfs.negative hprov)) hprov
 
-/-! ## Independence and truth -/
-
-/-- **Independence of RH from ZFC** (Theorem 1.18.1). -/
 theorem RH_independent (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hs : ArithSoundness S)
-    (htfs : TruthGivesFS S τ) (hntfs : NegTruthGivesFS S τ)
-    (hp : RoundTripPreserves S τ) :
+    (hfs : FiniteSatisfiabilityObligation S τ) (hp : RoundTripPreserves S τ) :
     ¬ S.Prov S.RH ∧ ¬ S.Prov (neg S.RH) :=
-  ⟨RH_not_provable S τ hc hs htfs hp,
-   neg_RH_not_provable S τ hc hs hntfs hp⟩
+  ⟨RH_not_provable S τ hfs hp, neg_RH_not_provable S τ hfs hp⟩
 
-/-- Truth from non-refutability (Theorem 1.18.2).
-    Kreisel reflection: a Π₁ sentence that is not refutable in a
-    Σ₁-complete theory must be true in ℕ. -/
+/-- Σ₁ completeness / witness reflection, supplied for the chosen theory.
+It is not a theorem for arbitrary Setting.T. -/
+def WitnessReflection (S : Setting) : Prop :=
+  ∀ φ, IsPi1 φ → ¬ TrueInN φ → S.Prov (neg φ)
+
 theorem truth_from_unrefutability (S : Setting)
     (hr : WitnessReflection S) {φ : Sent}
     (hpi : IsPi1 φ) (hnot : ¬ S.Prov (neg φ)) : TrueInN φ :=
   Classical.byContradiction fun hfalse => hnot (hr φ hpi hfalse)
 
-/-- **Truth of RH in ℕ** (Theorem 1.18.3).
-
-    Non-refutability (from the symmetric reductio) + Π₁ + Kreisel
-    reflection.  Both reductios have already closed; this step is
-    external to them. -/
 theorem RH_true_in_N (S : Setting) (τ : TranslationPair)
     (hpi : IsPi1 S.RH) (hr : WitnessReflection S)
-    (hc : Compactness) (hs : ArithSoundness S)
-    (hntfs : NegTruthGivesFS S τ)
-    (hp : RoundTripPreserves S τ) :
+    (hfs : FiniteSatisfiabilityObligation S τ) (hp : RoundTripPreserves S τ) :
     TrueInN S.RH :=
-  truth_from_unrefutability S hr hpi
-    (neg_RH_not_provable S τ hc hs hntfs hp)
+  truth_from_unrefutability S hr hpi (neg_RH_not_provable S τ hfs hp)
 
-/-- Truth via model (minimal route, Theorem 1.18.3 variant). -/
-theorem RH_true_from_model (S : Setting)
-    (hpi : IsPi1 S.RH) (hr : WitnessReflection S)
-    (hmodel : ∃ M : Model, S.ZFCModel M ∧ M.Sat S.RH) :
-    TrueInN S.RH :=
-  truth_from_unrefutability S hr hpi (neg_RH_not_provable_of_model S hmodel)
+/-! ## Boundary checks: the hypotheses cannot silently assume disagreement -/
 
-/-! ## Λ-soundness framework
+/-- Identity reconstruction has no semantic obstruction. -/
+theorem identity_lambda_zero (S : Setting) (φ : Sent) :
+    LambdaZero S ⟨id, id⟩ φ := fun _ _ => Iff.rfl
 
-This structure captures the conditions used in the deductive reductio,
-not the entire two-language Definition 1.4.3 of the manuscript.
-The `changes` field is derived from the disagreement model, which
-is itself produced inside the reductio (see `changes_rh`).
--/
-
-structure LambdaSound (S : Setting) (φ : Sent) (τ : TranslationPair) : Prop where
-  inv : ∀ ψ, S.Prov ψ → ∀ M, S.ZFCModel M → M.Sat ψ → M.Sat (τ.RL ψ)
-  comp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ)
-  kernel : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))
-  changes : ¬ S.Prov (iffS φ (τ.RL φ))
-
-/-- The round-trip changes RH: derived from the disagreement model. -/
-theorem changes_rh (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ) :
-    ¬ S.Prov (iffS S.RH (τ.RL S.RH)) := by
-  intro hprov
-  obtain ⟨M, hM, hsat, hfail⟩ := canonical_disagreement S τ hc hf
-  exact hfail (((M.sat_iff S.RH (τ.RL S.RH)).mp (hprov M hM)).mp hsat)
-
-theorem canonical_lambda_sound_rh (S : Setting) (τ : TranslationPair)
-    (hc : Compactness) (hf : OverspillFiniteSatisfiability S τ)
-    (hp : RoundTripPreserves S τ)
-    (hcomp : ∀ ψ, τ.toC (neg ψ) = neg (τ.toC ψ) ∧ τ.toL (neg ψ) = neg (τ.toL ψ))
-    (hk : ∀ ψ, IsPi1 ψ → (TrueInN ψ ↔ TrueInN (τ.RL ψ))) :
-    LambdaSound S S.RH τ where
-  inv ψ hψ M hM _ := hp ψ hψ M hM
-  comp := hcomp
-  kernel := hk
-  changes := changes_rh S τ hc hf
-
-/-- Lemma 1.5.6 (Uniform Preservation). -/
-theorem uniform_preservation {S' : Setting} {φ : Sent} {τ : TranslationPair}
-    (hτ : LambdaSound S' φ τ) {ψ : Sent} (hψ : S'.Prov ψ) (M : Model)
-    (hM : S'.ZFCModel M) : M.Sat ψ ↔ M.Sat (τ.RL ψ) :=
-  ⟨fun h => hτ.inv ψ hψ M hM h, fun _ => hψ M hM⟩
-
-/-- Theorem 1.7.13 (Round-Trip Adequacy). -/
-theorem round_trip_adequacy {S' : Setting} {φ : Sent} {τ : TranslationPair}
-    (hτ : LambdaSound S' φ τ) {ψ : Sent} (hψ : S'.Prov ψ) :
-    S'.Prov (iffS ψ (τ.RL ψ)) :=
-  fun M hM => (M.sat_iff ψ (τ.RL ψ)).mpr (uniform_preservation hτ hψ M hM)
-
-/-- Remark 1.6.2: provability contradicts Λ-soundness. -/
-theorem no_lambda_sound_of_provable {S' : Setting} {φ : Sent} (hφ : S'.Prov φ) :
-    ¬ ∃ τ, LambdaSound S' φ τ := by
-  rintro ⟨τ, hτ⟩
-  exact hτ.changes (round_trip_adequacy hτ hφ)
+/-- Full pointwise forward preservation plus Boolean negation preservation
+would force zero obstruction, even for sentences not provable in T. -/
+theorem pointwise_preservation_forces_zero (S : Setting) (τ : TranslationPair)
+    (hpoint : ∀ M, S.ZFCModel M → ∀ φ, M.Sat φ → M.Sat (τ.RL φ))
+    (hneg : ∀ φ, τ.RL (neg φ) = neg (τ.RL φ)) (φ : Sent) :
+    LambdaZero S τ φ := by
+  intro M hM
+  refine ⟨hpoint M hM φ, ?_⟩
+  intro hround
+  by_contra hφ
+  have hn := hpoint M hM (neg φ) ((M.sat_neg φ).mpr hφ)
+  rw [hneg φ] at hn
+  exact (M.sat_neg (τ.RL φ)).mp hn hround
 
 end RH.Paper
 
+#print axioms RH.Paper.firstOrderCompactness
 #print axioms RH.Paper.RH_not_provable
 #print axioms RH.Paper.neg_RH_not_provable
 #print axioms RH.Paper.RH_independent
